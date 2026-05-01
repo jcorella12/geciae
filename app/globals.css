@@ -2,26 +2,99 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    /* shadcn/ui tokens (HSL — required by shadcn components)
+       Paleta PSENERGIA: navy `#1E3A5F` como primary, naranja `#F18F2C` como accent. */
+    --background: 210 40% 98%;
+    --foreground: 220 28% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 28% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 28% 14%;
+
+    --primary: 213 52% 25%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 220 28% 14%;
+
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    --accent: 30 88% 56%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 73% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 84%;
+    --input: 215 28% 84%;
+    --ring: 213 52% 25%;
+
+    --radius: 0.5rem;
+
+    /* GECIAE brand tokens (literal hex)
+       Sistema usa la paleta PSENERGIA. Cada empresa expone su color real
+       (extraído de su logo) para banda y dot del switcher. */
+    --color-brand-primary: #1E3A5F;
+    --color-brand-secondary: #F18F2C;
+
+    --color-pse: #1E3A5F;
+    --color-ciae: #1F6B47;
+    --color-ied: #C9A24E;
+    --color-limson: #B8E03A;
+
+    --color-success: #2D8B5A;
+    --color-warning: #E89B45;
+    --color-danger: #DC2626;
+    --color-info: #3F8FCC;
+    --color-neutral: #94A3B8;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 96%;
+
+    --card: 217 33% 18%;
+    --card-foreground: 210 40% 96%;
+
+    --popover: 217 33% 18%;
+    --popover-foreground: 210 40% 96%;
+
+    --primary: 213 45% 55%;
+    --primary-foreground: 222 47% 11%;
+
+    --secondary: 217 33% 18%;
+    --secondary-foreground: 210 40% 96%;
+
+    --muted: 217 33% 18%;
+    --muted-foreground: 215 16% 65%;
+
+    --accent: 30 90% 65%;
+    --accent-foreground: 222 47% 11%;
+
+    --destructive: 0 73% 51%;
+    --destructive-foreground: 210 40% 96%;
+
+    --border: 217 33% 25%;
+    --input: 217 33% 25%;
+    --ring: 213 45% 55%;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
