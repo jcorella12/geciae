@@ -1,11 +1,16 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import { obtenerVinculos, puedeAccederConfiguracion } from "@/lib/auth/permisos";
+import {
+  obtenerVinculos,
+  puedeAccederCentros,
+  puedeAccederConfiguracion,
+} from "@/lib/auth/permisos";
 import { cn } from "@/lib/utils";
 
 const tabs = [
   { href: "/configuracion/usuarios", label: "Usuarios" },
+  { href: "/configuracion/centros", label: "Centros" },
   { href: "/configuracion/ia", label: "IA" },
 ] as const;
 
@@ -15,7 +20,9 @@ export default async function ConfiguracionLayout({
   children: React.ReactNode;
 }) {
   const vinculos = await obtenerVinculos();
-  if (!puedeAccederConfiguracion(vinculos)) {
+  // CEO accede a todo. Director/tesorero/auditor solo a Centros — pero el
+  // gate de cada sub-página lo refina.
+  if (!puedeAccederConfiguracion(vinculos) && !puedeAccederCentros(vinculos)) {
     redirect("/mi-dia");
   }
 

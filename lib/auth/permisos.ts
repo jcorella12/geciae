@@ -323,3 +323,49 @@ export function puedeAccederCalidad(vinculos: Vinculo[]): boolean {
 export function puedeVerTesoreriaConsolidada(vinculos: Vinculo[]): boolean {
   return esCEO(vinculos) || tieneAtributo(vinculos, "tesorero_corporativo");
 }
+
+/**
+ * Acceso al panel de Centros de costo y utilidad.
+ * CEO, tesorero corporativo, auditor interno (lectura) o director de
+ * cualquier empresa.
+ */
+export function puedeAccederCentros(vinculos: Vinculo[]): boolean {
+  return (
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "tesorero_corporativo") ||
+    tieneAtributo(vinculos, "auditor_interno") ||
+    vinculos.some((v) => v.rol === "director")
+  );
+}
+
+/**
+ * Puede crear/editar/archivar centros de una empresa específica.
+ */
+export function puedeGestionarCentrosEn(
+  vinculos: Vinculo[],
+  empresaId: string,
+): boolean {
+  return (
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "tesorero_corporativo") ||
+    esRolEn(vinculos, empresaId, "director")
+  );
+}
+
+/**
+ * Empresas en las que el usuario puede gestionar centros.
+ */
+export function empresasDondeGestionaCentros(vinculos: Vinculo[]): string[] {
+  if (esCEO(vinculos) || tieneAtributo(vinculos, "tesorero_corporativo")) {
+    // CEO/tesorero ven todas: el caller decide cómo expandir esta lista
+    return Array.from(new Set(vinculos.map((v) => v.empresa_id)));
+  }
+  return vinculos.filter((v) => v.rol === "director").map((v) => v.empresa_id);
+}
+
+/**
+ * Solo CEO o tesorero corporativo modifican reglas de reparto.
+ */
+export function puedeGestionarReglasReparto(vinculos: Vinculo[]): boolean {
+  return esCEO(vinculos) || tieneAtributo(vinculos, "tesorero_corporativo");
+}
