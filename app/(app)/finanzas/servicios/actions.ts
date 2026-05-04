@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 
 import { obtenerVinculos, puedeCrearOCEn } from "@/lib/auth/permisos";
 import { ServicioFormSchema } from "@/lib/ot/schemas";
+import type { ServicioState } from "@/lib/ot/state";
 import { createClient } from "@/lib/supabase/server";
 
 function parseFormData(formData: FormData) {
@@ -20,13 +21,6 @@ function parseFormData(formData: FormData) {
     unidad_sat: formData.get("unidad_sat") || undefined,
   };
 }
-
-export type ServicioState = {
-  ok: boolean;
-  error: string | null;
-};
-
-export const initialServicioState: ServicioState = { ok: false, error: null };
 
 export async function crearServicio(
   _prev: ServicioState,

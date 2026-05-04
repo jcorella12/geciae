@@ -24,3 +24,17 @@ export const ESTADOS_OT = [
 export type EstadoOT = (typeof ESTADOS_OT)[number]["value"];
 
 export const MARGEN_DEFAULT = 0.15;
+
+// ----------------------------------------------------------------------------
+// Servicios (catálogo) — state movido aquí porque actions.ts es "use server"
+// y no puede exportar tipos ni constantes (solo funciones async).
+// ----------------------------------------------------------------------------
+export type ServicioState = {
+  ok: boolean;
+  error: string | null;
+};
+
+export const initialServicioState: ServicioState = {
+  ok: false,
+  error: null,
+};

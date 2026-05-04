@@ -7,8 +7,9 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { initialServicioState } from "@/lib/ot/state";
 
-import { crearServicio, initialServicioState } from "./actions";
+import { crearServicio } from "./actions";
 
 const empresaCodigoColor: Record<string, string> = {
   PSE: "bg-pse",
