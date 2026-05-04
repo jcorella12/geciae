@@ -32,3 +32,44 @@ export function puedeVerConsolidado(
       (v.atributos ?? []).includes("tesorero_corporativo"),
   );
 }
+
+/**
+ * Resuelve qué empresas debe mostrar el dashboard / página actual:
+ * - Si la cookie tiene un UUID específico válido → solo esa empresa
+ * - Si la cookie es 'consolidated' (y el user puede) → todas las empresas del user
+ * - Si no hay cookie → todas las empresas del user (default consolidado para CEO/tesorero)
+ *
+ * Útil para que el switcher del topbar realmente filtre los datos.
+ */
+export function resolverEmpresasFiltro(input: {
+  cookieValue: string | null;
+  empresasUsuario: string[];
+  puedeConsolidado: boolean;
+}): { empresasIds: string[]; consolidada: boolean; activaId: string | null } {
+  const { cookieValue, empresasUsuario, puedeConsolidado } = input;
+
+  // Vista consolidada explícita
+  if (cookieValue === VISTA_CONSOLIDADA && puedeConsolidado) {
+    return {
+      empresasIds: empresasUsuario,
+      consolidada: true,
+      activaId: VISTA_CONSOLIDADA,
+    };
+  }
+
+  // Empresa específica (UUID válido entre las del user)
+  if (cookieValue && empresasUsuario.includes(cookieValue)) {
+    return {
+      empresasIds: [cookieValue],
+      consolidada: false,
+      activaId: cookieValue,
+    };
+  }
+
+  // Default: si puede consolidado → ve todas; si no → ve todas las del user (que es lo mismo).
+  return {
+    empresasIds: empresasUsuario,
+    consolidada: puedeConsolidado,
+    activaId: empresasUsuario[0] ?? null,
+  };
+}

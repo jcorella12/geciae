@@ -2,11 +2,135 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   PSE ERP — Design Tokens v2
+   Paleta corporativa PSE refinada · Geist Sans + Geist Mono
+   Sistema multi-empresa: PSE / CIAE / IED / Limson
+   Densidad: comfy / compact (vía data-density en <html>)
+   ============================================================ */
+
 @layer base {
   :root {
-    /* shadcn/ui tokens (HSL — required by shadcn components)
-       Paleta PSENERGIA: navy `#1E3A5F` como primary, naranja `#F18F2C` como accent. */
-    --background: 210 40% 98%;
+    /* ---------- Tipografía (Geist) ---------- */
+    --font-sans-stack: var(--font-geist-sans), "Inter", -apple-system,
+      BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-mono-stack: var(--font-geist-mono), "JetBrains Mono", "SF Mono",
+      Consolas, monospace;
+
+    /* ---------- Tamaños ---------- */
+    --text-2xs: 10.5px;
+    --text-xs: 11.5px;
+    --text-sm: 12.5px;
+    --text-base: 13.5px;
+    --text-md: 14px;
+    --text-lg: 16px;
+    --text-xl: 18px;
+    --text-2xl: 22px;
+    --text-3xl: 28px;
+    --text-4xl: 36px;
+    --text-5xl: 48px;
+
+    /* ---------- Spacing (base 4) ---------- */
+    --s-1: 4px;
+    --s-2: 8px;
+    --s-3: 12px;
+    --s-4: 16px;
+    --s-5: 20px;
+    --s-6: 24px;
+    --s-7: 28px;
+    --s-8: 32px;
+    --s-10: 40px;
+    --s-12: 48px;
+    --s-14: 56px;
+    --s-16: 64px;
+
+    /* ---------- Radios ---------- */
+    --r-xs: 3px;
+    --r-sm: 5px;
+    --r-md: 8px;
+    --r-lg: 10px;
+    --r-xl: 14px;
+    --r-2xl: 18px;
+    --radius: 8px; /* shadcn -> usa --radius */
+
+    /* ---------- Neutrales (cool slate, calibrados a navy PSE) ---------- */
+    --bg: oklch(0.992 0.003 245);
+    --bg-2: oklch(0.978 0.004 245);
+    --bg-3: oklch(0.96 0.006 245);
+    --bg-4: oklch(0.94 0.008 245);
+    --surface: #ffffff;
+    --surface-2: oklch(0.988 0.003 245);
+    --border-token: oklch(0.92 0.008 245);
+    --border-strong: oklch(0.86 0.012 245);
+    --divider: oklch(0.945 0.006 245);
+
+    --ink-1: oklch(0.18 0.02 250);
+    --ink-2: oklch(0.34 0.018 250);
+    --ink-3: oklch(0.5 0.014 250);
+    --ink-4: oklch(0.65 0.01 250);
+    --ink-5: oklch(0.8 0.008 250);
+
+    /* ---------- Marca PSE ---------- */
+    --pse-navy: oklch(0.32 0.075 252); /* #1E3A5F base */
+    --pse-navy-deep: oklch(0.22 0.06 252);
+    --pse-navy-darker: oklch(0.16 0.045 252);
+    --pse-navy-soft: oklch(0.95 0.02 252);
+    --pse-navy-mid: oklch(0.55 0.09 252);
+
+    --pse-orange: oklch(0.72 0.155 60); /* #F18F2C base */
+    --pse-orange-deep: oklch(0.62 0.165 50);
+    --pse-orange-soft: oklch(0.96 0.04 70);
+
+    /* ---------- Marca por empresa (banda + dot) ---------- */
+    --c-pse: oklch(0.32 0.075 252);
+    --c-ciae: oklch(0.45 0.115 150);
+    --c-ied: oklch(0.68 0.115 80);
+    --c-limson: oklch(0.78 0.18 130);
+
+    /* ---------- Acento activo (rebindeable por [data-empresa]) ---------- */
+    --brand: var(--pse-navy);
+    --brand-deep: var(--pse-navy-deep);
+    --brand-darker: var(--pse-navy-darker);
+    --brand-soft: var(--pse-navy-soft);
+    --brand-fg: #ffffff;
+    --accent-token: var(--pse-orange);
+    --accent-deep: var(--pse-orange-deep);
+    --accent-soft: var(--pse-orange-soft);
+
+    /* ---------- Estados ---------- */
+    --success: oklch(0.56 0.13 150);
+    --success-soft: oklch(0.95 0.035 150);
+    --success-deep: oklch(0.42 0.13 150);
+    --warning: oklch(0.72 0.135 75);
+    --warning-soft: oklch(0.96 0.045 75);
+    --warning-deep: oklch(0.5 0.14 75);
+    --danger: oklch(0.58 0.18 25);
+    --danger-soft: oklch(0.96 0.035 25);
+    --danger-deep: oklch(0.45 0.18 25);
+    --info: oklch(0.58 0.13 230);
+    --info-soft: oklch(0.95 0.035 230);
+
+    /* ---------- Sombras ---------- */
+    --shadow-xs: 0 1px 0 rgba(15, 23, 42, 0.04);
+    --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06),
+      0 1px 0 rgba(15, 23, 42, 0.04);
+    --shadow-md: 0 6px 16px -4px rgba(15, 23, 42, 0.1),
+      0 2px 4px -1px rgba(15, 23, 42, 0.05);
+    --shadow-lg: 0 18px 36px -10px rgba(15, 23, 42, 0.16);
+    --shadow-glow: 0 0 0 4px color-mix(in oklch, var(--brand) 12%, transparent);
+
+    /* ---------- Layout ---------- */
+    --sidebar-w: 232px;
+    --sidebar-w-compact: 64px;
+    --topbar-h: 56px;
+
+    /* ============================================================
+       Compatibilidad shadcn/ui (HSL tokens)
+       Los componentes shadcn instalados consumen `hsl(var(--xxx))`,
+       así que mantenemos la nomenclatura HSL pero alineada a la
+       paleta v2 de oklch.
+       ============================================================ */
+    --background: 210 40% 98.5%;
     --foreground: 220 28% 14%;
 
     --card: 0 0% 100%;
@@ -15,7 +139,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 220 28% 14%;
 
-    --primary: 213 52% 25%;
+    --primary: 213 52% 25%; /* navy ~ pse-navy */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 210 40% 96%;
@@ -24,77 +148,229 @@
     --muted: 210 40% 96%;
     --muted-foreground: 215 16% 47%;
 
-    --accent: 30 88% 56%;
+    --accent: 30 88% 56%; /* naranja PSE para shadcn */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 73% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 215 28% 84%;
-    --input: 215 28% 84%;
+    --border: 215 28% 88%;
+    --input: 215 28% 88%;
     --ring: 213 52% 25%;
 
-    --radius: 0.5rem;
-
-    /* GECIAE brand tokens (literal hex)
-       Sistema usa la paleta PSENERGIA. Cada empresa expone su color real
-       (extraído de su logo) para banda y dot del switcher. */
-    --color-brand-primary: #1E3A5F;
-    --color-brand-secondary: #F18F2C;
-
-    --color-pse: #1E3A5F;
-    --color-ciae: #1F6B47;
-    --color-ied: #C9A24E;
-    --color-limson: #B8E03A;
-
-    --color-success: #2D8B5A;
-    --color-warning: #E89B45;
-    --color-danger: #DC2626;
-    --color-info: #3F8FCC;
-    --color-neutral: #94A3B8;
-
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
-    --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+    /* Brand legacy (banda y dots por empresa — literal hex) */
+    --color-brand-primary: #1e3a5f;
+    --color-brand-secondary: #f18f2c;
+    --color-pse: #1e3a5f;
+    --color-ciae: #1f6b47;
+    --color-ied: #c9a24e;
+    --color-limson: #b8e03a;
+    --color-success: #2d8b5a;
+    --color-warning: #e89b45;
+    --color-danger: #dc2626;
+    --color-info: #3f8fcc;
+    --color-neutral: #94a3b8;
   }
 
-  .dark {
+  .dark,
+  [data-theme="dark"] {
+    /* Tokens shadcn HSL */
     --background: 222 47% 11%;
     --foreground: 210 40% 96%;
-
     --card: 217 33% 18%;
     --card-foreground: 210 40% 96%;
-
     --popover: 217 33% 18%;
     --popover-foreground: 210 40% 96%;
-
     --primary: 213 45% 55%;
     --primary-foreground: 222 47% 11%;
-
     --secondary: 217 33% 18%;
     --secondary-foreground: 210 40% 96%;
-
     --muted: 217 33% 18%;
     --muted-foreground: 215 16% 65%;
-
     --accent: 30 90% 65%;
     --accent-foreground: 222 47% 11%;
-
     --destructive: 0 73% 51%;
     --destructive-foreground: 210 40% 96%;
-
     --border: 217 33% 25%;
     --input: 217 33% 25%;
     --ring: 213 45% 55%;
-  }
-}
 
-@layer base {
+    /* Tokens v2 (oklch) — slate cálido, no negro puro */
+    --bg: oklch(0.16 0.012 252);
+    --bg-2: oklch(0.19 0.014 252);
+    --bg-3: oklch(0.23 0.015 252);
+    --bg-4: oklch(0.27 0.016 252);
+    --surface: oklch(0.2 0.014 252);
+    --surface-2: oklch(0.23 0.015 252);
+    --border-token: oklch(0.3 0.018 252);
+    --border-strong: oklch(0.38 0.022 252);
+    --divider: oklch(0.26 0.016 252);
+
+    --ink-1: oklch(0.96 0.008 252);
+    --ink-2: oklch(0.86 0.012 252);
+    --ink-3: oklch(0.7 0.016 252);
+    --ink-4: oklch(0.55 0.018 252);
+    --ink-5: oklch(0.42 0.018 252);
+
+    /* Brand soft re-mezclado contra fondo oscuro */
+    --brand-soft: color-mix(in oklch, var(--brand) 18%, oklch(0.22 0.014 252));
+    --accent-soft: color-mix(
+      in oklch,
+      var(--accent-token) 22%,
+      oklch(0.22 0.014 252)
+    );
+
+    /* Estados softs adaptados */
+    --success-soft: color-mix(
+      in oklch,
+      var(--success) 22%,
+      oklch(0.22 0.014 252)
+    );
+    --warning-soft: color-mix(
+      in oklch,
+      var(--warning) 22%,
+      oklch(0.22 0.014 252)
+    );
+    --danger-soft: color-mix(
+      in oklch,
+      var(--danger) 22%,
+      oklch(0.22 0.014 252)
+    );
+    --info-soft: color-mix(in oklch, var(--info) 22%, oklch(0.22 0.014 252));
+
+    /* Sombras casi imperceptibles en dark */
+    --shadow-xs: 0 1px 0 rgba(0, 0, 0, 0.35);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.45),
+      0 1px 0 rgba(0, 0, 0, 0.35);
+    --shadow-md: 0 6px 16px -4px rgba(0, 0, 0, 0.55),
+      0 2px 4px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 18px 36px -10px rgba(0, 0, 0, 0.65);
+  }
+
+  /* Sidebar dark — un pelín más oscuro que el contenido */
+  [data-theme="dark"] aside,
+  .dark aside {
+    background: oklch(0.12 0.014 252);
+  }
+
+  /* Scrollbars sutiles para dark */
+  [data-theme="dark"] ::-webkit-scrollbar,
+  .dark ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  [data-theme="dark"] ::-webkit-scrollbar-track,
+  .dark ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  [data-theme="dark"] ::-webkit-scrollbar-thumb,
+  .dark ::-webkit-scrollbar-thumb {
+    background: oklch(0.32 0.018 252);
+    border-radius: 6px;
+    border: 2px solid var(--bg);
+  }
+  [data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: oklch(0.4 0.02 252);
+  }
+
+  /*
+   * Brand corporativo PSE constante (navy/orange) en toda la app.
+   * Cada empresa se identifica por su DOT de color (`--c-pse`, `--c-ciae`,
+   * `--c-ied`, `--c-limson`) en el switcher, banda visual y referencias
+   * tabulares — pero el sistema de UI mantiene siempre la paleta PSE.
+   */
+
+  /* ============================================================
+     Densidad (comfy / compact) — afecta row-height, padding, gap
+     ============================================================ */
+  [data-density="comfy"] {
+    --row-h: 44px;
+    --kpi-pad: 20px;
+    --panel-pad: 20px;
+    --gap: 20px;
+  }
+  [data-density="compact"] {
+    --row-h: 32px;
+    --kpi-pad: 14px;
+    --panel-pad: 14px;
+    --gap: 12px;
+    --text-base: 12.5px;
+    --text-md: 13px;
+  }
+
   * {
     @apply border-border;
   }
   body {
     @apply bg-background text-foreground antialiased;
+    font-family: var(--font-sans-stack);
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ============================================================
+   Utilidades v2 (mono tabular, label uppercase, etc.)
+   ============================================================ */
+@layer utilities {
+  .font-mono-tnum {
+    font-family: var(--font-mono-stack);
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  .tnum {
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  .lbl-mini {
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+}
+
+/* ============================================================
+   Estilos para impresión / generación de PDF (Ctrl+P o botón Imprimir)
+   ============================================================ */
+@media print {
+  aside,
+  nav,
+  .print\:hidden,
+  [data-no-print="true"] {
+    display: none !important;
+  }
+  body,
+  html {
+    background: white !important;
+    color: black !important;
+  }
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+  .rounded-lg,
+  .rounded-md {
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  table {
+    page-break-inside: auto !important;
+  }
+  thead {
+    display: table-header-group !important;
+  }
+  tr {
+    page-break-inside: avoid !important;
+  }
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+  h1, h2, h3 {
+    page-break-after: avoid !important;
   }
 }

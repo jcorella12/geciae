@@ -1,19 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, JetBrains_Mono } from "next/font/google";
+import { GeistSans } from "geist/font/sans";
+import { GeistMono } from "geist/font/mono";
+import { cookies } from "next/headers";
 import "./globals.css";
+import { SWRegister } from "@/components/shared/sw-register";
 import { cn } from "@/lib/utils";
 
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  weight: ["400", "500", "600", "700"],
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  variable: "--font-jetbrains-mono",
-  weight: ["400", "500"],
-});
+const THEME_COOKIE = "pse_theme";
 
 export const metadata: Metadata = {
   title: {
@@ -35,16 +28,28 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Tema desde cookie — aplicado en SSR para evitar flash en oscuro
+  const themeCookie = cookies().get(THEME_COOKIE)?.value;
+  const isDark = themeCookie === "dark";
+
   return (
-    <html lang="es-MX" suppressHydrationWarning>
-      <body
-        className={cn(
-          inter.variable,
-          jetbrainsMono.variable,
-          "min-h-screen bg-background font-sans text-foreground antialiased",
-        )}
-      >
+    <html
+      lang="es-MX"
+      suppressHydrationWarning
+      data-density="comfy"
+      data-theme={isDark ? "dark" : undefined}
+      className={cn(
+        GeistSans.variable,
+        GeistMono.variable,
+        isDark && "dark",
+      )}
+      style={{
+        fontFeatureSettings: "'rlig' 1, 'calt' 1",
+      }}
+    >
+      <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         {children}
+        <SWRegister />
       </body>
     </html>
   );

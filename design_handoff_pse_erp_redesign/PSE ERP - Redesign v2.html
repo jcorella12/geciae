@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=1480"/>
+<title>PSE ERP — Rediseño UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="v2/tokens-v2.css"/>
+<link rel="stylesheet" href="v2/components-v2.css"/>
+<style>
+  body { background: #f5f6f8; margin: 0; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="icons.jsx"></script>
+<script type="text/babel" src="shared.jsx"></script>
+<script type="text/babel" src="v2/tweaks-panel.jsx"></script>
+<script type="text/babel" src="v2/charts-v2.jsx"></script>
+<script type="text/babel" src="v2/shell-v2.jsx"></script>
+<script type="text/babel" src="v2/dashboard-ejecutivo.jsx"></script>
+<script type="text/babel" src="v2/dashboard-ejecutivo-compact.jsx"></script>
+<script type="text/babel" src="v2/mi-dia.jsx"></script>
+<script type="text/babel" src="v2/proyectos.jsx"></script>
+<script type="text/babel" src="v2/finanzas-inventario.jsx"></script>
+
+<script type="text/babel">
+const { DesignCanvas, DCSection, DCArtboard, TweaksPanel, useTweaks, TweakSection, TweakRadio, TweakSelect } = window;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "empresa": "pse",
+  "density": "comfy"
+}/*EDITMODE-END*/;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  React.useEffect(() => {
+    document.querySelectorAll('.app-v2').forEach(el => {
+      el.setAttribute('data-empresa', tweaks.empresa);
+      el.setAttribute('data-density', tweaks.density);
+    });
+  }, [tweaks.empresa, tweaks.density]);
+
+  const Brief = () => (
+    <div style={{ padding: 40, fontSize: 13.5, lineHeight: 1.65, color: 'var(--ink-2)', fontFamily: 'Geist, system-ui, sans-serif', background: 'white', height: '100%', overflow: 'hidden' }}>
+      <div style={{ fontFamily: 'Geist Mono, monospace', fontSize: 11, letterSpacing: '0.2em', color: 'var(--pse-orange-deep, #C66E1A)', marginBottom: 8, textTransform: 'uppercase' }}>
+        PSE Group · ERP · v2 design
+      </div>
+      <h1 style={{ fontSize: 30, letterSpacing: '-0.025em', margin: '0 0 14px', fontWeight: 600, color: 'var(--ink-1)' }}>
+        Rediseño completo del ERP con foco en visión ejecutiva
+      </h1>
+      <p style={{ marginBottom: 20 }}>
+        Mantiene la paleta PSE (navy <code>#1E3A5F</code> + naranja <code>#F18F2C</code>) recalibrada en oklch,
+        migra a <strong>Geist Sans/Mono</strong>, densidad media. La navegación se reorganiza por
+        <strong> "espacios"</strong> (Operación · Equipo · Control) con switcher de empresa permanente
+        en el sidebar. Pensado para multiempresa: PSE / CIAE / IED / Limson.
+      </p>
+
+      <h3 style={{ fontSize: 14, marginTop: 20, marginBottom: 10, color: 'var(--ink-1)' }}>Decisiones de diseño</h3>
+      <ul style={{ paddingLeft: 18, margin: 0 }}>
+        <li><strong>Sidebar navy oscuro</strong> — diferencia ERP corporativo. Naranja como acento de acción.</li>
+        <li><strong>Empresa activa siempre visible</strong> con dot del color de marca de cada empresa.</li>
+        <li><strong>Dashboard ejecutivo</strong> — KPIs financieros arriba, alertas a la derecha, proyectos como tabla escaneable.</li>
+        <li><strong>DualBar (avance vs plan)</strong> — patrón visual consistente para curva-S en todos los módulos.</li>
+        <li><strong>Mi Día empleado</strong> — agenda + pendientes + accesos rápidos a la izq; nómina/vacaciones a la der.</li>
+        <li><strong>Tablas con números mono</strong> — <code>tabular-nums</code> + Geist Mono para alineación perfecta.</li>
+      </ul>
+
+      <h3 style={{ fontSize: 14, marginTop: 24, marginBottom: 10, color: 'var(--ink-1)' }}>Cambios concretos al código</h3>
+      <div style={{ background: 'var(--bg-2, #f5f6f8)', border: '1px solid var(--border, #e3e6eb)', borderRadius: 8, padding: 14, fontSize: 12.5 }}>
+        <div style={{ marginBottom: 8 }}><strong>1. Tipografía</strong> — <code>app/layout.tsx</code>: cambiar <code>Inter</code> por <code>Geist</code> (next/font).</div>
+        <div style={{ marginBottom: 8 }}><strong>2. Tokens</strong> — <code>app/globals.css</code>: migrar HSL→oklch. Añadir <code>[data-empresa="..."]</code> con <code>--brand</code> y <code>--brand-soft</code>.</div>
+        <div style={{ marginBottom: 8 }}><strong>3. Sidebar</strong> — <code>components/shared/app-sidebar.tsx</code>: navy oscuro, switcher de empresa arriba con dot, 4 grupos (Principal/Operación/Equipo/Control), barra naranja activa.</div>
+        <div style={{ marginBottom: 8 }}><strong>4. Topbar</strong> — breadcrumbs textuales, search 320px <code>⌘K</code>, "Crear" primario a la derecha.</div>
+        <div style={{ marginBottom: 8 }}><strong>5. Dashboard</strong> — nuevo <code>app/(app)/page.tsx</code>: KPI feature card + 4 KPIs + LineChart cashflow + tabla proyectos + alertas.</div>
+        <div style={{ marginBottom: 8 }}><strong>6. Mi Día</strong> — <code>app/(app)/mi-dia/page.tsx</code>: agenda + pendientes + accesos + proyectos + nómina + vacaciones.</div>
+        <div style={{ marginBottom: 8 }}><strong>7. UI nuevos</strong> — <code>components/ui/</code>: <code>kpi-card</code>, <code>dual-bar</code>, <code>status-dot</code>, <code>stat</code>, <code>alert-item</code>.</div>
+        <div><strong>8. Tablas</strong> — densidad media (12×16), headers uppercase 11px, números <code>tabular-nums</code> + mono.</div>
+      </div>
+
+      <h3 style={{ fontSize: 14, marginTop: 24, marginBottom: 10, color: 'var(--ink-1)' }}>Sistema multiempresa</h3>
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', fontSize: 12 }}>
+        {[
+          ['PSE Energía', '#1E3A5F'],
+          ['CIAE Construcción', '#3B7A57'],
+          ['IED Inmobiliaria', '#B58A3A'],
+          ['Limson', '#7CB342'],
+        ].map(([n, c]) => (
+          <div key={n} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 12px', border: '1px solid var(--border, #e3e6eb)', borderRadius: 6, background: 'white' }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: c }}/>
+            {n}
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: 12, color: 'var(--ink-3, #76808f)', marginTop: 12 }}>
+        Usa los Tweaks (esquina inferior derecha) para cambiar empresa activa y densidad globalmente.
+      </p>
+    </div>
+  );
+
+  const safe = (Comp, label) => Comp ? <Comp/> : <div style={{ padding: 40, fontFamily: 'Geist Mono, monospace', fontSize: 12, color: '#999' }}>[{label} · pendiente]</div>;
+
+  return (
+    <>
+      <DesignCanvas
+        title="PSE ERP — Rediseño UI v2"
+        subtitle="Visión 360° de la empresa · Geist + paleta PSE refinada · 2 variaciones por pantalla"
+      >
+        <DCSection id="brief" title="Brief y sistema visual">
+          <DCArtboard id="readme" label="Resumen del rediseño y cambios al código" width={960} height={1100}>
+            <Brief/>
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="dashboard" title="Dashboard ejecutivo" subtitle="Visión consolidada · finanzas + proyectos + inventario + personas">
+          <DCArtboard id="exec-comfy" label="A · Espacioso (densidad media — recomendado)" width={1480} height={1840}>
+            {safe(window.DashboardEjecutivoV2, 'Dashboard ejecutivo cómodo')}
+          </DCArtboard>
+          <DCArtboard id="exec-compact" label="B · Compacto (power user, todo arriba del fold)" width={1480} height={1180}>
+            {safe(window.DashboardEjecutivoCompactoV2, 'Dashboard ejecutivo compacto')}
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="midia" title="Mi día — vista del empleado" subtitle="Para PMs, residentes, supervisores, oficina">
+          <DCArtboard id="midia-pm" label="Mi Día · Project Manager" width={1480} height={1320}>
+            {safe(window.MiDiaV2, 'Mi Día')}
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="proyectos" title="Proyectos" subtitle="Lista + detalle de obra">
+          <DCArtboard id="proy-lista" label="Lista de proyectos · cartera ordenada por riesgo" width={1480} height={1100}>
+            {safe(window.ProyectosListaV2, 'Lista proyectos')}
+          </DCArtboard>
+          <DCArtboard id="proy-detalle" label="Detalle proyecto · Torre Polanco" width={1480} height={1500}>
+            {safe(window.ProyectoDetalleV2, 'Detalle proyecto')}
+          </DCArtboard>
+        </DCSection>
+
+        <DCSection id="finanzas" title="Finanzas + Inventario" subtitle="Cashflow, CxC/CxP, almacén">
+          <DCArtboard id="finanzas" label="Finanzas · resumen consolidado" width={1480} height={1320}>
+            {safe(window.FinanzasV2, 'Finanzas')}
+          </DCArtboard>
+          <DCArtboard id="inventario" label="Inventario · 3 almacenes con alertas de stock" width={1480} height={1000}>
+            {safe(window.InventarioV2, 'Inventario')}
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Empresa activa">
+          <TweakSelect
+            label="Marca"
+            value={tweaks.empresa}
+            onChange={v => setTweak('empresa', v)}
+            options={[
+              { value: 'pse',    label: 'PSE Energía (navy)' },
+              { value: 'ciae',   label: 'CIAE Construcción (verde)' },
+              { value: 'ied',    label: 'IED Inmobiliaria (dorado)' },
+              { value: 'limson', label: 'Limson (lima)' },
+            ]}
+          />
+        </TweakSection>
+        <TweakSection title="Densidad">
+          <TweakRadio
+            label="Espaciado"
+            value={tweaks.density}
+            onChange={v => setTweak('density', v)}
+            options={[
+              { value: 'comfy',   label: 'Cómoda' },
+              { value: 'compact', label: 'Compacta' },
+            ]}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

@@ -1,54 +1,174 @@
 import { LogOut } from "lucide-react";
 import Link from "next/link";
 
-import { EmpresaSwitcher } from "@/components/shared/empresa-switcher";
-import { Button } from "@/components/ui/button";
-import type { EmpresaResumen } from "@/lib/empresa-activa";
+import { DensityToggle } from "@/components/shared/density-toggle";
+import { GlobalSearch } from "@/components/shared/global-search";
+import { NotificationBell } from "@/components/shared/notification-bell";
+import { ThemeToggle } from "@/components/shared/theme-toggle";
+import {
+  TopbarCreateButton,
+  type CreateOption,
+} from "@/components/shared/topbar-create-button";
+import { TopbarBreadcrumbs } from "@/components/shared/topbar-breadcrumbs";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  empresasDondeCreaOC,
+  empresasDondeGestionaEmpleados,
+  empresasDondeGestionaProyectos,
+  esCEO,
+  obtenerVinculos,
+  puedeGestionarClientes,
+  puedeGestionarProveedores,
+  tieneAtributo,
+} from "@/lib/auth/permisos";
 
 type Props = {
   email: string;
-  empresas: EmpresaResumen[];
-  activaId: string | null;
-  puedeConsolidado: boolean;
+  initials: string;
 };
 
-export function AppTopbar({
-  email,
-  empresas,
-  activaId,
-  puedeConsolidado,
-}: Props) {
+export async function AppTopbar({ email, initials }: Props) {
+  const v = await obtenerVinculos();
+
+  const options: CreateOption[] = [];
+
+  if (empresasDondeCreaOC(v).length > 0) {
+    options.push({
+      href: "/finanzas/oc/nueva",
+      label: "Orden de compra",
+      description: "Capturar OC con conceptos",
+      icon: "oc",
+      group: "operacion",
+    });
+  }
+
+  options.push({
+    href: "/finanzas/cfdi/nuevo",
+    label: "Registrar CFDI",
+    description: "Subir XML/PDF timbrado",
+    icon: "cfdi",
+    group: "operacion",
+  });
+
+  if (
+    esCEO(v) ||
+    tieneAtributo(v, "tesorero_corporativo") ||
+    v.some((vi) => ["director", "operativo"].includes(vi.rol))
+  ) {
+    options.push({
+      href: "/finanzas/ot/nueva",
+      label: "OT inter-co",
+      description: "Servicio entre empresas del grupo",
+      icon: "ot",
+      group: "operacion",
+    });
+  }
+
+  if (empresasDondeGestionaProyectos(v).length > 0) {
+    options.push({
+      href: "/proyectos/nuevo",
+      label: "Proyecto",
+      description: "Nuevo proyecto cliente",
+      icon: "proyecto",
+      group: "operacion",
+    });
+  }
+
+  if (puedeGestionarClientes(v)) {
+    options.push({
+      href: "/clientes/nuevo",
+      label: "Cliente",
+      icon: "cliente",
+      group: "comercial",
+    });
+  }
+
+  if (puedeGestionarProveedores(v)) {
+    options.push({
+      href: "/finanzas/proveedores/nuevo",
+      label: "Proveedor",
+      icon: "proveedor",
+      group: "comercial",
+    });
+  }
+
+  if (empresasDondeGestionaEmpleados(v).length > 0) {
+    options.push({
+      href: "/personas/nuevo",
+      label: "Empleado",
+      icon: "empleado",
+      group: "personas",
+    });
+  }
+
+  if (esCEO(v) || tieneAtributo(v, "tesorero_corporativo")) {
+    options.push({
+      href: "/finanzas/tesoreria/prestamos/nuevo",
+      label: "Préstamo inter-co",
+      description: "Solicitar disposición sobre línea",
+      icon: "prestamo",
+      group: "tesoreria",
+    });
+  }
+
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-border bg-background px-4">
-      <div className="flex items-center gap-3">
-        <EmpresaSwitcher
-          empresas={empresas}
-          activaId={activaId}
-          puedeConsolidado={puedeConsolidado}
-        />
+    <header
+      className="flex shrink-0 items-center gap-3 border-b border-border bg-surface px-6"
+      style={{ height: "var(--topbar-h)" }}
+    >
+      <TopbarBreadcrumbs />
+
+      <div className="ml-auto">
+        <GlobalSearch />
       </div>
 
-      <div className="flex items-center gap-3">
-        <Link
-          href="/perfil"
-          className="hidden text-sm text-muted-foreground hover:text-foreground sm:inline"
-          title="Mi perfil"
+      <DensityToggle variant="icon" />
+
+      <ThemeToggle compact />
+
+      <NotificationBell />
+
+      <TopbarCreateButton options={options} />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand text-[11.5px] font-semibold text-white transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Menú de usuario"
         >
-          {email}
-        </Link>
-        <form action="/auth/signout" method="post">
-          <Button
-            type="submit"
-            variant="ghost"
-            size="sm"
-            className="gap-2"
-            title="Cerrar sesión"
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="hidden sm:inline">Cerrar sesión</span>
-          </Button>
-        </form>
-      </div>
+          {initials}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="min-w-[14rem]">
+          <DropdownMenuLabel className="font-normal">
+            <p className="text-sm font-medium">{email}</p>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <Link href="/perfil">Mi perfil</Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/configuracion">Configuración</Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem asChild>
+            <form action="/auth/signout" method="post" className="w-full">
+              <button
+                type="submit"
+                className="flex w-full items-center gap-2 text-left"
+              >
+                <LogOut className="h-4 w-4" />
+                Cerrar sesión
+              </button>
+            </form>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }

@@ -13,6 +13,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       accesos_externos: {
@@ -164,6 +189,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activos_asignados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activos_asignados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -375,46 +414,124 @@ export type Database = {
         Row: {
           activa: boolean | null
           alias: string | null
+          asesor: string | null
           banco: string
           clabe: string | null
+          contrato: string | null
           created_at: string | null
+          cuenta_garantia_id: string | null
           empresa_id: string
           fecha_actualizacion_saldo: string | null
           id: string
+          inversion_emisora: string | null
+          inversion_es_garantia: boolean | null
+          inversion_precio_titulo: number | null
+          inversion_rendimiento_mensual_pct: number | null
+          inversion_titulos: number | null
+          linea_credito_dispuesto: number | null
+          linea_credito_fecha_apertura: string | null
+          linea_credito_fecha_vencimiento: string | null
+          linea_credito_monto_aprobado: number | null
+          linea_credito_pagos_pendientes: number | null
+          linea_credito_proximo_pago_fecha: string | null
+          linea_credito_proximo_pago_monto: number | null
+          linea_credito_tasa_efectiva: number | null
+          linea_credito_tasa_referencia: string | null
+          linea_credito_tasa_spread: number | null
           moneda: string | null
           numero_cuenta: string
           saldo_actual: number | null
+          spid: string | null
           tipo: string | null
         }
         Insert: {
           activa?: boolean | null
           alias?: string | null
+          asesor?: string | null
           banco: string
           clabe?: string | null
+          contrato?: string | null
           created_at?: string | null
+          cuenta_garantia_id?: string | null
           empresa_id: string
           fecha_actualizacion_saldo?: string | null
           id?: string
+          inversion_emisora?: string | null
+          inversion_es_garantia?: boolean | null
+          inversion_precio_titulo?: number | null
+          inversion_rendimiento_mensual_pct?: number | null
+          inversion_titulos?: number | null
+          linea_credito_dispuesto?: number | null
+          linea_credito_fecha_apertura?: string | null
+          linea_credito_fecha_vencimiento?: string | null
+          linea_credito_monto_aprobado?: number | null
+          linea_credito_pagos_pendientes?: number | null
+          linea_credito_proximo_pago_fecha?: string | null
+          linea_credito_proximo_pago_monto?: number | null
+          linea_credito_tasa_efectiva?: number | null
+          linea_credito_tasa_referencia?: string | null
+          linea_credito_tasa_spread?: number | null
           moneda?: string | null
           numero_cuenta: string
           saldo_actual?: number | null
+          spid?: string | null
           tipo?: string | null
         }
         Update: {
           activa?: boolean | null
           alias?: string | null
+          asesor?: string | null
           banco?: string
           clabe?: string | null
+          contrato?: string | null
           created_at?: string | null
+          cuenta_garantia_id?: string | null
           empresa_id?: string
           fecha_actualizacion_saldo?: string | null
           id?: string
+          inversion_emisora?: string | null
+          inversion_es_garantia?: boolean | null
+          inversion_precio_titulo?: number | null
+          inversion_rendimiento_mensual_pct?: number | null
+          inversion_titulos?: number | null
+          linea_credito_dispuesto?: number | null
+          linea_credito_fecha_apertura?: string | null
+          linea_credito_fecha_vencimiento?: string | null
+          linea_credito_monto_aprobado?: number | null
+          linea_credito_pagos_pendientes?: number | null
+          linea_credito_proximo_pago_fecha?: string | null
+          linea_credito_proximo_pago_monto?: number | null
+          linea_credito_tasa_efectiva?: number | null
+          linea_credito_tasa_referencia?: string | null
+          linea_credito_tasa_spread?: number | null
           moneda?: string | null
           numero_cuenta?: string
           saldo_actual?: number | null
+          spid?: string | null
           tipo?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "bancos_cuentas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "v_bancos_cuentas_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "v_conciliacion_mensual"
+            referencedColumns: ["cuenta_id"]
+          },
           {
             foreignKeyName: "bancos_cuentas_empresa_id_fkey"
             columns: ["empresa_id"]
@@ -428,14 +545,18 @@ export type Database = {
         Row: {
           cfdi_relacionado_id: string | null
           concepto: string | null
+          conciliacion_notas: string | null
           conciliado: boolean | null
+          conciliado_por: string | null
           created_at: string | null
           cuenta_id: string
           fecha: string
           fecha_aplicacion: string | null
+          fecha_conciliacion: string | null
           id: string
           monto: number
           observaciones: string | null
+          oc_relacionada_id: string | null
           origen: string | null
           prestamo_relacionado_id: string | null
           referencia: string | null
@@ -445,14 +566,18 @@ export type Database = {
         Insert: {
           cfdi_relacionado_id?: string | null
           concepto?: string | null
+          conciliacion_notas?: string | null
           conciliado?: boolean | null
+          conciliado_por?: string | null
           created_at?: string | null
           cuenta_id: string
           fecha: string
           fecha_aplicacion?: string | null
+          fecha_conciliacion?: string | null
           id?: string
           monto: number
           observaciones?: string | null
+          oc_relacionada_id?: string | null
           origen?: string | null
           prestamo_relacionado_id?: string | null
           referencia?: string | null
@@ -462,14 +587,18 @@ export type Database = {
         Update: {
           cfdi_relacionado_id?: string | null
           concepto?: string | null
+          conciliacion_notas?: string | null
           conciliado?: boolean | null
+          conciliado_por?: string | null
           created_at?: string | null
           cuenta_id?: string
           fecha?: string
           fecha_aplicacion?: string | null
+          fecha_conciliacion?: string | null
           id?: string
           monto?: number
           observaciones?: string | null
+          oc_relacionada_id?: string | null
           origen?: string | null
           prestamo_relacionado_id?: string | null
           referencia?: string | null
@@ -489,6 +618,27 @@ export type Database = {
             columns: ["cuenta_id"]
             isOneToOne: false
             referencedRelation: "bancos_cuentas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_movimientos_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "v_bancos_cuentas_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_movimientos_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "v_conciliacion_mensual"
+            referencedColumns: ["cuenta_id"]
+          },
+          {
+            foreignKeyName: "bancos_movimientos_oc_relacionada_id_fkey"
+            columns: ["oc_relacionada_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_compra"
             referencedColumns: ["id"]
           },
           {
@@ -566,6 +716,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bitacoras_obra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       bolsa_talento: {
@@ -627,6 +784,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bolsa_talento_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bolsa_talento_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -738,22 +909,34 @@ export type Database = {
           categoria: string | null
           clave_sat: string | null
           codigo: string
+          costo_maximo: number | null
+          costo_minimo: number | null
           costo_promedio: number | null
+          costo_ultimo: number | null
           created_at: string | null
           descripcion: string | null
+          empresa_id: string | null
+          especificaciones: Json | null
+          fecha_actualizacion_valor: string | null
+          fuente_valor: string | null
           garantia_meses: number | null
           id: string
+          imagen_url: string | null
           marca: string | null
           modelo: string | null
           nombre: string
+          observaciones: string | null
           precio_lista: number | null
+          proveedor_preferido_id: string | null
           requiere_serie: boolean | null
           stock_maximo: number | null
           stock_minimo: number | null
+          subcategoria: string | null
           unidad_capacidad: string | null
           unidad_medida: string | null
           unidad_sat: string | null
           url_datasheet: string | null
+          valor_mercado: number | null
         }
         Insert: {
           activo?: boolean | null
@@ -761,22 +944,34 @@ export type Database = {
           categoria?: string | null
           clave_sat?: string | null
           codigo: string
+          costo_maximo?: number | null
+          costo_minimo?: number | null
           costo_promedio?: number | null
+          costo_ultimo?: number | null
           created_at?: string | null
           descripcion?: string | null
+          empresa_id?: string | null
+          especificaciones?: Json | null
+          fecha_actualizacion_valor?: string | null
+          fuente_valor?: string | null
           garantia_meses?: number | null
           id?: string
+          imagen_url?: string | null
           marca?: string | null
           modelo?: string | null
           nombre: string
+          observaciones?: string | null
           precio_lista?: number | null
+          proveedor_preferido_id?: string | null
           requiere_serie?: boolean | null
           stock_maximo?: number | null
           stock_minimo?: number | null
+          subcategoria?: string | null
           unidad_capacidad?: string | null
           unidad_medida?: string | null
           unidad_sat?: string | null
           url_datasheet?: string | null
+          valor_mercado?: number | null
         }
         Update: {
           activo?: boolean | null
@@ -784,24 +979,51 @@ export type Database = {
           categoria?: string | null
           clave_sat?: string | null
           codigo?: string
+          costo_maximo?: number | null
+          costo_minimo?: number | null
           costo_promedio?: number | null
+          costo_ultimo?: number | null
           created_at?: string | null
           descripcion?: string | null
+          empresa_id?: string | null
+          especificaciones?: Json | null
+          fecha_actualizacion_valor?: string | null
+          fuente_valor?: string | null
           garantia_meses?: number | null
           id?: string
+          imagen_url?: string | null
           marca?: string | null
           modelo?: string | null
           nombre?: string
+          observaciones?: string | null
           precio_lista?: number | null
+          proveedor_preferido_id?: string | null
           requiere_serie?: boolean | null
           stock_maximo?: number | null
           stock_minimo?: number | null
+          subcategoria?: string | null
           unidad_capacidad?: string | null
           unidad_medida?: string | null
           unidad_sat?: string | null
           url_datasheet?: string | null
+          valor_mercado?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalogo_productos_proveedor_preferido_id_fkey"
+            columns: ["proveedor_preferido_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       catalogo_servicios: {
         Row: {
@@ -1101,6 +1323,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cfdi_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -1567,6 +1796,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "contratos_cliente_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "v_cotizaciones_lista"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "contratos_cliente_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -1579,6 +1815,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_cliente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -1626,6 +1869,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_laborales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_laborales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -1795,6 +2052,13 @@ export type Database = {
             referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cotizaciones_conceptos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "v_cotizaciones_lista"
+            referencedColumns: ["id"]
+          },
         ]
       }
       dossier_documentos: {
@@ -1847,6 +2111,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_documentos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -2089,6 +2360,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ema_dictamenes_uvie_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       empleados: {
@@ -2107,6 +2385,7 @@ export type Database = {
           fecha_baja: string | null
           fecha_ingreso: string
           fecha_nacimiento: string | null
+          folio_repse: string | null
           genero: string | null
           id: string
           jefe_directo_id: string | null
@@ -2122,6 +2401,7 @@ export type Database = {
           telefono: string | null
           updated_at: string | null
           usuario_id: string | null
+          vigencia_repse_hasta: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -2139,6 +2419,7 @@ export type Database = {
           fecha_baja?: string | null
           fecha_ingreso: string
           fecha_nacimiento?: string | null
+          folio_repse?: string | null
           genero?: string | null
           id?: string
           jefe_directo_id?: string | null
@@ -2154,6 +2435,7 @@ export type Database = {
           telefono?: string | null
           updated_at?: string | null
           usuario_id?: string | null
+          vigencia_repse_hasta?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -2171,6 +2453,7 @@ export type Database = {
           fecha_baja?: string | null
           fecha_ingreso?: string
           fecha_nacimiento?: string | null
+          folio_repse?: string | null
           genero?: string | null
           id?: string
           jefe_directo_id?: string | null
@@ -2186,6 +2469,7 @@ export type Database = {
           telefono?: string | null
           updated_at?: string | null
           usuario_id?: string | null
+          vigencia_repse_hasta?: string | null
           whatsapp?: string | null
         }
         Relationships: [
@@ -2202,6 +2486,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_jefe_directo_id_fkey"
+            columns: ["jefe_directo_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_jefe_directo_id_fkey"
+            columns: ["jefe_directo_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -2268,6 +2566,81 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_capacitaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_capacitaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+        ]
+      }
+      empleados_documentos: {
+        Row: {
+          created_at: string | null
+          empleado_id: string
+          fecha_emision: string | null
+          fecha_vencimiento: string | null
+          id: string
+          nombre_archivo: string
+          observaciones: string | null
+          subido_por: string | null
+          tipo: string
+          url_storage: string
+        }
+        Insert: {
+          created_at?: string | null
+          empleado_id: string
+          fecha_emision?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          nombre_archivo: string
+          observaciones?: string | null
+          subido_por?: string | null
+          tipo: string
+          url_storage: string
+        }
+        Update: {
+          created_at?: string | null
+          empleado_id?: string
+          fecha_emision?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          nombre_archivo?: string
+          observaciones?: string | null
+          subido_por?: string | null
+          tipo?: string
+          url_storage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_documentos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_documentos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_documentos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -2390,10 +2763,180 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "encuestas_satisfaccion_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
             foreignKeyName: "encuestas_satisfaccion_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
             referencedRelation: "tickets_soporte"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estados_cuenta_bancarios: {
+        Row: {
+          created_at: string | null
+          cuenta_id: string
+          empresa_id: string
+          formato: string
+          id: string
+          movimientos_cargados: number | null
+          num_abonos: number | null
+          num_cargos: number | null
+          observaciones: string | null
+          periodo_fin: string
+          periodo_inicio: string
+          saldo_final: number
+          saldo_inicial: number | null
+          subido_por: string | null
+          total_abonos: number | null
+          total_cargos: number | null
+          url_archivo: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          cuenta_id: string
+          empresa_id: string
+          formato: string
+          id?: string
+          movimientos_cargados?: number | null
+          num_abonos?: number | null
+          num_cargos?: number | null
+          observaciones?: string | null
+          periodo_fin: string
+          periodo_inicio: string
+          saldo_final: number
+          saldo_inicial?: number | null
+          subido_por?: string | null
+          total_abonos?: number | null
+          total_cargos?: number | null
+          url_archivo?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          cuenta_id?: string
+          empresa_id?: string
+          formato?: string
+          id?: string
+          movimientos_cargados?: number | null
+          num_abonos?: number | null
+          num_cargos?: number | null
+          observaciones?: string | null
+          periodo_fin?: string
+          periodo_inicio?: string
+          saldo_final?: number
+          saldo_inicial?: number | null
+          subido_por?: string | null
+          total_abonos?: number | null
+          total_cargos?: number | null
+          url_archivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estados_cuenta_bancarios_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "bancos_cuentas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estados_cuenta_bancarios_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "v_bancos_cuentas_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "estados_cuenta_bancarios_cuenta_id_fkey"
+            columns: ["cuenta_id"]
+            isOneToOne: false
+            referencedRelation: "v_conciliacion_mensual"
+            referencedColumns: ["cuenta_id"]
+          },
+          {
+            foreignKeyName: "estados_cuenta_bancarios_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estados_financieros_mensuales: {
+        Row: {
+          anio: number
+          created_at: string | null
+          documentos: Json
+          egresos_totales: number | null
+          empresa_id: string
+          firmados: boolean | null
+          flujo_efectivo: number | null
+          id: string
+          ingresos_totales: number | null
+          iva_acreditable: number | null
+          iva_trasladado: number | null
+          mes: number
+          num_documentos: number
+          observaciones: string | null
+          paquete_completo: boolean | null
+          subido_por: string | null
+          total_size_bytes: number | null
+          updated_at: string | null
+          utilidad_neta: number | null
+        }
+        Insert: {
+          anio: number
+          created_at?: string | null
+          documentos?: Json
+          egresos_totales?: number | null
+          empresa_id: string
+          firmados?: boolean | null
+          flujo_efectivo?: number | null
+          id?: string
+          ingresos_totales?: number | null
+          iva_acreditable?: number | null
+          iva_trasladado?: number | null
+          mes: number
+          num_documentos?: number
+          observaciones?: string | null
+          paquete_completo?: boolean | null
+          subido_por?: string | null
+          total_size_bytes?: number | null
+          updated_at?: string | null
+          utilidad_neta?: number | null
+        }
+        Update: {
+          anio?: number
+          created_at?: string | null
+          documentos?: Json
+          egresos_totales?: number | null
+          empresa_id?: string
+          firmados?: boolean | null
+          flujo_efectivo?: number | null
+          id?: string
+          ingresos_totales?: number | null
+          iva_acreditable?: number | null
+          iva_trasladado?: number | null
+          mes?: number
+          num_documentos?: number
+          observaciones?: string | null
+          paquete_completo?: boolean | null
+          subido_por?: string | null
+          total_size_bytes?: number | null
+          updated_at?: string | null
+          utilidad_neta?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estados_financieros_mensuales_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -2451,6 +2994,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluaciones_desempeno_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evaluaciones_desempeno_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -2510,6 +3067,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finiquitos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finiquitos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
           },
         ]
       }
@@ -2572,6 +3143,107 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotos_obra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
+      gastos_recurrentes: {
+        Row: {
+          activo: boolean | null
+          capturado_por: string | null
+          categoria: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          cfdi_relacionado_id: string | null
+          contrato_url: string | null
+          created_at: string | null
+          descripcion: string
+          dia_pago: number | null
+          empresa_id: string
+          fecha_fin: string | null
+          fecha_inicio: string
+          frecuencia: Database["public"]["Enums"]["frecuencia_gasto"]
+          id: string
+          identificador: string | null
+          iva_incluido: boolean | null
+          moneda: string
+          monto: number
+          observaciones: string | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          capturado_por?: string | null
+          categoria: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          cfdi_relacionado_id?: string | null
+          contrato_url?: string | null
+          created_at?: string | null
+          descripcion: string
+          dia_pago?: number | null
+          empresa_id: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          frecuencia?: Database["public"]["Enums"]["frecuencia_gasto"]
+          id?: string
+          identificador?: string | null
+          iva_incluido?: boolean | null
+          moneda?: string
+          monto: number
+          observaciones?: string | null
+          proveedor_id?: string | null
+          proveedor_nombre?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          capturado_por?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          cfdi_relacionado_id?: string | null
+          contrato_url?: string | null
+          created_at?: string | null
+          descripcion?: string
+          dia_pago?: number | null
+          empresa_id?: string
+          fecha_fin?: string | null
+          fecha_inicio?: string
+          frecuencia?: Database["public"]["Enums"]["frecuencia_gasto"]
+          id?: string
+          identificador?: string | null
+          iva_incluido?: boolean | null
+          moneda?: string
+          monto?: number
+          observaciones?: string | null
+          proveedor_id?: string | null
+          proveedor_nombre?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gastos_recurrentes_cfdi_relacionado_id_fkey"
+            columns: ["cfdi_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
         ]
@@ -2847,6 +3519,13 @@ export type Database = {
             referencedRelation: "catalogo_productos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inventario_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
+          },
         ]
       }
       inventario_movimientos: {
@@ -2856,12 +3535,21 @@ export type Database = {
           autorizado_por: string | null
           cantidad: number
           capturado_por: string
+          capturado_por_nombre: string | null
+          cfdi_id: string | null
+          costo_unitario: number | null
           created_at: string | null
+          empresa_id: string | null
+          fecha: string | null
           id: string
+          monto_total: number | null
           motivo: string | null
+          movimiento_relacionado_id: string | null
+          numero_documento: string | null
           observaciones: string | null
           oc_id: string | null
           producto_id: string
+          proveedor_id: string | null
           proyecto_id: string | null
           serie_id: string | null
           tipo: string
@@ -2872,12 +3560,21 @@ export type Database = {
           autorizado_por?: string | null
           cantidad: number
           capturado_por: string
+          capturado_por_nombre?: string | null
+          cfdi_id?: string | null
+          costo_unitario?: number | null
           created_at?: string | null
+          empresa_id?: string | null
+          fecha?: string | null
           id?: string
+          monto_total?: number | null
           motivo?: string | null
+          movimiento_relacionado_id?: string | null
+          numero_documento?: string | null
           observaciones?: string | null
           oc_id?: string | null
           producto_id: string
+          proveedor_id?: string | null
           proyecto_id?: string | null
           serie_id?: string | null
           tipo: string
@@ -2888,12 +3585,21 @@ export type Database = {
           autorizado_por?: string | null
           cantidad?: number
           capturado_por?: string
+          capturado_por_nombre?: string | null
+          cfdi_id?: string | null
+          costo_unitario?: number | null
           created_at?: string | null
+          empresa_id?: string | null
+          fecha?: string | null
           id?: string
+          monto_total?: number | null
           motivo?: string | null
+          movimiento_relacionado_id?: string | null
+          numero_documento?: string | null
           observaciones?: string | null
           oc_id?: string | null
           producto_id?: string
+          proveedor_id?: string | null
           proyecto_id?: string | null
           serie_id?: string | null
           tipo?: string
@@ -2914,10 +3620,52 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventario_movimientos_cfdi_id_fkey"
+            columns: ["cfdi_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_movimiento_relacionado_id_fkey"
+            columns: ["movimiento_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "inventario_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_movimiento_relacionado_id_fkey"
+            columns: ["movimiento_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventario_movimientos_producto_id_fkey"
             columns: ["producto_id"]
             isOneToOne: false
             referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
           {
@@ -2926,6 +3674,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
           {
             foreignKeyName: "inventario_movimientos_serie_id_fkey"
@@ -3062,6 +3817,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mediciones_ejecuciones_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -3237,6 +3999,142 @@ export type Database = {
             columns: ["no_conformidad_id"]
             isOneToOne: false
             referencedRelation: "no_conformidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notificaciones: {
+        Row: {
+          created_at: string
+          empresa_id: string | null
+          entidad_id: string | null
+          entidad_tipo: string | null
+          fecha_lectura: string | null
+          id: string
+          leida: boolean
+          mensaje: string | null
+          severidad: string
+          tipo: string
+          titulo: string
+          url: string | null
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          empresa_id?: string | null
+          entidad_id?: string | null
+          entidad_tipo?: string | null
+          fecha_lectura?: string | null
+          id?: string
+          leida?: boolean
+          mensaje?: string | null
+          severidad?: string
+          tipo: string
+          titulo: string
+          url?: string | null
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          empresa_id?: string | null
+          entidad_id?: string | null
+          entidad_tipo?: string | null
+          fecha_lectura?: string | null
+          id?: string
+          leida?: boolean
+          mensaje?: string | null
+          severidad?: string
+          tipo?: string
+          titulo?: string
+          url?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificaciones_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      obligaciones_sat: {
+        Row: {
+          capturado_por: string | null
+          created_at: string | null
+          empresa_id: string
+          estado: Database["public"]["Enums"]["estado_obligacion"]
+          fecha_pago: string | null
+          fecha_presentacion: string | null
+          fecha_vencimiento: string
+          id: string
+          monto_calculado: number | null
+          monto_pagado: number | null
+          numero_operacion: string | null
+          observaciones: string | null
+          periodo_anio: number
+          periodo_label: string | null
+          periodo_mes: number | null
+          responsable_id: string | null
+          saldo_a_favor: number | null
+          tipo: Database["public"]["Enums"]["tipo_obligacion_sat"]
+          updated_at: string | null
+          url_acuse: string | null
+          url_comprobante: string | null
+        }
+        Insert: {
+          capturado_por?: string | null
+          created_at?: string | null
+          empresa_id: string
+          estado?: Database["public"]["Enums"]["estado_obligacion"]
+          fecha_pago?: string | null
+          fecha_presentacion?: string | null
+          fecha_vencimiento: string
+          id?: string
+          monto_calculado?: number | null
+          monto_pagado?: number | null
+          numero_operacion?: string | null
+          observaciones?: string | null
+          periodo_anio: number
+          periodo_label?: string | null
+          periodo_mes?: number | null
+          responsable_id?: string | null
+          saldo_a_favor?: number | null
+          tipo: Database["public"]["Enums"]["tipo_obligacion_sat"]
+          updated_at?: string | null
+          url_acuse?: string | null
+          url_comprobante?: string | null
+        }
+        Update: {
+          capturado_por?: string | null
+          created_at?: string | null
+          empresa_id?: string
+          estado?: Database["public"]["Enums"]["estado_obligacion"]
+          fecha_pago?: string | null
+          fecha_presentacion?: string | null
+          fecha_vencimiento?: string
+          id?: string
+          monto_calculado?: number | null
+          monto_pagado?: number | null
+          numero_operacion?: string | null
+          observaciones?: string | null
+          periodo_anio?: number
+          periodo_label?: string | null
+          periodo_mes?: number | null
+          responsable_id?: string | null
+          saldo_a_favor?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_obligacion_sat"]
+          updated_at?: string | null
+          url_acuse?: string | null
+          url_comprobante?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obligaciones_sat_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
             referencedColumns: ["id"]
           },
         ]
@@ -3426,6 +4324,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "ordenes_compra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       ordenes_compra_conceptos: {
@@ -3491,6 +4396,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "catalogo_productos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_compra_conceptos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
           },
         ]
       }
@@ -3606,6 +4518,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
           {
             foreignKeyName: "ordenes_trabajo_inter_co_servicio_id_fkey"
@@ -3974,6 +4893,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "presupuestos_proyecto_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       procedimientos: {
@@ -4164,11 +5090,25 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "productos_serie_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
+          },
+          {
             foreignKeyName: "productos_serie_proyecto_id_fkey"
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "productos_serie_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -4459,6 +5399,469 @@ export type Database = {
           },
         ]
       }
+      proyecto_bitacora: {
+        Row: {
+          adjuntos: Json | null
+          capturado_por: string | null
+          capturado_por_nombre: string | null
+          created_at: string | null
+          descripcion: string
+          es_critica: boolean | null
+          fecha: string
+          id: string
+          proyecto_id: string
+          tarea_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento_bitacora"]
+          titulo: string | null
+          visible_cliente: boolean | null
+        }
+        Insert: {
+          adjuntos?: Json | null
+          capturado_por?: string | null
+          capturado_por_nombre?: string | null
+          created_at?: string | null
+          descripcion: string
+          es_critica?: boolean | null
+          fecha?: string
+          id?: string
+          proyecto_id: string
+          tarea_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento_bitacora"]
+          titulo?: string | null
+          visible_cliente?: boolean | null
+        }
+        Update: {
+          adjuntos?: Json | null
+          capturado_por?: string | null
+          capturado_por_nombre?: string | null
+          created_at?: string | null
+          descripcion?: string
+          es_critica?: boolean | null
+          fecha?: string
+          id?: string
+          proyecto_id?: string
+          tarea_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento_bitacora"]
+          titulo?: string | null
+          visible_cliente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proyecto_documentos: {
+        Row: {
+          categoria: Database["public"]["Enums"]["categoria_documento_proyecto"]
+          created_at: string | null
+          descripcion: string | null
+          id: string
+          mime_type: string | null
+          nombre: string
+          proyecto_id: string
+          storage_path: string
+          subido_por: string | null
+          subido_por_nombre: string | null
+          tamano_bytes: number | null
+          tarea_id: string | null
+          version: number | null
+          visible_cliente: boolean | null
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["categoria_documento_proyecto"]
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre: string
+          proyecto_id: string
+          storage_path: string
+          subido_por?: string | null
+          subido_por_nombre?: string | null
+          tamano_bytes?: number | null
+          tarea_id?: string | null
+          version?: number | null
+          visible_cliente?: boolean | null
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["categoria_documento_proyecto"]
+          created_at?: string | null
+          descripcion?: string | null
+          id?: string
+          mime_type?: string | null
+          nombre?: string
+          proyecto_id?: string
+          storage_path?: string
+          subido_por?: string | null
+          subido_por_nombre?: string | null
+          tamano_bytes?: number | null
+          tarea_id?: string | null
+          version?: number | null
+          visible_cliente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_documentos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_documentos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_documentos_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_documentos_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proyecto_equipo: {
+        Row: {
+          agregado_por: string | null
+          created_at: string | null
+          fecha_alta: string | null
+          fecha_baja: string | null
+          id: string
+          observaciones: string | null
+          proyecto_id: string
+          rol: Database["public"]["Enums"]["rol_proyecto"]
+          usuario_id: string
+          usuario_nombre: string | null
+        }
+        Insert: {
+          agregado_por?: string | null
+          created_at?: string | null
+          fecha_alta?: string | null
+          fecha_baja?: string | null
+          id?: string
+          observaciones?: string | null
+          proyecto_id: string
+          rol?: Database["public"]["Enums"]["rol_proyecto"]
+          usuario_id: string
+          usuario_nombre?: string | null
+        }
+        Update: {
+          agregado_por?: string | null
+          created_at?: string | null
+          fecha_alta?: string | null
+          fecha_baja?: string | null
+          id?: string
+          observaciones?: string | null
+          proyecto_id?: string
+          rol?: Database["public"]["Enums"]["rol_proyecto"]
+          usuario_id?: string
+          usuario_nombre?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_equipo_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_equipo_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
+      proyecto_reportes: {
+        Row: {
+          accion_correctiva: string | null
+          adjuntos: Json | null
+          contenido: string | null
+          creado_por: string | null
+          creado_por_nombre: string | null
+          created_at: string | null
+          enviado_a: string[] | null
+          estado: Database["public"]["Enums"]["estado_reporte"]
+          fecha_compromiso: string | null
+          fecha_envio: string | null
+          fecha_evento: string | null
+          fecha_reporte: string
+          fecha_resolucion: string | null
+          id: string
+          impacto: string | null
+          numero: string
+          proyecto_id: string
+          responsable_nombre: string | null
+          responsable_seguimiento: string | null
+          resumen: string | null
+          severidad: Database["public"]["Enums"]["severidad_reporte"] | null
+          tarea_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_reporte_proyecto"]
+          titulo: string
+          ubicacion: string | null
+          updated_at: string | null
+          visible_cliente: boolean | null
+        }
+        Insert: {
+          accion_correctiva?: string | null
+          adjuntos?: Json | null
+          contenido?: string | null
+          creado_por?: string | null
+          creado_por_nombre?: string | null
+          created_at?: string | null
+          enviado_a?: string[] | null
+          estado?: Database["public"]["Enums"]["estado_reporte"]
+          fecha_compromiso?: string | null
+          fecha_envio?: string | null
+          fecha_evento?: string | null
+          fecha_reporte?: string
+          fecha_resolucion?: string | null
+          id?: string
+          impacto?: string | null
+          numero: string
+          proyecto_id: string
+          responsable_nombre?: string | null
+          responsable_seguimiento?: string | null
+          resumen?: string | null
+          severidad?: Database["public"]["Enums"]["severidad_reporte"] | null
+          tarea_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_reporte_proyecto"]
+          titulo: string
+          ubicacion?: string | null
+          updated_at?: string | null
+          visible_cliente?: boolean | null
+        }
+        Update: {
+          accion_correctiva?: string | null
+          adjuntos?: Json | null
+          contenido?: string | null
+          creado_por?: string | null
+          creado_por_nombre?: string | null
+          created_at?: string | null
+          enviado_a?: string[] | null
+          estado?: Database["public"]["Enums"]["estado_reporte"]
+          fecha_compromiso?: string | null
+          fecha_envio?: string | null
+          fecha_evento?: string | null
+          fecha_reporte?: string
+          fecha_resolucion?: string | null
+          id?: string
+          impacto?: string | null
+          numero?: string
+          proyecto_id?: string
+          responsable_nombre?: string | null
+          responsable_seguimiento?: string | null
+          resumen?: string | null
+          severidad?: Database["public"]["Enums"]["severidad_reporte"] | null
+          tarea_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_reporte_proyecto"]
+          titulo?: string
+          ubicacion?: string | null
+          updated_at?: string | null
+          visible_cliente?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proyecto_tareas: {
+        Row: {
+          asignado_a: string | null
+          capturado_por: string | null
+          cfdi_relacionado_id: string | null
+          costo_estimado: number | null
+          costo_real: number | null
+          created_at: string | null
+          depende_de: string[] | null
+          descripcion: string | null
+          duracion_dias: number | null
+          es_hito: boolean | null
+          estado: Database["public"]["Enums"]["estado_tarea_proyecto"]
+          fecha_fin_planeada: string | null
+          fecha_fin_real: string | null
+          fecha_inicio_planeada: string | null
+          fecha_inicio_real: string | null
+          horas_estimadas: number | null
+          horas_reales: number | null
+          id: string
+          observaciones: string | null
+          oc_relacionada_id: string | null
+          orden: number
+          parent_id: string | null
+          porcentaje_avance: number | null
+          prioridad: Database["public"]["Enums"]["prioridad_tarea"] | null
+          proyecto_id: string
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          asignado_a?: string | null
+          capturado_por?: string | null
+          cfdi_relacionado_id?: string | null
+          costo_estimado?: number | null
+          costo_real?: number | null
+          created_at?: string | null
+          depende_de?: string[] | null
+          descripcion?: string | null
+          duracion_dias?: number | null
+          es_hito?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_tarea_proyecto"]
+          fecha_fin_planeada?: string | null
+          fecha_fin_real?: string | null
+          fecha_inicio_planeada?: string | null
+          fecha_inicio_real?: string | null
+          horas_estimadas?: number | null
+          horas_reales?: number | null
+          id?: string
+          observaciones?: string | null
+          oc_relacionada_id?: string | null
+          orden?: number
+          parent_id?: string | null
+          porcentaje_avance?: number | null
+          prioridad?: Database["public"]["Enums"]["prioridad_tarea"] | null
+          proyecto_id: string
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          asignado_a?: string | null
+          capturado_por?: string | null
+          cfdi_relacionado_id?: string | null
+          costo_estimado?: number | null
+          costo_real?: number | null
+          created_at?: string | null
+          depende_de?: string[] | null
+          descripcion?: string | null
+          duracion_dias?: number | null
+          es_hito?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_tarea_proyecto"]
+          fecha_fin_planeada?: string | null
+          fecha_fin_real?: string | null
+          fecha_inicio_planeada?: string | null
+          fecha_inicio_real?: string | null
+          horas_estimadas?: number | null
+          horas_reales?: number | null
+          id?: string
+          observaciones?: string | null
+          oc_relacionada_id?: string | null
+          orden?: number
+          parent_id?: string | null
+          porcentaje_avance?: number | null
+          prioridad?: Database["public"]["Enums"]["prioridad_tarea"] | null
+          proyecto_id?: string
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_tareas_cfdi_relacionado_id_fkey"
+            columns: ["cfdi_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_oc_relacionada_id_fkey"
+            columns: ["oc_relacionada_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_compra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
       proyectos: {
         Row: {
           activo: boolean | null
@@ -4643,6 +6046,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proyectos_etapas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       reportes_cliente: {
@@ -4698,6 +6108,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reportes_cliente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -5162,6 +6579,13 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
       tickets_comentarios: {
@@ -5285,7 +6709,38 @@ export type Database = {
             referencedRelation: "proyectos"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tickets_soporte_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
+      }
+      tiie_historico: {
+        Row: {
+          created_at: string
+          fecha: string
+          fuente: string | null
+          tasa: number
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          fecha: string
+          fuente?: string | null
+          tasa: number
+          tipo?: string
+        }
+        Update: {
+          created_at?: string
+          fecha?: string
+          fuente?: string | null
+          tasa?: number
+          tipo?: string
+        }
+        Relationships: []
       }
       umbrales_aprobacion: {
         Row: {
@@ -5470,6 +6925,344 @@ export type Database = {
             referencedRelation: "empleados"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vacaciones_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vacaciones_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+        ]
+      }
+      vehiculos: {
+        Row: {
+          anio: number | null
+          asignado_a: string | null
+          capturado_por: string | null
+          color: string | null
+          combustible: string | null
+          costo_adquisicion: number | null
+          created_at: string | null
+          empresa_id: string
+          estatus: Database["public"]["Enums"]["estatus_vehiculo"]
+          factura_url: string | null
+          fecha_adquisicion: string | null
+          fecha_proximo_servicio: string | null
+          fecha_termino_contrato: string | null
+          fecha_ultimo_servicio: string | null
+          fecha_vencimiento_seguro: string | null
+          gasto_recurrente_id: string | null
+          id: string
+          km_actual: number | null
+          km_proximo_servicio: number | null
+          marca: string
+          modelo: string
+          numero_economico: string | null
+          observaciones: string | null
+          placa: string | null
+          poliza_seguro: string | null
+          proveedor_id: string | null
+          proyecto_asignado_id: string | null
+          serie: string | null
+          tarjeta_circulacion_url: string | null
+          tipo: string | null
+          tipo_propiedad: Database["public"]["Enums"]["tipo_propiedad_vehiculo"]
+          updated_at: string | null
+          uso: string | null
+        }
+        Insert: {
+          anio?: number | null
+          asignado_a?: string | null
+          capturado_por?: string | null
+          color?: string | null
+          combustible?: string | null
+          costo_adquisicion?: number | null
+          created_at?: string | null
+          empresa_id: string
+          estatus?: Database["public"]["Enums"]["estatus_vehiculo"]
+          factura_url?: string | null
+          fecha_adquisicion?: string | null
+          fecha_proximo_servicio?: string | null
+          fecha_termino_contrato?: string | null
+          fecha_ultimo_servicio?: string | null
+          fecha_vencimiento_seguro?: string | null
+          gasto_recurrente_id?: string | null
+          id?: string
+          km_actual?: number | null
+          km_proximo_servicio?: number | null
+          marca: string
+          modelo: string
+          numero_economico?: string | null
+          observaciones?: string | null
+          placa?: string | null
+          poliza_seguro?: string | null
+          proveedor_id?: string | null
+          proyecto_asignado_id?: string | null
+          serie?: string | null
+          tarjeta_circulacion_url?: string | null
+          tipo?: string | null
+          tipo_propiedad?: Database["public"]["Enums"]["tipo_propiedad_vehiculo"]
+          updated_at?: string | null
+          uso?: string | null
+        }
+        Update: {
+          anio?: number | null
+          asignado_a?: string | null
+          capturado_por?: string | null
+          color?: string | null
+          combustible?: string | null
+          costo_adquisicion?: number | null
+          created_at?: string | null
+          empresa_id?: string
+          estatus?: Database["public"]["Enums"]["estatus_vehiculo"]
+          factura_url?: string | null
+          fecha_adquisicion?: string | null
+          fecha_proximo_servicio?: string | null
+          fecha_termino_contrato?: string | null
+          fecha_ultimo_servicio?: string | null
+          fecha_vencimiento_seguro?: string | null
+          gasto_recurrente_id?: string | null
+          id?: string
+          km_actual?: number | null
+          km_proximo_servicio?: number | null
+          marca?: string
+          modelo?: string
+          numero_economico?: string | null
+          observaciones?: string | null
+          placa?: string | null
+          poliza_seguro?: string | null
+          proveedor_id?: string | null
+          proyecto_asignado_id?: string | null
+          serie?: string | null
+          tarjeta_circulacion_url?: string | null
+          tipo?: string | null
+          tipo_propiedad?: Database["public"]["Enums"]["tipo_propiedad_vehiculo"]
+          updated_at?: string | null
+          uso?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehiculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_gasto_recurrente_id_fkey"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "gastos_recurrentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_gasto_recurrente_id_fkey"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "v_gastos_recurrentes_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
+      vehiculos_bitacora: {
+        Row: {
+          capturado_por: string | null
+          cfdi_relacionado_id: string | null
+          comprobante_url: string | null
+          conductor_id: string | null
+          created_at: string | null
+          descripcion: string
+          fecha: string
+          id: string
+          iva: number | null
+          km_lectura: number | null
+          km_recorridos: number | null
+          litros: number | null
+          monto: number | null
+          observaciones: string | null
+          precio_por_litro: number | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento_vehiculo"]
+          vehiculo_id: string
+        }
+        Insert: {
+          capturado_por?: string | null
+          cfdi_relacionado_id?: string | null
+          comprobante_url?: string | null
+          conductor_id?: string | null
+          created_at?: string | null
+          descripcion: string
+          fecha?: string
+          id?: string
+          iva?: number | null
+          km_lectura?: number | null
+          km_recorridos?: number | null
+          litros?: number | null
+          monto?: number | null
+          observaciones?: string | null
+          precio_por_litro?: number | null
+          proveedor_id?: string | null
+          proveedor_nombre?: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento_vehiculo"]
+          vehiculo_id: string
+        }
+        Update: {
+          capturado_por?: string | null
+          cfdi_relacionado_id?: string | null
+          comprobante_url?: string | null
+          conductor_id?: string | null
+          created_at?: string | null
+          descripcion?: string
+          fecha?: string
+          id?: string
+          iva?: number | null
+          km_lectura?: number | null
+          km_recorridos?: number | null
+          litros?: number | null
+          monto?: number | null
+          observaciones?: string | null
+          precio_por_litro?: number | null
+          proveedor_id?: string | null
+          proveedor_nombre?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_evento_vehiculo"]
+          vehiculo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehiculos_bitacora_cfdi_relacionado_id_fkey"
+            columns: ["cfdi_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_bitacora_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_bitacora_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "v_vehiculos_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_bitacora_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "vehiculos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vehiculos_documentos: {
+        Row: {
+          categoria: Database["public"]["Enums"]["categoria_documento_vehiculo"]
+          created_at: string | null
+          descripcion: string | null
+          emisor: string | null
+          fecha_emision: string | null
+          fecha_vencimiento: string | null
+          id: string
+          mime_type: string | null
+          monto: number | null
+          nombre: string
+          numero_documento: string | null
+          storage_path: string
+          subido_por: string | null
+          subido_por_nombre: string | null
+          tamano_bytes: number | null
+          updated_at: string | null
+          vehiculo_id: string
+          visible_conductor: boolean | null
+        }
+        Insert: {
+          categoria?: Database["public"]["Enums"]["categoria_documento_vehiculo"]
+          created_at?: string | null
+          descripcion?: string | null
+          emisor?: string | null
+          fecha_emision?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          monto?: number | null
+          nombre: string
+          numero_documento?: string | null
+          storage_path: string
+          subido_por?: string | null
+          subido_por_nombre?: string | null
+          tamano_bytes?: number | null
+          updated_at?: string | null
+          vehiculo_id: string
+          visible_conductor?: boolean | null
+        }
+        Update: {
+          categoria?: Database["public"]["Enums"]["categoria_documento_vehiculo"]
+          created_at?: string | null
+          descripcion?: string | null
+          emisor?: string | null
+          fecha_emision?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          mime_type?: string | null
+          monto?: number | null
+          nombre?: string
+          numero_documento?: string | null
+          storage_path?: string
+          subido_por?: string | null
+          subido_por_nombre?: string | null
+          tamano_bytes?: number | null
+          updated_at?: string | null
+          vehiculo_id?: string
+          visible_conductor?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "v_vehiculos_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "vehiculos"
+            referencedColumns: ["id"]
+          },
         ]
       }
       viajes_solicitudes: {
@@ -5535,19 +7328,1131 @@ export type Database = {
             referencedRelation: "empleados"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "viajes_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viajes_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+        ]
+      }
+      viaticos: {
+        Row: {
+          aprobado_por: string | null
+          capturado_por: string
+          categoria: string
+          cfdi_id: string | null
+          concepto: string
+          created_at: string | null
+          empleado_id: string
+          empresa_id: string
+          estado: string | null
+          fecha_aprobacion: string | null
+          fecha_gasto: string
+          fecha_reembolso: string | null
+          id: string
+          monto: number
+          motivo_rechazo: string | null
+          observaciones: string | null
+          proyecto_id: string | null
+          url_ticket: string | null
+          url_xml: string | null
+        }
+        Insert: {
+          aprobado_por?: string | null
+          capturado_por: string
+          categoria: string
+          cfdi_id?: string | null
+          concepto: string
+          created_at?: string | null
+          empleado_id: string
+          empresa_id: string
+          estado?: string | null
+          fecha_aprobacion?: string | null
+          fecha_gasto: string
+          fecha_reembolso?: string | null
+          id?: string
+          monto: number
+          motivo_rechazo?: string | null
+          observaciones?: string | null
+          proyecto_id?: string | null
+          url_ticket?: string | null
+          url_xml?: string | null
+        }
+        Update: {
+          aprobado_por?: string | null
+          capturado_por?: string
+          categoria?: string
+          cfdi_id?: string | null
+          concepto?: string
+          created_at?: string | null
+          empleado_id?: string
+          empresa_id?: string
+          estado?: string | null
+          fecha_aprobacion?: string | null
+          fecha_gasto?: string
+          fecha_reembolso?: string | null
+          id?: string
+          monto?: number
+          motivo_rechazo?: string | null
+          observaciones?: string | null
+          proyecto_id?: string | null
+          url_ticket?: string | null
+          url_xml?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viaticos_cfdi_id_fkey"
+            columns: ["cfdi_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "viaticos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      v_bancos_cuentas_full: {
+        Row: {
+          activa: boolean | null
+          alias: string | null
+          asesor: string | null
+          banco: string | null
+          clabe: string | null
+          contrato: string | null
+          cuenta_garantia_id: string | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          fecha_actualizacion_saldo: string | null
+          id: string | null
+          inversion_emisora: string | null
+          inversion_es_garantia: boolean | null
+          inversion_precio_titulo: number | null
+          inversion_rendimiento_mensual_pct: number | null
+          inversion_titulos: number | null
+          linea_credito_disponible: number | null
+          linea_credito_dispuesto: number | null
+          linea_credito_fecha_apertura: string | null
+          linea_credito_fecha_vencimiento: string | null
+          linea_credito_monto_aprobado: number | null
+          linea_credito_pagos_pendientes: number | null
+          linea_credito_proximo_pago_fecha: string | null
+          linea_credito_proximo_pago_monto: number | null
+          linea_credito_tasa_efectiva: number | null
+          linea_credito_tasa_referencia: string | null
+          linea_credito_tasa_spread: number | null
+          moneda: string | null
+          numero_cuenta: string | null
+          saldo_actual: number | null
+          spid: string | null
+          tipo: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "bancos_cuentas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "v_bancos_cuentas_full"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bancos_cuentas_cuenta_garantia_id_fkey"
+            columns: ["cuenta_garantia_id"]
+            isOneToOne: false
+            referencedRelation: "v_conciliacion_mensual"
+            referencedColumns: ["cuenta_id"]
+          },
+          {
+            foreignKeyName: "bancos_cuentas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_conciliacion_mensual: {
+        Row: {
+          abonos_conciliados: number | null
+          cargos_conciliados: number | null
+          cuenta_id: string | null
+          empresa_id: string | null
+          mes: string | null
+          num_conciliados: number | null
+          num_movs: number | null
+          num_pendientes: number | null
+          total_abonos: number | null
+          total_cargos: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_cuentas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_cotizaciones_lista: {
+        Row: {
+          aprobada_internamente: boolean | null
+          cliente_id: string | null
+          cliente_nombre_comercial: string | null
+          cliente_razon_social: string | null
+          cliente_rfc: string | null
+          created_at: string | null
+          descuento: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          empresa_razon_social: string | null
+          enviada_a_cliente: boolean | null
+          estado: string | null
+          estado_computado: string | null
+          fecha_emision: string | null
+          fecha_envio: string | null
+          fecha_vencimiento: string | null
+          id: string | null
+          iva: number | null
+          num_conceptos: number | null
+          numero: string | null
+          oportunidad_id: string | null
+          subtotal: number | null
+          total: number | null
+          version: number | null
+          vigencia_dias: number | null
+          vista_por_cliente: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "oportunidades"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_estados_financieros_lista: {
+        Row: {
+          anio: number | null
+          created_at: string | null
+          documentos: Json | null
+          egresos_totales: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          empresa_razon_social: string | null
+          firmados: boolean | null
+          id: string | null
+          ingresos_totales: number | null
+          mes: number | null
+          mes_nombre: string | null
+          num_documentos: number | null
+          paquete_completo: boolean | null
+          periodo: string | null
+          utilidad_neta: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estados_financieros_mensuales_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_gastos_recurrentes_lista: {
+        Row: {
+          activo: boolean | null
+          categoria:
+            | Database["public"]["Enums"]["categoria_gasto_recurrente"]
+            | null
+          contrato_url: string | null
+          created_at: string | null
+          descripcion: string | null
+          dia_pago: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          fecha_fin: string | null
+          fecha_inicio: string | null
+          frecuencia: Database["public"]["Enums"]["frecuencia_gasto"] | null
+          id: string | null
+          identificador: string | null
+          iva_incluido: boolean | null
+          moneda: string | null
+          monto: number | null
+          monto_mensualizado: number | null
+          observaciones: string | null
+          proveedor_display: string | null
+          proveedor_id: string | null
+          proveedor_razon_social: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gastos_recurrentes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_inventario_movimientos: {
+        Row: {
+          almacen_codigo: string | null
+          almacen_destino_id: string | null
+          almacen_id: string | null
+          almacen_nombre: string | null
+          autorizado_por: string | null
+          cantidad: number | null
+          capturado_por: string | null
+          capturado_por_nombre: string | null
+          cfdi_id: string | null
+          costo_unitario: number | null
+          created_at: string | null
+          empresa_id: string | null
+          fecha: string | null
+          id: string | null
+          monto_total: number | null
+          motivo: string | null
+          movimiento_relacionado_id: string | null
+          numero_documento: string | null
+          observaciones: string | null
+          oc_id: string | null
+          producto_codigo: string | null
+          producto_empresa_id: string | null
+          producto_id: string | null
+          producto_nombre: string | null
+          proveedor_id: string | null
+          proveedor_nombre: string | null
+          proyecto_codigo: string | null
+          proyecto_id: string | null
+          proyecto_nombre: string | null
+          serie_id: string | null
+          tipo: string | null
+          unidad_medida: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_empresa_id_fkey"
+            columns: ["producto_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_almacen_destino_id_fkey"
+            columns: ["almacen_destino_id"]
+            isOneToOne: false
+            referencedRelation: "almacenes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_almacen_id_fkey"
+            columns: ["almacen_id"]
+            isOneToOne: false
+            referencedRelation: "almacenes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_cfdi_id_fkey"
+            columns: ["cfdi_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_movimiento_relacionado_id_fkey"
+            columns: ["movimiento_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "inventario_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_movimiento_relacionado_id_fkey"
+            columns: ["movimiento_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_serie_id_fkey"
+            columns: ["serie_id"]
+            isOneToOne: false
+            referencedRelation: "productos_serie"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_inventario_stock: {
+        Row: {
+          categoria: string | null
+          costo_maximo: number | null
+          costo_minimo: number | null
+          costo_promedio: number | null
+          costo_ultimo: number | null
+          descripcion: string | null
+          empresa_id: string | null
+          estado_stock: string | null
+          fecha_actualizacion_valor: string | null
+          imagen_url: string | null
+          marca: string | null
+          modelo: string | null
+          nombre: string | null
+          producto_id: string | null
+          sku: string | null
+          stock_actual: number | null
+          stock_maximo: number | null
+          stock_minimo: number | null
+          subcategoria: string | null
+          ultimo_movimiento_fecha: string | null
+          unidad_medida: string | null
+          valor_costo: number | null
+          valor_mercado: number | null
+          valor_mercado_total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_inventario_stock_almacen: {
+        Row: {
+          almacen_codigo: string | null
+          almacen_id: string | null
+          almacen_nombre: string | null
+          empresa_id: string | null
+          nombre: string | null
+          producto_id: string | null
+          sku: string | null
+          stock: number | null
+          unidad_medida: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalogo_productos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_almacen_id_fkey"
+            columns: ["almacen_id"]
+            isOneToOne: false
+            referencedRelation: "almacenes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "catalogo_productos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_producto_id_fkey"
+            columns: ["producto_id"]
+            isOneToOne: false
+            referencedRelation: "v_inventario_stock"
+            referencedColumns: ["producto_id"]
+          },
+        ]
+      }
+      v_matriz_inter_co: {
+        Row: {
+          empresa_acreedora_id: string | null
+          empresa_deudora_id: string | null
+          intereses_devengados: number | null
+          num_prestamos: number | null
+          saldo_total: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestamos_inter_co_empresa_acreedora_id_fkey"
+            columns: ["empresa_acreedora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prestamos_inter_co_empresa_deudora_id_fkey"
+            columns: ["empresa_deudora_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_obligaciones_lista: {
+        Row: {
+          created_at: string | null
+          dias_al_vencer: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          estado: Database["public"]["Enums"]["estado_obligacion"] | null
+          estado_efectivo:
+            | Database["public"]["Enums"]["estado_obligacion"]
+            | null
+          fecha_pago: string | null
+          fecha_presentacion: string | null
+          fecha_vencimiento: string | null
+          id: string | null
+          monto_calculado: number | null
+          monto_pagado: number | null
+          numero_operacion: string | null
+          periodo_anio: number | null
+          periodo_label: string | null
+          periodo_mes: number | null
+          tipo: Database["public"]["Enums"]["tipo_obligacion_sat"] | null
+          url_acuse: string | null
+          url_comprobante: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "obligaciones_sat_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyecto_avance: {
+        Row: {
+          avance_ponderado: number | null
+          avance_promedio: number | null
+          codigo: string | null
+          costo_estimado_total: number | null
+          costo_real_total: number | null
+          estado: Database["public"]["Enums"]["estado_proyecto"] | null
+          hitos_completados: number | null
+          horas_estimadas_total: number | null
+          horas_reales_total: number | null
+          nombre: string | null
+          proyecto_id: string | null
+          tareas_bloqueadas: number | null
+          tareas_completadas: number | null
+          tareas_en_curso: number | null
+          total_hitos: number | null
+          total_tareas: number | null
+        }
+        Relationships: []
+      }
+      v_proyecto_bitacora: {
+        Row: {
+          adjuntos: Json | null
+          capturado_por: string | null
+          capturado_por_nombre: string | null
+          created_at: string | null
+          descripcion: string | null
+          es_critica: boolean | null
+          fecha: string | null
+          id: string | null
+          proyecto_id: string | null
+          tarea_id: string | null
+          tarea_titulo: string | null
+          tipo: Database["public"]["Enums"]["tipo_evento_bitacora"] | null
+          titulo: string | null
+          visible_cliente: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyecto_reportes_lista: {
+        Row: {
+          accion_correctiva: string | null
+          adjuntos: Json | null
+          contenido: string | null
+          creado_por: string | null
+          creado_por_nombre: string | null
+          created_at: string | null
+          enviado_a: string[] | null
+          estado: Database["public"]["Enums"]["estado_reporte"] | null
+          fecha_compromiso: string | null
+          fecha_envio: string | null
+          fecha_evento: string | null
+          fecha_reporte: string | null
+          fecha_resolucion: string | null
+          id: string | null
+          impacto: string | null
+          numero: string | null
+          proyecto_codigo: string | null
+          proyecto_empresa_id: string | null
+          proyecto_id: string | null
+          proyecto_nombre: string | null
+          responsable_nombre: string | null
+          responsable_seguimiento: string | null
+          resumen: string | null
+          severidad: Database["public"]["Enums"]["severidad_reporte"] | null
+          tarea_id: string | null
+          tarea_titulo: string | null
+          tipo: Database["public"]["Enums"]["tipo_reporte_proyecto"] | null
+          titulo: string | null
+          ubicacion: string | null
+          updated_at: string | null
+          visible_cliente: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_tarea_id_fkey"
+            columns: ["tarea_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyectos_empresa_id_fkey"
+            columns: ["proyecto_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyecto_tareas_lista: {
+        Row: {
+          asignado_a: string | null
+          capturado_por: string | null
+          cfdi_relacionado_id: string | null
+          costo_estimado: number | null
+          costo_real: number | null
+          created_at: string | null
+          depende_de: string[] | null
+          descripcion: string | null
+          duracion_dias: number | null
+          es_hito: boolean | null
+          estado: Database["public"]["Enums"]["estado_tarea_proyecto"] | null
+          fecha_fin_planeada: string | null
+          fecha_fin_real: string | null
+          fecha_inicio_planeada: string | null
+          fecha_inicio_real: string | null
+          horas_estimadas: number | null
+          horas_reales: number | null
+          id: string | null
+          observaciones: string | null
+          oc_relacionada_id: string | null
+          orden: number | null
+          parent_id: string | null
+          porcentaje_avance: number | null
+          prioridad: Database["public"]["Enums"]["prioridad_tarea"] | null
+          proyecto_codigo: string | null
+          proyecto_empresa_id: string | null
+          proyecto_id: string | null
+          proyecto_nombre: string | null
+          titulo: string | null
+          updated_at: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_tareas_cfdi_relacionado_id_fkey"
+            columns: ["cfdi_relacionado_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_oc_relacionada_id_fkey"
+            columns: ["oc_relacionada_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_compra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_tareas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_tareas_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyectos_empresa_id_fkey"
+            columns: ["proyecto_empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_repse_alertas: {
+        Row: {
+          dias_para_vencer: number | null
+          empresa_id: string | null
+          estado_repse: string | null
+          folio_repse: string | null
+          id: string | null
+          nombre_completo: string | null
+          numero_empleado: string | null
+          vigencia_repse_hasta: string | null
+        }
+        Insert: {
+          dias_para_vencer?: never
+          empresa_id?: string | null
+          estado_repse?: never
+          folio_repse?: string | null
+          id?: string | null
+          nombre_completo?: string | null
+          numero_empleado?: string | null
+          vigencia_repse_hasta?: string | null
+        }
+        Update: {
+          dias_para_vencer?: never
+          empresa_id?: string | null
+          estado_repse?: never
+          folio_repse?: string | null
+          id?: string | null
+          nombre_completo?: string | null
+          numero_empleado?: string | null
+          vigencia_repse_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_saldo_bancos_por_empresa: {
+        Row: {
+          empresa_id: string | null
+          num_cuentas: number | null
+          saldo_total: number | null
+          ultima_actualizacion: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancos_cuentas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_saldo_vacaciones: {
+        Row: {
+          dias_anuales_lft: number | null
+          dias_disponibles: number | null
+          dias_tomados_periodo: number | null
+          empleado_id: string | null
+          empresa_id: string | null
+          fecha_ingreso: string | null
+          nombre_completo: string | null
+        }
+        Insert: {
+          dias_anuales_lft?: never
+          dias_disponibles?: never
+          dias_tomados_periodo?: never
+          empleado_id?: string | null
+          empresa_id?: string | null
+          fecha_ingreso?: string | null
+          nombre_completo?: string | null
+        }
+        Update: {
+          dias_anuales_lft?: never
+          dias_disponibles?: never
+          dias_tomados_periodo?: never
+          empleado_id?: string | null
+          empresa_id?: string | null
+          fecha_ingreso?: string | null
+          nombre_completo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_vehiculos_documentos_alertas: {
+        Row: {
+          categoria:
+            | Database["public"]["Enums"]["categoria_documento_vehiculo"]
+            | null
+          created_at: string | null
+          descripcion: string | null
+          dias_para_vencer: number | null
+          emisor: string | null
+          empresa_id: string | null
+          estado_vencimiento: string | null
+          fecha_emision: string | null
+          fecha_vencimiento: string | null
+          id: string | null
+          marca: string | null
+          mime_type: string | null
+          modelo: string | null
+          monto: number | null
+          nombre: string | null
+          numero_documento: string | null
+          placa: string | null
+          storage_path: string | null
+          subido_por: string | null
+          subido_por_nombre: string | null
+          tamano_bytes: number | null
+          updated_at: string | null
+          vehiculo_id: string | null
+          visible_conductor: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "v_vehiculos_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
+            referencedRelation: "vehiculos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_vehiculos_lista: {
+        Row: {
+          anio: number | null
+          asignado_a: string | null
+          color: string | null
+          combustible: string | null
+          combustible_12m: number | null
+          created_at: string | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          estatus: Database["public"]["Enums"]["estatus_vehiculo"] | null
+          fecha_proximo_servicio: string | null
+          fecha_termino_contrato: string | null
+          fecha_ultimo_servicio: string | null
+          fecha_vencimiento_seguro: string | null
+          gasto_12m: number | null
+          gasto_recurrente_id: string | null
+          id: string | null
+          km_actual: number | null
+          km_proximo_servicio: number | null
+          mantenimiento_12m: number | null
+          marca: string | null
+          mensualidad_arrendamiento: number | null
+          modelo: string | null
+          numero_economico: string | null
+          placa: string | null
+          proyecto_asignado_id: string | null
+          tipo: string | null
+          tipo_propiedad:
+            | Database["public"]["Enums"]["tipo_propiedad_vehiculo"]
+            | null
+          uso: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vehiculos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_gasto_recurrente_id_fkey"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "gastos_recurrentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_gasto_recurrente_id_fkey"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "v_gastos_recurrentes_lista"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
     }
     Functions: {
+      calcular_semaforo_proveedor: {
+        Args: { p_proveedor_id: string }
+        Returns: string
+      }
+      cfdi_kpis_filtrados: {
+        Args: {
+          p_desde?: string
+          p_direccion?: string
+          p_empresa_id?: string
+          p_estado?: string
+          p_forma_pago?: string
+          p_hasta?: string
+          p_monto_min?: number
+          p_q?: string
+        }
+        Returns: {
+          cxc: number
+          cxp: number
+          iva_acreditable: number
+          iva_trasladado: number
+          n_emitidos: number
+          n_recibidos: number
+          total_emitido: number
+          total_recibido: number
+        }[]
+      }
+      devengar_intereses_dia: { Args: { p_fecha?: string }; Returns: number }
+      dias_vacaciones_lft: {
+        Args: { p_fecha_corte?: string; p_fecha_ingreso: string }
+        Returns: number
+      }
       empresa_actual: { Args: never; Returns: string }
       empresas_del_usuario: { Args: never; Returns: string[] }
+      generar_numero_cotizacion: {
+        Args: { p_empresa_id: string }
+        Returns: string
+      }
+      generar_numero_prestamo: { Args: never; Returns: string }
+      generar_obligaciones_anuales: {
+        Args: { p_anio: number; p_empresa_id: string }
+        Returns: number
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sugerir_match_movimiento: {
+        Args: { p_movimiento_id: string }
+        Returns: {
+          contraparte: string
+          fecha: string
+          match_id: string
+          monto: number
+          numero_o_folio: string
+          similitud: number
+          tipo: string
+        }[]
+      }
+      tiie_mas_reciente: { Args: never; Returns: number }
       unaccent: { Args: { "": string }; Returns: string }
+      usuario_activo_grupo: { Args: never; Returns: boolean }
       usuario_es_ceo: { Args: never; Returns: boolean }
+      usuario_puede_gestionar_catalogos: { Args: never; Returns: boolean }
       usuario_tiene_atributo: { Args: { p_atributo: string }; Returns: boolean }
       usuario_tiene_rol_en_empresa: {
         Args: { p_empresa_id: string; p_roles: string[] }
@@ -5555,6 +8460,59 @@ export type Database = {
       }
     }
     Enums: {
+      categoria_documento_proyecto:
+        | "contrato"
+        | "plano"
+        | "especificacion"
+        | "diseno"
+        | "cotizacion"
+        | "foto"
+        | "manual"
+        | "permiso"
+        | "acta"
+        | "otro"
+      categoria_documento_vehiculo:
+        | "factura"
+        | "seguro"
+        | "tarjeta_circulacion"
+        | "verificacion"
+        | "tenencia"
+        | "permiso_carga"
+        | "permiso_federal"
+        | "manual"
+        | "contrato_arrendamiento"
+        | "foto"
+        | "placas"
+        | "tarjeton_acceso"
+        | "otro"
+      categoria_gasto_recurrente:
+        | "arrendamiento_vehiculo"
+        | "renta_inmueble"
+        | "telefonia_internet"
+        | "software_saas"
+        | "seguros"
+        | "vigilancia"
+        | "mantenimiento"
+        | "limpieza"
+        | "servicios_publicos"
+        | "membresia_camara"
+        | "asesoria_contable"
+        | "asesoria_legal"
+        | "otros_indirectos"
+      categoria_inventario:
+        | "panel_solar"
+        | "inversor"
+        | "estructura"
+        | "cable"
+        | "herraje"
+        | "tablero"
+        | "proteccion"
+        | "monitoreo"
+        | "baterias"
+        | "herramienta"
+        | "consumible"
+        | "epp"
+        | "otro"
       categoria_personal: "planta" | "por_obra" | "repse"
       estado_capacitacion:
         | "inscrito"
@@ -5574,6 +8532,15 @@ export type Database = {
         | "en_accion"
         | "cerrada"
         | "reabierta"
+      estado_obligacion:
+        | "pendiente"
+        | "en_proceso"
+        | "presentada"
+        | "pagada"
+        | "rechazada"
+        | "fuera_plazo"
+        | "extemporanea"
+        | "no_aplica"
       estado_oc:
         | "borrador"
         | "pendiente_aprobacion"
@@ -5620,17 +8587,112 @@ export type Database = {
         | "en_om"
         | "cerrado"
         | "cancelado"
+      estado_reporte:
+        | "borrador"
+        | "emitido"
+        | "en_seguimiento"
+        | "resuelto"
+        | "cerrado"
+      estado_tarea_proyecto:
+        | "pendiente"
+        | "en_curso"
+        | "bloqueada"
+        | "completada"
+        | "cancelada"
       estado_ticket:
         | "abierto"
         | "en_proceso"
         | "esperando_cliente"
         | "resuelto"
         | "cerrado"
+      estatus_vehiculo:
+        | "activo"
+        | "mantenimiento"
+        | "reparacion"
+        | "fuera_servicio"
+        | "baja"
+      frecuencia_gasto:
+        | "mensual"
+        | "bimestral"
+        | "trimestral"
+        | "semestral"
+        | "anual"
       nivel_autonomia_ia: "verde" | "amarillo" | "rojo"
+      prioridad_tarea: "baja" | "media" | "alta" | "urgente"
       prioridad_ticket: "baja" | "media" | "alta" | "critica"
+      rol_proyecto:
+        | "pm"
+        | "vendedor"
+        | "supervisor_obra"
+        | "ingeniero_diseno"
+        | "ingeniero_electrico"
+        | "instalador"
+        | "soporte"
+        | "admin_proyecto"
+        | "cliente_contacto"
+        | "observador"
       rol_usuario: "ceo" | "director" | "operativo" | "empleado" | "cliente"
       severidad_no_conformidad: "observacion" | "menor" | "mayor"
+      severidad_reporte: "info" | "baja" | "media" | "alta" | "critica"
       tipo_cfdi: "ingreso" | "egreso" | "traslado" | "pago" | "nomina"
+      tipo_evento_bitacora:
+        | "avance"
+        | "problema"
+        | "decision"
+        | "visita"
+        | "foto"
+        | "hito_alcanzado"
+        | "cambio_alcance"
+        | "reunion"
+        | "nota"
+      tipo_evento_vehiculo:
+        | "carga_combustible"
+        | "lectura_km"
+        | "mantenimiento_preventivo"
+        | "mantenimiento_correctivo"
+        | "reparacion"
+        | "verificacion"
+        | "tenencia"
+        | "siniestro"
+        | "multa"
+        | "lavado"
+        | "otros"
+      tipo_obligacion_sat:
+        | "iva_mensual"
+        | "isr_provisional"
+        | "isr_retenciones"
+        | "diot"
+        | "iva_retenciones"
+        | "declaracion_anual"
+        | "iva_anual"
+        | "isn"
+        | "icsoe"
+        | "sisub"
+        | "aportacion_imss"
+        | "pago_infonavit"
+        | "pago_fonacot"
+        | "estatales"
+        | "otra"
+      tipo_propiedad_vehiculo:
+        | "propio"
+        | "arrendamiento_financiero"
+        | "arrendamiento_puro"
+        | "rentado_corto_plazo"
+        | "comodato"
+      tipo_reporte_proyecto:
+        | "incidente"
+        | "avance_semanal"
+        | "avance_mensual"
+        | "inspeccion"
+        | "no_conformidad"
+        | "hallazgo_seguridad"
+        | "retraso"
+        | "cambio_alcance"
+        | "ejecutivo"
+        | "cierre_etapa"
+        | "siniestro"
+        | "auditoria"
+        | "otro"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -5756,8 +8818,68 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
+      categoria_documento_proyecto: [
+        "contrato",
+        "plano",
+        "especificacion",
+        "diseno",
+        "cotizacion",
+        "foto",
+        "manual",
+        "permiso",
+        "acta",
+        "otro",
+      ],
+      categoria_documento_vehiculo: [
+        "factura",
+        "seguro",
+        "tarjeta_circulacion",
+        "verificacion",
+        "tenencia",
+        "permiso_carga",
+        "permiso_federal",
+        "manual",
+        "contrato_arrendamiento",
+        "foto",
+        "placas",
+        "tarjeton_acceso",
+        "otro",
+      ],
+      categoria_gasto_recurrente: [
+        "arrendamiento_vehiculo",
+        "renta_inmueble",
+        "telefonia_internet",
+        "software_saas",
+        "seguros",
+        "vigilancia",
+        "mantenimiento",
+        "limpieza",
+        "servicios_publicos",
+        "membresia_camara",
+        "asesoria_contable",
+        "asesoria_legal",
+        "otros_indirectos",
+      ],
+      categoria_inventario: [
+        "panel_solar",
+        "inversor",
+        "estructura",
+        "cable",
+        "herraje",
+        "tablero",
+        "proteccion",
+        "monitoreo",
+        "baterias",
+        "herramienta",
+        "consumible",
+        "epp",
+        "otro",
+      ],
       categoria_personal: ["planta", "por_obra", "repse"],
       estado_capacitacion: [
         "inscrito",
@@ -5779,6 +8901,16 @@ export const Constants = {
         "en_accion",
         "cerrada",
         "reabierta",
+      ],
+      estado_obligacion: [
+        "pendiente",
+        "en_proceso",
+        "presentada",
+        "pagada",
+        "rechazada",
+        "fuera_plazo",
+        "extemporanea",
+        "no_aplica",
       ],
       estado_oc: [
         "borrador",
@@ -5831,6 +8963,20 @@ export const Constants = {
         "cerrado",
         "cancelado",
       ],
+      estado_reporte: [
+        "borrador",
+        "emitido",
+        "en_seguimiento",
+        "resuelto",
+        "cerrado",
+      ],
+      estado_tarea_proyecto: [
+        "pendiente",
+        "en_curso",
+        "bloqueada",
+        "completada",
+        "cancelada",
+      ],
       estado_ticket: [
         "abierto",
         "en_proceso",
@@ -5838,11 +8984,102 @@ export const Constants = {
         "resuelto",
         "cerrado",
       ],
+      estatus_vehiculo: [
+        "activo",
+        "mantenimiento",
+        "reparacion",
+        "fuera_servicio",
+        "baja",
+      ],
+      frecuencia_gasto: [
+        "mensual",
+        "bimestral",
+        "trimestral",
+        "semestral",
+        "anual",
+      ],
       nivel_autonomia_ia: ["verde", "amarillo", "rojo"],
+      prioridad_tarea: ["baja", "media", "alta", "urgente"],
       prioridad_ticket: ["baja", "media", "alta", "critica"],
+      rol_proyecto: [
+        "pm",
+        "vendedor",
+        "supervisor_obra",
+        "ingeniero_diseno",
+        "ingeniero_electrico",
+        "instalador",
+        "soporte",
+        "admin_proyecto",
+        "cliente_contacto",
+        "observador",
+      ],
       rol_usuario: ["ceo", "director", "operativo", "empleado", "cliente"],
       severidad_no_conformidad: ["observacion", "menor", "mayor"],
+      severidad_reporte: ["info", "baja", "media", "alta", "critica"],
       tipo_cfdi: ["ingreso", "egreso", "traslado", "pago", "nomina"],
+      tipo_evento_bitacora: [
+        "avance",
+        "problema",
+        "decision",
+        "visita",
+        "foto",
+        "hito_alcanzado",
+        "cambio_alcance",
+        "reunion",
+        "nota",
+      ],
+      tipo_evento_vehiculo: [
+        "carga_combustible",
+        "lectura_km",
+        "mantenimiento_preventivo",
+        "mantenimiento_correctivo",
+        "reparacion",
+        "verificacion",
+        "tenencia",
+        "siniestro",
+        "multa",
+        "lavado",
+        "otros",
+      ],
+      tipo_obligacion_sat: [
+        "iva_mensual",
+        "isr_provisional",
+        "isr_retenciones",
+        "diot",
+        "iva_retenciones",
+        "declaracion_anual",
+        "iva_anual",
+        "isn",
+        "icsoe",
+        "sisub",
+        "aportacion_imss",
+        "pago_infonavit",
+        "pago_fonacot",
+        "estatales",
+        "otra",
+      ],
+      tipo_propiedad_vehiculo: [
+        "propio",
+        "arrendamiento_financiero",
+        "arrendamiento_puro",
+        "rentado_corto_plazo",
+        "comodato",
+      ],
+      tipo_reporte_proyecto: [
+        "incidente",
+        "avance_semanal",
+        "avance_mensual",
+        "inspeccion",
+        "no_conformidad",
+        "hallazgo_seguridad",
+        "retraso",
+        "cambio_alcance",
+        "ejecutivo",
+        "cierre_etapa",
+        "siniestro",
+        "auditoria",
+        "otro",
+      ],
     },
   },
 } as const

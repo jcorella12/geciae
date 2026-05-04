@@ -179,6 +179,54 @@ export function puedeAprobarOC(
   return puedeAprobarPorCampo(vinculos, empresaId, monto, "umbral_max_mxn_oc");
 }
 
+/**
+ * Puede crear OC en una empresa específica.
+ * Spec: CEO/Director/Operativo de esa empresa.
+ */
+export function puedeCrearOCEn(
+  vinculos: Vinculo[],
+  empresaId: string,
+): boolean {
+  return vinculos.some(
+    (v) =>
+      v.empresa_id === empresaId &&
+      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+  );
+}
+
+/** Empresas donde el usuario puede crear OC. */
+export function empresasDondeCreaOC(vinculos: Vinculo[]): string[] {
+  return vinculos
+    .filter((v) =>
+      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+    )
+    .map((v) => v.empresa_id);
+}
+
+/**
+ * Puede crear/editar proyectos en una empresa específica.
+ * Mismas reglas que OC: CEO/Director/Operativo de esa empresa.
+ */
+export function puedeGestionarProyectosEn(
+  vinculos: Vinculo[],
+  empresaId: string,
+): boolean {
+  return vinculos.some(
+    (v) =>
+      v.empresa_id === empresaId &&
+      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+  );
+}
+
+/** Empresas donde el usuario puede crear/editar proyectos. */
+export function empresasDondeGestionaProyectos(vinculos: Vinculo[]): string[] {
+  return vinculos
+    .filter((v) =>
+      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+    )
+    .map((v) => v.empresa_id);
+}
+
 export function puedeAprobarOT(
   vinculos: Vinculo[],
   empresaId: string,
@@ -211,6 +259,51 @@ export function puedeAprobarPrestamo(
  */
 export function puedeAccederConfiguracion(vinculos: Vinculo[]): boolean {
   return esCEO(vinculos);
+}
+
+/**
+ * Puede gestionar el catálogo de clientes (alta, edición, vinculación).
+ * Spec: cualquier rol con función comercial/operativa.
+ */
+export function puedeGestionarClientes(vinculos: Vinculo[]): boolean {
+  return vinculos.some((v) =>
+    (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+  );
+}
+
+/**
+ * Puede gestionar el catálogo de proveedores. Mismas reglas que clientes
+ * para Sprint 2 — Sprint 4 agregará bloqueos finos por semáforo.
+ */
+export const puedeGestionarProveedores = puedeGestionarClientes;
+
+/**
+ * Puede crear/editar empleados de una empresa específica.
+ * Spec: CEO o Director con acceso a esa empresa. RH (con atributo) en Sprint 7.
+ */
+export function puedeGestionarEmpleadosEn(
+  vinculos: Vinculo[],
+  empresaId: string,
+): boolean {
+  return vinculos.some(
+    (v) =>
+      v.empresa_id === empresaId &&
+      (["ceo", "director"] as RolBase[]).includes(v.rol),
+  );
+}
+
+/** ¿Puede ver al menos algún empleado en alguna empresa? */
+export function puedeVerEmpleados(vinculos: Vinculo[]): boolean {
+  return vinculos.length > 0;
+}
+
+/** Empresas en las que puede dar de alta empleados. */
+export function empresasDondeGestionaEmpleados(
+  vinculos: Vinculo[],
+): string[] {
+  return vinculos
+    .filter((v) => (["ceo", "director"] as RolBase[]).includes(v.rol))
+    .map((v) => v.empresa_id);
 }
 
 /**
