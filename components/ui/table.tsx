@@ -1,4 +1,5 @@
-import { forwardRef, type HTMLAttributes, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
+import Link from "next/link";
+import { forwardRef, type HTMLAttributes, type ReactNode, type TdHTMLAttributes, type ThHTMLAttributes } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -68,20 +69,62 @@ const TableFooter = forwardRef<
 ));
 TableFooter.displayName = "TableFooter";
 
+/**
+ * Fila de tabla.
+ *
+ * Filas clickeables (patrón "stretched link"):
+ * - Pasa `href` para que toda la fila navegue al hacer click — funciona con
+ *   middle-click, Cmd/Ctrl+Click y navegación por teclado (Tab + Enter).
+ * - `linkLabel` se usa como `aria-label` para accesibilidad
+ *   (lectores de pantalla).
+ * - El `<Link>` se renderiza con `position: absolute` cubriendo la fila;
+ *   el `<tr>` recibe `position: relative` automáticamente.
+ *
+ * Importante para botones/inputs dentro de filas clickeables:
+ *   Cualquier elemento interactivo (Button, Input, Select, Link interno, etc.)
+ *   DEBE llevar `className="relative z-10"` para quedar por encima del
+ *   stretched link y poder recibir clicks. Sin ese z-index, el click cae
+ *   en el Link de la fila y navega al detalle en vez de ejecutar la acción.
+ */
 const TableRow = forwardRef<
   HTMLTableRowElement,
-  HTMLAttributes<HTMLTableRowElement> & { interactive?: boolean }
->(({ className, interactive = true, ...props }, ref) => (
-  <tr
-    ref={ref}
-    className={cn(
-      "transition-colors",
-      interactive && "hover:bg-bg-2",
-      className,
-    )}
-    {...props}
-  />
-));
+  HTMLAttributes<HTMLTableRowElement> & {
+    interactive?: boolean;
+    href?: string;
+    linkLabel?: string;
+    children?: ReactNode;
+  }
+>(
+  (
+    { className, interactive = true, href, linkLabel, children, ...props },
+    ref,
+  ) => (
+    <tr
+      ref={ref}
+      className={cn(
+        "transition-colors",
+        interactive && "hover:bg-bg-2",
+        href && "relative cursor-pointer",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      {href && (
+        <td className="absolute inset-0 z-0 p-0" aria-hidden="true">
+          <Link
+            href={href}
+            aria-label={linkLabel}
+            className="block h-full w-full"
+            tabIndex={0}
+          >
+            <span className="sr-only">{linkLabel ?? "Abrir detalle"}</span>
+          </Link>
+        </td>
+      )}
+    </tr>
+  ),
+);
 TableRow.displayName = "TableRow";
 
 type HeadProps = ThHTMLAttributes<HTMLTableCellElement> & {

@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -105,9 +104,14 @@ export function CuentasList({
         <TableBody>
           {cuentas.map((c) => {
             const puede = empresasGestionables.includes(c.empresa_id);
+            // Si la fila está en modo edición, no usamos stretched link para
+            // que el input/botones reciban clicks sin interferencia.
+            const editing = editId === c.id;
             return (
               <TableRow
                 key={c.id}
+                href={editing ? undefined : `/finanzas/tesoreria/cuentas/${c.id}`}
+                linkLabel={`Abrir cuenta ${c.banco} ${c.numero_cuenta}`}
                 className={c.activa === false ? "opacity-60" : undefined}
               >
                 <TableCell className="text-xs">
@@ -122,36 +126,26 @@ export function CuentasList({
                   </span>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/finanzas/tesoreria/cuentas/${c.id}`}
-                    className="font-medium hover:text-brand"
-                  >
-                    {c.banco}
-                  </Link>
+                  <p className="font-medium">{c.banco}</p>
                   {c.tipo && (
                     <p className="text-xs text-ink-3 capitalize">{c.tipo}</p>
                   )}
                 </TableCell>
                 <TableCell className="font-mono text-xs">
-                  <Link
-                    href={`/finanzas/tesoreria/cuentas/${c.id}`}
-                    className="hover:text-brand"
-                  >
-                    {c.numero_cuenta}
-                  </Link>
+                  <p>{c.numero_cuenta}</p>
                   {c.clabe && (
                     <p className="text-ink-3">CLABE: {c.clabe}</p>
                   )}
                 </TableCell>
                 <TableCell className="text-xs">{c.alias ?? "—"}</TableCell>
                 <TableCell align="right">
-                  {editId === c.id ? (
+                  {editing ? (
                     <Input
                       type="number"
                       step="0.01"
                       value={editValor}
                       onChange={(e) => setEditValor(e.target.value)}
-                      className="w-32 text-right font-mono"
+                      className="relative z-10 w-32 text-right font-mono"
                       autoFocus
                     />
                   ) : c.tipo === "credito" ? (
@@ -184,8 +178,8 @@ export function CuentasList({
                 </TableCell>
                 <TableCell>
                   {puede &&
-                    (editId === c.id ? (
-                      <div className="flex gap-1">
+                    (editing ? (
+                      <div className="relative z-10 flex gap-1">
                         <Button size="sm" onClick={guardarSaldo}>
                           Guardar
                         </Button>
@@ -198,7 +192,7 @@ export function CuentasList({
                         </Button>
                       </div>
                     ) : (
-                      <div className="flex gap-1">
+                      <div className="relative z-10 flex gap-1">
                         <Button
                           size="sm"
                           variant="outline"
