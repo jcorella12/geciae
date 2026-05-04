@@ -31,6 +31,13 @@ import {
   MovimientoAcciones,
   type Sugerencia,
 } from "./movimiento-acciones";
+import { MovimientoManualAcciones } from "./movimiento-manual-acciones";
+import { NuevoMovimientoButton } from "./nuevo-movimiento";
+import {
+  COLOR_ORIGEN,
+  ETIQUETA_ORIGEN,
+  esOrigenEditable,
+} from "@/lib/bancos-movimientos/state";
 
 const empresaCodigoColor: Record<string, string> = {
   PSE: "bg-pse",
@@ -468,13 +475,16 @@ export default async function CuentaDetallePage({
                 </div>
               </div>
 
-              {/* Auto-conciliar masivo */}
+              {/* Toolbar: nuevo movimiento + auto-conciliar */}
               {puedeConciliar && (
-                <AutoConciliarButton
-                  cuentaId={params.id}
-                  mesYYYYMM={mesParam}
-                  movsPendientes={movs.filter((m) => !m.conciliado).length}
-                />
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <NuevoMovimientoButton cuentaId={params.id} />
+                  <AutoConciliarButton
+                    cuentaId={params.id}
+                    mesYYYYMM={mesParam}
+                    movsPendientes={movs.filter((m) => !m.conciliado).length}
+                  />
+                </div>
               )}
 
               {movs.length === 0 ? (
@@ -488,6 +498,7 @@ export default async function CuentaDetallePage({
                       <TableRow interactive={false}>
                         <TableHead>Fecha</TableHead>
                         <TableHead>Concepto</TableHead>
+                        <TableHead>Origen</TableHead>
                         <TableHead align="right">Cargo</TableHead>
                         <TableHead align="right">Abono</TableHead>
                         <TableHead align="right">Saldo</TableHead>
@@ -496,7 +507,14 @@ export default async function CuentaDetallePage({
                     </TableHeader>
                     <TableBody>
                       {movs.map((m) => (
-                        <TableRow key={m.id}>
+                        <TableRow
+                          key={m.id}
+                          className={
+                            esOrigenEditable(m.origen)
+                              ? "bg-amber-50/30"
+                              : undefined
+                          }
+                        >
                           <TableCell className="text-[12px] text-ink-3">
                             {fmtFecha(m.fecha)}
                           </TableCell>
@@ -505,6 +523,23 @@ export default async function CuentaDetallePage({
                             <p className="font-mono text-[10px] text-ink-4">
                               {m.observaciones ?? m.referencia}
                             </p>
+                          </TableCell>
+                          <TableCell>
+                            <span
+                              className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                                COLOR_ORIGEN[m.origen ?? ""] ??
+                                "bg-bg-2 text-ink-3"
+                              }`}
+                            >
+                              {ETIQUETA_ORIGEN[m.origen ?? ""] ??
+                                (m.origen ?? "—")}
+                            </span>
+                            {puedeConciliar &&
+                              esOrigenEditable(m.origen) && (
+                                <span className="ml-1 inline-block align-middle">
+                                  <MovimientoManualAcciones movId={m.id} />
+                                </span>
+                              )}
                           </TableCell>
                           <TableCell align="right" mono>
                             {m.tipo === "cargo" ? (
@@ -567,7 +602,10 @@ export default async function CuentaDetallePage({
             <div className="space-y-4">
               {/* Uploader drag-and-drop */}
               {puedeConciliar && (
-                <div className="rounded-lg border border-border bg-card p-4 shadow-sm">
+                <div
+                  id="edocta-uploader"
+                  className="rounded-lg border border-border bg-card p-4 shadow-sm"
+                >
                   <h3 className="mb-2 text-sm font-semibold">
                     Subir estado de cuenta
                   </h3>
