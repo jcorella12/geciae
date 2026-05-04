@@ -296,6 +296,160 @@ export async function toggleActivoCliente(
 }
 
 // ============================================================================
+// Sprint 2.2 — Cliente potencial (sin RFC)
+// ============================================================================
+
+/**
+ * Crea un cliente potencial (es_potencial=TRUE) desde el flujo de oportunidad.
+ * No requiere RFC — el constraint `chk_cliente_rfc_potencial` lo permite.
+ *
+ * Se usa típicamente desde QuickCreatePicker cuando un vendedor captura un
+ * lead residencial ("Casa Don Juan") que aún no tiene RFC.
+ */
+export async function crearClientePotencial(input: {
+  razon_social: string;
+  nombre_comercial?: string | null;
+  telefono?: string | null;
+  email?: string | null;
+  ciudad?: string | null;
+  tipo?: "residencial" | "comercial" | "industrial" | "gubernamental" | null;
+  empresa_id?: string | null;
+  notas?: string | null;
+}): Promise<{
+  ok: boolean;
+  error: string | null;
+  cliente?: {
+    id: string;
+    razon_social: string;
+    rfc: string | null;
+    nombre_comercial: string | null;
+    es_potencial: boolean;
+  };
+}> {
+  const gate = await gateGestion();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const razonSocial = input.razon_social?.trim() ?? "";
+  if (razonSocial.length < 3)
+    return { ok: false, error: "Razón social muy corta." };
+
+  const supabase = createClient();
+  // `es_potencial`, `telefono_potencial`, `ciudad_potencial`, `notas_potencial`,
+  // `fecha_conversion` son columnas agregadas en migración 20260520000000;
+  // hasta que se regeneren los types, casteamos para evitar TS error.
+  const { data: nuevo, error: insertErr } = await supabase
+    .from("clientes")
+    .insert({
+      razon_social: razonSocial,
+      nombre_comercial: input.nombre_comercial?.trim() || null,
+      rfc: null,
+      email_facturacion: input.email?.trim() || null,
+      tipo: input.tipo ?? null,
+      es_potencial: true,
+      telefono_potencial: input.telefono?.trim() || null,
+      ciudad_potencial: input.ciudad?.trim() || null,
+      notas_potencial: input.notas?.trim() || null,
+      activo: true,
+    } as never)
+    .select("id, razon_social, rfc, nombre_comercial")
+    .single();
+
+  if (insertErr || !nuevo) {
+    return {
+      ok: false,
+      error: insertErr?.message ?? "Error al crear cliente potencial",
+    };
+  }
+
+  if (input.empresa_id) {
+    await supabase.from("clientes_empresas").insert({
+      cliente_id: nuevo.id,
+      empresa_id: input.empresa_id,
+      activo: true,
+    });
+  }
+
+  revalidatePath("/clientes");
+  return {
+    ok: true,
+    error: null,
+    cliente: {
+      id: nuevo.id,
+      razon_social: nuevo.razon_social,
+      rfc: nuevo.rfc,
+      nombre_comercial: nuevo.nombre_comercial,
+      // Acabamos de insertar con es_potencial=true; hardcodeamos para evitar
+      // un round-trip extra hasta que se regeneren los types.
+      es_potencial: true,
+    },
+  };
+}
+
+/**
+ * Convierte un cliente potencial a formal: marca es_potencial=FALSE,
+ * setea fecha_conversion y captura datos fiscales (RFC, régimen, CP).
+ *
+ * Permitido a CEO, director u operativo (mismo gate que crear cliente).
+ * Bloqueado: revertir formal→potencial (no debe ser posible).
+ */
+export async function convertirClienteAFormal(
+  clienteId: string,
+  datos: {
+    rfc: string;
+    regimen_fiscal: string;
+    cp_fiscal: string;
+  },
+): Promise<{ ok: boolean; error: string | null }> {
+  const gate = await gateGestion();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const rfc = datos.rfc?.trim().toUpperCase() ?? "";
+  if (rfc.length < 12)
+    return { ok: false, error: "RFC inválido (mínimo 12 caracteres)." };
+  if (!/^\d{5}$/.test(datos.cp_fiscal ?? ""))
+    return { ok: false, error: "CP fiscal debe ser 5 dígitos." };
+
+  const supabase = createClient();
+  // Verificar que efectivamente sea potencial (no permitir formal→potencial).
+  // `es_potencial` no está en types regenerados; usamos cast en la fila.
+  const { data: actual } = await supabase
+    .from("clientes")
+    .select("id, rfc")
+    .eq("id", clienteId)
+    .maybeSingle();
+  if (!actual)
+    return { ok: false, error: "Cliente no encontrado." };
+  // Heurística mientras los types se regeneran: los formales tienen RFC,
+  // los potenciales no. La constraint de BD garantiza esto.
+  if (actual.rfc !== null && actual.rfc !== undefined)
+    return { ok: false, error: "Este cliente ya es formal." };
+
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      rfc,
+      regimen_fiscal: datos.regimen_fiscal,
+      cp_fiscal: datos.cp_fiscal,
+      es_potencial: false,
+      fecha_conversion: new Date().toISOString().slice(0, 10),
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", clienteId);
+
+  if (error) {
+    if (error.message.includes("duplicate"))
+      return {
+        ok: false,
+        error: "Ya existe un cliente formal con ese RFC.",
+      };
+    return { ok: false, error: error.message };
+  }
+  revalidatePath(`/clientes/${clienteId}`);
+  revalidatePath("/clientes");
+  return { ok: true, error: null };
+}
+
+// ============================================================================
 // Sprint 1.5 — Archivado
 // ============================================================================
 

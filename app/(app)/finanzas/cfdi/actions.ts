@@ -125,6 +125,26 @@ export async function subirCfdi(
   const ot_id = (formData.get("ot_id") as string) || null;
   const proyecto_id = (formData.get("proyecto_id") as string) || null;
 
+  // Sprint 2.2: bloquear timbrado de CFDI emitido a cliente potencial
+  // (sin RFC formal). El cliente debe convertirse a formal primero.
+  if (cliente_id && esEmitido) {
+    const { data: cli } = await supabase
+      .from("clientes")
+      .select("id, rfc")
+      .eq("id", cliente_id)
+      .maybeSingle();
+    // La constraint chk_cliente_rfc_potencial garantiza que rfc IS NULL ⇔ es_potencial,
+    // así que `rfc === null` lo identifica sin necesidad de tipos regenerados.
+    if (cli && cli.rfc === null) {
+      return {
+        ok: false,
+        cfdiId: null,
+        error:
+          "Este cliente es potencial (sin RFC). Conviértelo a cliente formal antes de emitirle un CFDI.",
+      };
+    }
+  }
+
   // Subir archivos al bucket
   const baseName = `${empresaId}/${parsed.uuid_sat}`;
   const xmlPath = `${baseName}.xml`;

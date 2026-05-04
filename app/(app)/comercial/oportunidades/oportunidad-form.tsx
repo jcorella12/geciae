@@ -4,7 +4,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
-import { ClientePicker } from "@/components/shared/cliente-picker";
+import {
+  QuickCreateClientePotencialForm,
+  type ClientePotencialQuickItem,
+} from "@/components/shared/quick-create-cliente-potencial-form";
+import { QuickCreatePicker } from "@/components/shared/quick-create-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,8 +38,10 @@ type Empresa = {
 type Cliente = {
   id: string;
   razon_social: string;
-  rfc: string;
+  /** Puede ser null para clientes potenciales (sin RFC todavía). */
+  rfc: string | null;
   nombre_comercial: string | null;
+  es_potencial?: boolean | null;
 };
 
 type Vendedor = {
@@ -64,7 +70,7 @@ const FUENTES = Object.keys(ETIQUETA_FUENTE) as FuenteOportunidad[];
 
 export function OportunidadForm({
   empresas,
-  clientes,
+  clientes: clientesIniciales,
   vendedores,
   oportunidadId,
   defaults,
@@ -89,6 +95,8 @@ export function OportunidadForm({
   );
   const [clienteId, setClienteId] = useState(defaults?.cliente_id ?? "");
   const [empresaId, setEmpresaId] = useState(defaults?.empresa_id ?? "");
+  // Lista local de clientes para soportar Quick Create de potenciales
+  const [clientes, setClientes] = useState(clientesIniciales);
 
   // Auto-ajustar probabilidad cuando cambia estado (si no se ha tocado manual)
   useEffect(() => {
@@ -162,12 +170,52 @@ export function OportunidadForm({
 
           <div className="col-span-2">
             <Label className="text-sm">Cliente *</Label>
-            <ClientePicker
-              clientes={clientes}
+            <QuickCreatePicker<Cliente>
+              items={clientes}
               value={clienteId}
               onChange={setClienteId}
-              empresaId={empresaId}
+              inputName="cliente_id"
+              required
+              placeholder="Buscar cliente o crear uno potencial…"
+              getLabel={(c) =>
+                `${c.razon_social}${
+                  c.rfc ? ` · ${c.rfc}` : c.es_potencial ? " · (potencial)" : ""
+                }`
+              }
+              getSecondary={(c) =>
+                c.nombre_comercial ?? null
+              }
+              matchesQuery={(c, q) =>
+                c.razon_social.toLowerCase().includes(q) ||
+                (c.rfc ?? "").toLowerCase().includes(q) ||
+                (c.nombre_comercial ?? "").toLowerCase().includes(q)
+              }
+              newItemLabel="Cliente potencial (sin RFC)"
+              renderCreateForm={({ onCreated, onCancel, initialQuery }) => (
+                <QuickCreateClientePotencialForm
+                  empresaId={empresaId || null}
+                  initialNombre={initialQuery}
+                  onCreated={(c: ClientePotencialQuickItem) => {
+                    const nuevo: Cliente = {
+                      id: c.id,
+                      razon_social: c.razon_social,
+                      rfc: c.rfc,
+                      nombre_comercial: c.nombre_comercial,
+                      es_potencial: c.es_potencial,
+                    };
+                    setClientes((prev) => [nuevo, ...prev]);
+                    onCreated(nuevo);
+                  }}
+                  onCancel={onCancel}
+                />
+              )}
             />
+            {clienteId &&
+              clientes.find((c) => c.id === clienteId)?.es_potencial && (
+                <p className="mt-1.5 inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                  Cliente potencial · sin RFC
+                </p>
+              )}
           </div>
           <div className="col-span-2">
             <Label htmlFor="descripcion" className="text-sm">

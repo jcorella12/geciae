@@ -31,6 +31,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { ActividadForm } from "./actividad-form";
+import { ConvertirClienteButton } from "./convertir-cliente-button";
 import { OportunidadAcciones } from "./oportunidad-acciones";
 
 export const dynamic = "force-dynamic";
@@ -90,10 +91,14 @@ export default async function OportunidadDetallePage({
     | { codigo: string; razon_social: string }
     | null;
   const cliente = op.clientes as
-    | { razon_social: string; rfc: string; nombre_comercial: string | null }
+    | { razon_social: string; rfc: string | null; nombre_comercial: string | null }
     | null;
   const estado = op.estado as EstadoOportunidad;
   const esTerminal = ["ganado", "perdido"].includes(estado);
+
+  // Sprint 2.2: si el cliente sigue como potencial (rfc null), permitir convertirlo
+  // a formal. Heurística: rfc IS NULL ⇔ es_potencial (constraint de BD).
+  const clienteEsPotencial = cliente !== null && cliente.rfc === null;
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-8">
@@ -136,6 +141,11 @@ export default async function OportunidadDetallePage({
                 <code className="ml-2 font-mono text-[11px] text-ink-3">
                   {cliente.rfc}
                 </code>
+              )}
+              {clienteEsPotencial && (
+                <span className="ml-2 inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 text-[10.5px] font-medium text-amber-800">
+                  Potencial · sin RFC
+                </span>
               )}
             </p>
           </div>
@@ -282,6 +292,29 @@ export default async function OportunidadDetallePage({
               </span>
             </div>
           )}
+          {/* Sprint 2.2: si oportunidad ganada y cliente sigue potencial,
+              ofrecer convertirlo a formal antes de poder timbrar CFDI. */}
+          {estado === "ganado" &&
+            clienteEsPotencial &&
+            puedeEditar && (
+              <div className="col-span-2 flex items-center justify-between gap-3 rounded-md border border-amber-300/40 bg-amber-50 p-3">
+                <div>
+                  <p className="text-[12.5px] font-medium text-amber-900">
+                    Cliente todavía es potencial
+                  </p>
+                  <p className="text-[11.5px] text-amber-800">
+                    Para timbrar CFDI necesitas convertirlo a cliente formal
+                    (RFC, régimen, CP fiscal).
+                  </p>
+                </div>
+                <ConvertirClienteButton
+                  clienteId={op.cliente_id as string}
+                  clienteNombre={
+                    cliente?.nombre_comercial ?? cliente?.razon_social ?? ""
+                  }
+                />
+              </div>
+            )}
         </dl>
       </section>
 

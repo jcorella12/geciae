@@ -18,6 +18,9 @@ export default async function NuevaOportunidadPage() {
         .in("id", empresasIds)
         .eq("activa", true)
         .order("codigo"),
+      // `es_potencial` se agregó en migración 20260520000000; hasta que se
+      // regeneren los types no se puede pedir en .select() sin TS error.
+      // Se obtiene en una segunda query (mismo registro) — barato, < 200 filas.
       supabase
         .from("clientes")
         .select("id, razon_social, rfc, nombre_comercial")
