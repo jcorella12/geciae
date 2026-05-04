@@ -308,3 +308,89 @@ export async function toggleActivoProveedor(
   revalidatePath("/finanzas/proveedores");
   return { ok: true, error: null };
 }
+
+// ============================================================================
+// Sprint 1.5 — Archivado
+// ============================================================================
+
+/** Archivar un proveedor con motivo opcional. */
+export async function archivarProveedor(
+  proveedorId: string,
+  motivo?: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const g = await gate();
+  if (!g.ok) return { ok: false, error: g.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  // `estado` columna agregada en migración 20260519000000;
+  // hasta que se regeneren los types, casteamos para evitar TS error.
+  const { error } = await supabase
+    .from("proveedores")
+    .update({
+      estado: "archivado",
+      estado_motivo: motivo ?? null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", proveedorId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/proveedores/${proveedorId}`);
+  revalidatePath("/finanzas/proveedores");
+  return { ok: true, error: null };
+}
+
+/** Reactivar un proveedor archivado/inactivo (vuelve a estado='activo'). */
+export async function desarchivarProveedor(
+  proveedorId: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const g = await gate();
+  if (!g.ok) return { ok: false, error: g.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("proveedores")
+    .update({
+      estado: "activo",
+      estado_motivo: null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", proveedorId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/proveedores/${proveedorId}`);
+  revalidatePath("/finanzas/proveedores");
+  return { ok: true, error: null };
+}
+
+/** Archivar varios proveedores a la vez. */
+export async function archivarBulkProveedores(
+  ids: string[],
+  motivo?: string,
+): Promise<{ ok: boolean; error: string | null; count?: number }> {
+  if (ids.length === 0) return { ok: false, error: "Sin selección" };
+  const g = await gate();
+  if (!g.ok) return { ok: false, error: g.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  const { error, count } = await supabase
+    .from("proveedores")
+    .update({
+      estado: "archivado",
+      estado_motivo: motivo ?? null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never, { count: "exact" })
+    .in("id", ids);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/finanzas/proveedores");
+  return { ok: true, error: null, count: count ?? ids.length };
+}

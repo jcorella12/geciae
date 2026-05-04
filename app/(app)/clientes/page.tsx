@@ -18,6 +18,8 @@ import {
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import { EstadoTabs } from "@/components/shared/estado-tabs";
+
 import { ClientesToolbar } from "./clientes-toolbar";
 
 export const dynamic = "force-dynamic";
@@ -48,6 +50,8 @@ type SearchParams = {
   tipo?: string;
   riesgo?: string;
   activo?: string;
+  /** Estado de archivado: activo (default), inactivo, archivado o "todos" (omitido). */
+  estado?: "activo" | "inactivo" | "archivado" | "todos";
   score_min?: string;
   agrupar?: string;
   page?: string;
@@ -67,6 +71,8 @@ export default async function ClientesPage({
   const tipo = sp.tipo ?? "";
   const riesgo = sp.riesgo ?? "";
   const activo = sp.activo ?? "";
+  // Default: tab "Activos" (estado='activo'). El tab "Todos" omite el param.
+  const estadoTab = sp.estado ?? "activo";
   const scoreMinRaw = sp.score_min ?? "";
   const scoreMin = scoreMinRaw ? parseInt(scoreMinRaw, 10) : NaN;
   const agrupar = sp.agrupar ?? "";
@@ -82,6 +88,11 @@ export default async function ClientesPage({
 
   if (activo === "true") query = query.eq("activo", true);
   if (activo === "false") query = query.eq("activo", false);
+  // Filtro por estado de archivado (sprint 1.5)
+  if (estadoTab === "activo") query = query.eq("estado" as never, "activo");
+  else if (estadoTab === "inactivo") query = query.eq("estado" as never, "inactivo");
+  else if (estadoTab === "archivado") query = query.eq("estado" as never, "archivado");
+  // estadoTab === "todos" → no filtro
   if (tipo) query = query.eq("tipo", tipo);
   if (riesgo) query = query.eq("riesgo", riesgo);
   if (!Number.isNaN(scoreMin) && scoreMin > 0) {
@@ -200,6 +211,8 @@ export default async function ClientesPage({
           accent={cRiesgoAlto && cRiesgoAlto > 0 ? "danger" : "ok"}
         />
       </div>
+
+      <EstadoTabs current={estadoTab} basePath="/clientes" />
 
       <div className="mb-6">
         <ClientesToolbar

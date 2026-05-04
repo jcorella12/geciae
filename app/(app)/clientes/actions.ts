@@ -294,3 +294,89 @@ export async function toggleActivoCliente(
   revalidatePath("/clientes");
   return { ok: true, error: null };
 }
+
+// ============================================================================
+// Sprint 1.5 — Archivado
+// ============================================================================
+
+/** Archivar un cliente con motivo opcional. */
+export async function archivarCliente(
+  clienteId: string,
+  motivo?: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const gate = await gateGestion();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  // `estado` columna agregada en migración 20260519000000;
+  // hasta que se regeneren los types, casteamos para evitar TS error.
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      estado: "archivado",
+      estado_motivo: motivo ?? null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", clienteId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/clientes/${clienteId}`);
+  revalidatePath("/clientes");
+  return { ok: true, error: null };
+}
+
+/** Reactivar un cliente archivado/inactivo (vuelve a estado='activo'). */
+export async function desarchivarCliente(
+  clienteId: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const gate = await gateGestion();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  const { error } = await supabase
+    .from("clientes")
+    .update({
+      estado: "activo",
+      estado_motivo: null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never)
+    .eq("id", clienteId);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/clientes/${clienteId}`);
+  revalidatePath("/clientes");
+  return { ok: true, error: null };
+}
+
+/** Archivar varios clientes a la vez. */
+export async function archivarBulkClientes(
+  ids: string[],
+  motivo?: string,
+): Promise<{ ok: boolean; error: string | null; count?: number }> {
+  if (ids.length === 0) return { ok: false, error: "Sin selección" };
+  const gate = await gateGestion();
+  if (!gate.ok) return { ok: false, error: gate.error };
+
+  const supabase = createClient();
+  const { data: usr } = await supabase.auth.getUser();
+  const { error, count } = await supabase
+    .from("clientes")
+    .update({
+      estado: "archivado",
+      estado_motivo: motivo ?? null,
+      estado_modificado_at: new Date().toISOString(),
+      estado_modificado_por: usr.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    } as never, { count: "exact" })
+    .in("id", ids);
+
+  if (error) return { ok: false, error: error.message };
+  revalidatePath("/clientes");
+  return { ok: true, error: null, count: count ?? ids.length };
+}

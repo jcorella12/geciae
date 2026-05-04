@@ -19,6 +19,8 @@ import {
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import { EstadoTabs } from "@/components/shared/estado-tabs";
+
 import { ProveedoresToolbar } from "./proveedores-toolbar";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +46,8 @@ type SearchParams = {
   tipo?: string;
   semaforo?: string;
   activo?: string;
+  /** Estado de archivado: activo (default), inactivo, archivado o "todos" (omitido). */
+  estado?: "activo" | "inactivo" | "archivado" | "todos";
   repse?: string;
   aprobado?: string;
   agrupar?: string;
@@ -64,6 +68,8 @@ export default async function ProveedoresPage({
   const tipo = sp.tipo ?? "";
   const semaforo = sp.semaforo ?? "";
   const activo = sp.activo ?? "";
+  // Default: tab "Activos" (estado='activo'). El tab "Todos" omite el param.
+  const estadoTab = sp.estado ?? "activo";
   const repse = sp.repse ?? "";
   const aprobado = sp.aprobado ?? "";
   const agrupar = sp.agrupar ?? "";
@@ -79,6 +85,11 @@ export default async function ProveedoresPage({
 
   if (activo === "true") query = query.eq("activo", true);
   if (activo === "false") query = query.eq("activo", false);
+  // Filtro por estado de archivado (sprint 1.5)
+  if (estadoTab === "activo") query = query.eq("estado" as never, "activo");
+  else if (estadoTab === "inactivo") query = query.eq("estado" as never, "inactivo");
+  else if (estadoTab === "archivado") query = query.eq("estado" as never, "archivado");
+  // estadoTab === "todos" → no filtro
   if (tipo) query = query.eq("tipo_proveedor", tipo);
   if (semaforo) query = query.eq("semaforo", semaforo);
   if (repse === "true") query = query.eq("requiere_repse", true);
@@ -200,6 +211,8 @@ export default async function ProveedoresPage({
           sub="Subcontratistas activos"
         />
       </div>
+
+      <EstadoTabs current={estadoTab} basePath="/finanzas/proveedores" />
 
       <div className="mb-6">
         <ProveedoresToolbar
