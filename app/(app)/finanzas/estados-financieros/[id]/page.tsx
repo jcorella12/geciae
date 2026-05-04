@@ -64,10 +64,7 @@ export default async function EstadoFinancieroDetallePage({
   await obtenerVinculos();
 
   // La tabla/vista es nueva — cast minimo
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: ef } = await supa
+  const { data: ef } = await supabase
     .from("v_estados_financieros_lista")
     .select("*")
     .eq("id", params.id)
@@ -89,7 +86,7 @@ export default async function EstadoFinancieroDetallePage({
   // Generar URLs firmadas para cada doc (1 hr)
   const docsConUrl = await Promise.all(
     Object.entries(documentos).map(async ([slug, path]) => {
-      const { data } = await supa.storage
+      const { data } = await supabase.storage
         .from("estados-financieros")
         .createSignedUrl(path as string, 60 * 60);
       return { slug, path: path as string, url: data?.signedUrl };

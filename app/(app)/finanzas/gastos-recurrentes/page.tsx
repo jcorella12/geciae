@@ -77,21 +77,18 @@ export default async function GastosRecurrentesPage({
   const categoria = sp.categoria ?? "";
   const soloActivos = (sp.estado ?? "activos") === "activos";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("v_gastos_recurrentes_lista")
     .select("*")
     .order("monto_mensualizado", { ascending: false });
 
   if (empresaId) query = query.eq("empresa_id", empresaId);
-  if (categoria) query = query.eq("categoria", categoria);
+  // categoria viene de query string; cast al enum (BD valida).
+  if (categoria) query = query.eq("categoria", categoria as never);
   if (soloActivos) query = query.eq("activo", true);
 
-  const { data, error } = (await query) as {
-    data: Array<Record<string, unknown>> | null;
-    error: { message: string } | null;
-  };
-  const lista = data ?? [];
+  const { data, error } = await query;
+  const lista = (data ?? []) as Array<Record<string, unknown>>;
 
   const { data: empresas } = await supabase
     .from("empresas")

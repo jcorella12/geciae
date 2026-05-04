@@ -67,9 +67,7 @@ export default async function EstadosFinancierosPage({
   const empresaId = sp.empresa ?? "";
   const anio = sp.anio ? parseInt(sp.anio, 10) : null;
 
-  // La vista no está en types regenerados — usamos cast minimo
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("v_estados_financieros_lista")
     .select("*")
     .order("anio", { ascending: false })
@@ -78,11 +76,8 @@ export default async function EstadosFinancierosPage({
   if (empresaId) query = query.eq("empresa_id", empresaId);
   if (anio) query = query.eq("anio", anio);
 
-  const { data, error } = (await query) as {
-    data: Array<Record<string, unknown>> | null;
-    error: { message: string } | null;
-  };
-  const lista = data ?? [];
+  const { data, error } = await query;
+  const lista = (data ?? []) as Array<Record<string, unknown>>;
 
   const { data: empresas } = await supabase
     .from("empresas")

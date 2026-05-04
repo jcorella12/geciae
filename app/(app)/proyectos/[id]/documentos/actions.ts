@@ -89,12 +89,10 @@ export async function subirDocumento(
       error: `Storage: ${uploadErr.message}`,
     };
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error: insertErr } = await supa.from("proyecto_documentos").insert({
+  const { error: insertErr } = await supabase.from("proyecto_documentos").insert({
     proyecto_id: proyectoId,
-    categoria,
+    // categoria es enum categoria_documento_proyecto; lo valida BD.
+    categoria: categoria as never,
     nombre: nombre.trim() || file.name,
     descripcion,
     storage_path: path,
@@ -125,9 +123,7 @@ export async function eliminarDocumento(
   if (!g.ok) return { ...initialSimpleFormState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error: delDb } = await supa
+  const { error: delDb } = await supabase
     .from("proyecto_documentos")
     .delete()
     .eq("id", documentoId);

@@ -72,10 +72,7 @@ export async function crearTicket(
 
   const numero = await siguienteNumeroTicket(empresaId);
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: nuevo, error } = await supa
+  const { data: nuevo, error } = await supabase
     .from("tickets_soporte")
     .insert({
       empresa_id: empresaId,
@@ -145,8 +142,6 @@ export async function actualizarEstadoTicket(
   if (!g.ok) return { ...initialComentarioState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
   const patch: Record<string, unknown> = {
     estado: nuevoEstado,
     updated_at: new Date().toISOString(),
@@ -154,9 +149,10 @@ export async function actualizarEstadoTicket(
   if (nuevoEstado === "resuelto" || nuevoEstado === "cerrado") {
     patch.fecha_resolucion = new Date().toISOString();
   }
-  const { error } = await supa
+  const { error } = await supabase
     .from("tickets_soporte")
-    .update(patch)
+    // Patch dinámico; cast al tipo Update<tickets_soporte>.
+    .update(patch as never)
     .eq("id", ticketId);
 
   if (error) return { ...initialComentarioState, error: error.message };
@@ -175,9 +171,7 @@ export async function asignarTicket(
   if (!g.ok) return { ...initialComentarioState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error, data: ticket } = await supa
+  const { error, data: ticket } = await supabase
     .from("tickets_soporte")
     .update({ asignado_id: usuarioId, updated_at: new Date().toISOString() })
     .eq("id", ticketId)
@@ -233,9 +227,7 @@ export async function agregarComentarioTicket(
   if (!g.ok) return { ...initialComentarioState, error: g.error };
 
   const { data: usr } = await supabase.auth.getUser();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa.from("tickets_comentarios").insert({
+  const { error } = await supabase.from("tickets_comentarios").insert({
     ticket_id: ticketId,
     autor_id: usr.user?.id,
     contenido,

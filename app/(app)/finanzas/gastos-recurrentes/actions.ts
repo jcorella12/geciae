@@ -128,9 +128,7 @@ export async function crearGastoRecurrente(
     return { ok: false, id: null, error: "Sin permiso." };
   }
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data, error } = await supa
+  const { data, error } = await supabase
     .from("gastos_recurrentes")
     .insert({
       empresa_id: d.empresa_id,
@@ -189,9 +187,7 @@ export async function actualizarGastoRecurrente(
     return { ok: false, id: gastoId, error: "Sin permiso." };
   }
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("gastos_recurrentes")
     .update({
       empresa_id: d.empresa_id,
@@ -221,9 +217,7 @@ export async function toggleActivoGasto(
   activo: boolean,
 ): Promise<{ ok: boolean; error: string | null }> {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: g } = await supa
+  const { data: g } = await supabase
     .from("gastos_recurrentes")
     .select("empresa_id")
     .eq("id", gastoId)
@@ -232,7 +226,7 @@ export async function toggleActivoGasto(
   if (!(await gateGasto(g.empresa_id))) {
     return { ok: false, error: "Sin permiso." };
   }
-  const { error } = await supa
+  const { error } = await supabase
     .from("gastos_recurrentes")
     .update({ activo })
     .eq("id", gastoId);

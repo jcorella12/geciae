@@ -71,29 +71,33 @@ export default async function ItemInventarioPage({
 }) {
   const supabase = createClient();
   const v = await obtenerVinculos();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: item } = await supa
+  const { data: item } = await supabase
     .from("v_inventario_stock")
     .select("*")
     .eq("producto_id", params.id)
     .maybeSingle();
 
-  if (!item) notFound();
+  if (!item || !item.empresa_id || !item.producto_id) notFound();
 
   const puedeEditar =
     esCEO(v) || esRolEn(v, item.empresa_id, ["director", "operativo"]);
 
+  // Producto base — fuente_valor no está expuesta en la vista
+  const { data: productoBase } = await supabase
+    .from("catalogo_productos")
+    .select("fuente_valor")
+    .eq("id", params.id)
+    .maybeSingle();
+  const fuenteValor: string | null = productoBase?.fuente_valor ?? null;
+
   // Stock por almacén
-  const { data: stockAlm } = await supa
+  const { data: stockAlm } = await supabase
     .from("v_inventario_stock_almacen")
     .select("almacen_id, almacen_codigo, almacen_nombre, stock")
     .eq("producto_id", params.id);
 
   // Kardex (últimos 100 movimientos)
-  const { data: movs } = await supa
+  const { data: movs } = await supabase
     .from("v_inventario_movimientos")
     .select(
       "id, fecha, tipo, cantidad, costo_unitario, monto_total, almacen_codigo, almacen_nombre, proyecto_id, proyecto_codigo, proyecto_nombre, proveedor_nombre, numero_documento, observaciones, capturado_por_nombre, created_at",
@@ -219,7 +223,7 @@ export default async function ItemInventarioPage({
               itemId={item.producto_id}
               empresaId={item.empresa_id}
               valorActual={item.valor_mercado}
-              fuenteActual={item.fuente_valor ?? null}
+              fuenteActual={fuenteValor}
             />
           )}
         </div>
@@ -241,11 +245,11 @@ export default async function ItemInventarioPage({
             value={item.costo_maximo ? fmtMxn.format(Number(item.costo_maximo)) : "—"}
           />
         </div>
-        {item.fuente_valor && (
+        {fuenteValor && (
           <p className="mt-3 text-[11.5px] text-ink-3">
             Valor a mercado actualizado el{" "}
             {fmtFecha(item.fecha_actualizacion_valor)} · Fuente:{" "}
-            {item.fuente_valor}
+            {fuenteValor}
           </p>
         )}
       </section>
@@ -255,13 +259,13 @@ export default async function ItemInventarioPage({
         <section className="mb-6 rounded-lg border border-border bg-card p-5 shadow-sm">
           <h2 className="text-base font-semibold">Stock por almacén</h2>
           <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-            {stockAlm.map(
-              (a: {
-                almacen_id: string;
-                almacen_codigo: string;
-                almacen_nombre: string;
-                stock: number;
-              }) => (
+            {stockAlm
+              .filter(
+                (a): a is { almacen_id: string; almacen_codigo: string; almacen_nombre: string; stock: number } =>
+                  a.almacen_id !== null,
+              )
+              .map(
+              (a) => (
                 <div
                   key={a.almacen_id}
                   className="rounded-md border border-divider bg-bg-2/40 p-3"
@@ -328,23 +332,22 @@ export default async function ItemInventarioPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {movs.map(
-                  (m: {
-                    id: string;
-                    fecha: string;
-                    tipo: TipoMovimiento;
-                    cantidad: number;
-                    costo_unitario: number | null;
-                    monto_total: number | null;
-                    almacen_codigo: string;
-                    proyecto_id: string | null;
-                    proyecto_codigo: string | null;
-                    proyecto_nombre: string | null;
-                    proveedor_nombre: string | null;
-                    numero_documento: string | null;
-                    observaciones: string | null;
-                    capturado_por_nombre: string | null;
-                  }) => {
+                {(movs as Array<{
+                  id: string;
+                  fecha: string;
+                  tipo: TipoMovimiento;
+                  cantidad: number;
+                  costo_unitario: number | null;
+                  monto_total: number | null;
+                  almacen_codigo: string;
+                  proyecto_id: string | null;
+                  proyecto_codigo: string | null;
+                  proyecto_nombre: string | null;
+                  proveedor_nombre: string | null;
+                  numero_documento: string | null;
+                  observaciones: string | null;
+                  capturado_por_nombre: string | null;
+                }>).map((m) => {
                     const esEntrada = [
                       "entrada_compra",
                       "devolucion",

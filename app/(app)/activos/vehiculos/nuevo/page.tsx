@@ -9,9 +9,6 @@ export default async function NuevoVehiculoPage() {
   const supabase = createClient();
   const v = await obtenerVinculos();
   const empresasIds = Array.from(new Set(v.map((x) => x.empresa_id)));
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
   const [{ data: empresas }, { data: gastosRec }] = await Promise.all([
     supabase
       .from("empresas")
@@ -19,7 +16,7 @@ export default async function NuevoVehiculoPage() {
       .in("id", empresasIds)
       .eq("activa", true)
       .order("codigo"),
-    supa
+    supabase
       .from("gastos_recurrentes")
       .select("id, empresa_id, descripcion, monto")
       .eq("categoria", "arrendamiento_vehiculo")

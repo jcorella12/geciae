@@ -156,9 +156,7 @@ export default async function ProyectoDetailPage({
     .order("fecha_solicitud", { ascending: false });
 
   // Tareas del proyecto
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: tareasRaw } = await supa
+  const { data: tareasRaw } = await supabase
     .from("proyecto_tareas")
     .select(
       "id, proyecto_id, parent_id, orden, titulo, descripcion, es_hito, estado, prioridad, fecha_inicio_planeada, fecha_fin_planeada, fecha_inicio_real, fecha_fin_real, duracion_dias, porcentaje_avance, asignado_a, horas_estimadas, horas_reales, costo_estimado, costo_real",
@@ -169,7 +167,7 @@ export default async function ProyectoDetailPage({
   const tareas = (tareasRaw ?? []) as TareaRow[];
 
   // Avance ponderado desde la vista
-  const { data: avanceRow } = await supa
+  const { data: avanceRow } = await supabase
     .from("v_proyecto_avance")
     .select(
       "avance_promedio, avance_ponderado, total_tareas, tareas_completadas, tareas_en_curso, tareas_bloqueadas, hitos_completados, total_hitos, horas_estimadas_total, horas_reales_total, costo_estimado_total, costo_real_total",
@@ -178,7 +176,7 @@ export default async function ProyectoDetailPage({
     .maybeSingle();
 
   // Bitácora del proyecto (con tarea relacionada)
-  const { data: bitacoraRaw } = await supa
+  const { data: bitacoraRaw } = await supabase
     .from("v_proyecto_bitacora")
     .select(
       "id, fecha, tipo, titulo, descripcion, tarea_id, tarea_titulo, es_critica, visible_cliente, capturado_por_nombre",
@@ -209,18 +207,19 @@ export default async function ProyectoDetailPage({
   }>;
 
   // Documentos
-  const { data: documentosRaw } = await supa
+  const { data: documentosRaw } = await supabase
     .from("proyecto_documentos")
     .select(
       "id, categoria, nombre, descripcion, storage_path, mime_type, tamano_bytes, visible_cliente, subido_por_nombre, created_at",
     )
     .eq("proyecto_id", params.id)
     .order("created_at", { ascending: false });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const documentos = (documentosRaw ?? []) as any[];
+  const documentos = (documentosRaw ?? []).filter(
+    (d): d is typeof d & { created_at: string } => d.created_at !== null,
+  );
 
   // Salidas de inventario al proyecto
-  const { data: salidasInvRaw } = await supa
+  const { data: salidasInvRaw } = await supabase
     .from("v_inventario_movimientos")
     .select(
       "id, fecha, tipo, cantidad, costo_unitario, monto_total, producto_codigo, producto_nombre, unidad_medida, almacen_codigo, observaciones",
@@ -248,7 +247,7 @@ export default async function ProyectoDetailPage({
   );
 
   // Reportes formales del proyecto
-  const { data: reportesRaw } = await supa
+  const { data: reportesRaw } = await supabase
     .from("v_proyecto_reportes_lista")
     .select(
       "id, numero, tipo, severidad, estado, titulo, resumen, contenido, fecha_evento, fecha_reporte, ubicacion, impacto, accion_correctiva, responsable_nombre, fecha_compromiso, fecha_resolucion, visible_cliente, creado_por_nombre, tarea_titulo, adjuntos, created_at",
@@ -259,18 +258,17 @@ export default async function ProyectoDetailPage({
   const reportes = (reportesRaw ?? []) as ReporteRow[];
 
   // Equipo (miembros activos + histórico)
-  const { data: equipoRaw } = await supa
+  const { data: equipoRaw } = await supabase
     .from("proyecto_equipo")
     .select(
       "id, usuario_id, usuario_nombre, rol, fecha_alta, fecha_baja, observaciones",
     )
     .eq("proyecto_id", params.id)
     .order("fecha_alta", { ascending: false });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const equipo = (equipoRaw ?? []) as any[];
+  const equipo = equipoRaw ?? [];
 
   // Candidatos: empleados activos con cuenta de usuario en empresas visibles
-  const { data: candidatosRaw } = await supa
+  const { data: candidatosRaw } = await supabase
     .from("empleados")
     .select("usuario_id, nombre_completo, puesto, email_personal, empresa_id")
     .not("usuario_id", "is", null)

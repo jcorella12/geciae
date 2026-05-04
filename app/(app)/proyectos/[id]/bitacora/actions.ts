@@ -63,19 +63,17 @@ export async function registrarEventoBitacora(
     | undefined;
   const nombre =
     userMeta?.full_name ?? userMeta?.nombre ?? usr.user?.email ?? null;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa.from("proyecto_bitacora").insert({
+  const { error } = await supabase.from("proyecto_bitacora").insert({
     proyecto_id: proyectoId,
-    tipo,
+    // tipo es enum tipo_bitacora_proyecto; lo valida BD.
+    tipo: tipo as never,
     titulo,
     descripcion: descripcion.trim(),
     fecha,
     tarea_id: tareaId,
     es_critica: esCritica,
     visible_cliente: visibleCliente,
-    capturado_por: usr.user?.id,
+    capturado_por: usr.user?.id ?? null,
     capturado_por_nombre: nombre,
   });
 
@@ -93,9 +91,7 @@ export async function eliminarEventoBitacora(
   if (!g.ok) return { ...initialSimpleFormState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_bitacora")
     .delete()
     .eq("id", eventoId);

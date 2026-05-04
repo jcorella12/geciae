@@ -98,14 +98,12 @@ export async function subirDocumentoVehiculo(
       error: `Storage: ${uploadErr.message}`,
     };
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error: insertErr } = await supa
+  const { error: insertErr } = await supabase
     .from("vehiculos_documentos")
     .insert({
       vehiculo_id: vehiculoId,
-      categoria,
+      // categoria viene del FormData; se valida en BD por enum categoria_documento_vehiculo.
+      categoria: categoria as never,
       nombre: nombre.trim() || file.name,
       descripcion,
       numero_documento: numeroDocumento,
@@ -138,9 +136,7 @@ export async function eliminarDocumentoVehiculo(
   if (!g.ok) return { ...initialSimpleVehDocState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("vehiculos_documentos")
     .delete()
     .eq("id", documentoId);

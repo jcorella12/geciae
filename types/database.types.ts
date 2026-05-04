@@ -935,6 +935,7 @@ export type Database = {
           unidad_capacidad: string | null
           unidad_medida: string | null
           unidad_sat: string | null
+          updated_at: string | null
           url_datasheet: string | null
           valor_mercado: number | null
         }
@@ -970,6 +971,7 @@ export type Database = {
           unidad_capacidad?: string | null
           unidad_medida?: string | null
           unidad_sat?: string | null
+          updated_at?: string | null
           url_datasheet?: string | null
           valor_mercado?: number | null
         }
@@ -1005,6 +1007,7 @@ export type Database = {
           unidad_capacidad?: string | null
           unidad_medida?: string | null
           unidad_sat?: string | null
+          updated_at?: string | null
           url_datasheet?: string | null
           valor_mercado?: number | null
         }

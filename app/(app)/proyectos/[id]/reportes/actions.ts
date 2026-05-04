@@ -114,36 +114,38 @@ export async function crearReporte(
       .maybeSingle();
     responsableNombre = empleado?.nombre_completo ?? null;
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: nuevo, error } = await supa
+  // `numero` es requerido en TS pero lo auto-genera un trigger en BD
+  // (migración 20260516000000_proyecto_reportes.sql · RPT-{YEAR}-{seq}).
+  // Por eso casteamos el payload entero a `never`.
+  const insertPayload = {
+    proyecto_id: proyectoId,
+    // tipo/severidad/estado son enums (tipo_reporte_proyecto, etc.); BD valida.
+    tipo,
+    severidad,
+    estado: estadoInicial,
+    titulo,
+    resumen,
+    // En modo PDF, el contenido refiere al PDF anexo
+    contenido:
+      modo === "pdf"
+        ? (contenido ?? "Reporte adjunto en PDF — ver archivo en sección de adjuntos.")
+        : contenido,
+    fecha_evento: fechaEvento,
+    fecha_reporte: fechaReporte,
+    ubicacion,
+    impacto,
+    accion_correctiva: accionCorrectiva,
+    responsable_seguimiento: responsableSeguimiento,
+    responsable_nombre: responsableNombre,
+    fecha_compromiso: fechaCompromiso,
+    tarea_id: tareaId,
+    visible_cliente: visibleCliente,
+    creado_por: usr.user?.id,
+    creado_por_nombre: nombre,
+  };
+  const { data: nuevo, error } = await supabase
     .from("proyecto_reportes")
-    .insert({
-      proyecto_id: proyectoId,
-      tipo,
-      severidad,
-      estado: estadoInicial,
-      titulo,
-      resumen,
-      // En modo PDF, el contenido refiere al PDF anexo
-      contenido:
-        modo === "pdf"
-          ? (contenido ?? "Reporte adjunto en PDF — ver archivo en sección de adjuntos.")
-          : contenido,
-      fecha_evento: fechaEvento,
-      fecha_reporte: fechaReporte,
-      ubicacion,
-      impacto,
-      accion_correctiva: accionCorrectiva,
-      responsable_seguimiento: responsableSeguimiento,
-      responsable_nombre: responsableNombre,
-      fecha_compromiso: fechaCompromiso,
-      tarea_id: tareaId,
-      visible_cliente: visibleCliente,
-      creado_por: usr.user?.id,
-      creado_por_nombre: nombre,
-    })
+    .insert(insertPayload as never)
     .select("id")
     .single();
 
@@ -174,7 +176,7 @@ export async function crearReporte(
         es_principal: modo === "pdf",
         subido_en: new Date().toISOString(),
       };
-      await supa
+      await supabase
         .from("proyecto_reportes")
         .update({ adjuntos: [adjunto] })
         .eq("id", nuevo.id);
@@ -207,11 +209,10 @@ export async function actualizarEstadoReporte(
   if (!g.ok) return { ...initialSimpleState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_reportes")
-    .update({ estado: nuevoEstado })
+    // estado validado vs whitelist arriba; cast localizado al enum.
+    .update({ estado: nuevoEstado as never })
     .eq("id", reporteId);
 
   if (error) return { ...initialSimpleState, error: error.message };
@@ -229,9 +230,7 @@ export async function eliminarReporte(
 
   const supabase = createClient();
   // Recuperar adjuntos para limpiarlos del storage
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: rep } = await supa
+  const { data: rep } = await supabase
     .from("proyecto_reportes")
     .select("adjuntos")
     .eq("id", reporteId)
@@ -241,7 +240,7 @@ export async function eliminarReporte(
     ?.map((a) => a.path)
     .filter(Boolean) ?? [];
 
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_reportes")
     .delete()
     .eq("id", reporteId);
@@ -288,9 +287,7 @@ export async function adjuntarArchivoAReporte(
   if (upErr) return { ...initialSimpleState, error: upErr.message };
 
   // Anexar al JSONB
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: rep } = await supa
+  const { data: rep } = await supabase
     .from("proyecto_reportes")
     .select("adjuntos")
     .eq("id", reporteId)
@@ -310,7 +307,7 @@ export async function adjuntarArchivoAReporte(
     },
   ];
 
-  const { error: updErr } = await supa
+  const { error: updErr } = await supabase
     .from("proyecto_reportes")
     .update({ adjuntos: nuevos })
     .eq("id", reporteId);

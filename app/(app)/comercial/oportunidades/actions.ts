@@ -179,6 +179,9 @@ export async function cambiarEtapa(
     return { ok: false, error: "Sin permiso." };
   }
 
+  // Patch dinámico: campos opcionales se agregan condicionalmente.
+  // El tipo Update<oportunidades> es exacto; usamos un objeto plano y dejamos
+  // que Supabase valide en runtime (cast localizado para evitar `as any` global).
   const update: Record<string, unknown> = {
     estado: nuevaEtapa,
     probabilidad: PROBABILIDAD_DEFAULT[nuevaEtapa],
@@ -190,12 +193,9 @@ export async function cambiarEtapa(
       update.motivo_perdida = motivoPerdida.trim();
     }
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("oportunidades")
-    .update(update)
+    .update(update as never)
     .eq("id", oportunidadId);
   if (error) return { ok: false, error: error.message };
   revalidatePath("/comercial/oportunidades");

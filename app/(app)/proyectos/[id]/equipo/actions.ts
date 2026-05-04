@@ -58,14 +58,12 @@ export async function agregarMiembro(
   const nombreCompleto = empleado?.nombre_completo ?? null;
 
   const { data: usr } = await supabase.auth.getUser();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa.from("proyecto_equipo").insert({
+  const { error } = await supabase.from("proyecto_equipo").insert({
     proyecto_id: proyectoId,
     usuario_id: usuarioId,
     usuario_nombre: nombreCompleto,
-    rol,
+    // rol es enum rol_equipo_proyecto; lo valida BD.
+    rol: rol as never,
     observaciones,
     agregado_por: usr.user?.id,
   });
@@ -91,10 +89,8 @@ export async function removerMiembro(
   if (!g.ok) return { ...initialSimpleFormState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
   // Marcar baja en lugar de eliminar para histórico
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_equipo")
     .update({ fecha_baja: new Date().toISOString().slice(0, 10) })
     .eq("id", miembroId);

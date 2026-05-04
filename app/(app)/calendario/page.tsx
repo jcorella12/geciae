@@ -77,10 +77,6 @@ export default async function CalendarioPage({
   const v = await obtenerVinculos();
   const empresasIds = Array.from(new Set(v.map((x) => x.empresa_id)));
   const { data: { user } } = await supabase.auth.getUser();
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
   // Tareas
   let tareas: Array<{
     id: string;
@@ -90,7 +86,7 @@ export default async function CalendarioPage({
     es_hito: boolean | null;
   }> = [];
   if (user) {
-    const { data } = await supa
+    const { data } = await supabase
       .from("proyecto_tareas")
       .select("id, titulo, fecha_fin_planeada, proyecto_id, es_hito")
       .eq("asignado_a", user.id)
@@ -108,13 +104,18 @@ export default async function CalendarioPage({
     fecha_limite: string;
   }> = [];
   if (empresasIds.length > 0) {
-    const { data } = await supa
+    const { data } = await supabase
       .from("obligaciones_sat")
-      .select("id, tipo, periodo, fecha_limite")
+      .select("id, tipo, periodo_label, fecha_vencimiento")
       .in("empresa_id", empresasIds)
-      .gte("fecha_limite", fmt(inicio))
-      .lte("fecha_limite", fmt(fin));
-    obligaciones = data ?? [];
+      .gte("fecha_vencimiento", fmt(inicio))
+      .lte("fecha_vencimiento", fmt(fin));
+    obligaciones = (data ?? []).map((o) => ({
+      id: o.id,
+      tipo: o.tipo,
+      periodo: o.periodo_label ?? "",
+      fecha_limite: o.fecha_vencimiento,
+    }));
   }
 
   // Oportunidades con próxima_acción
@@ -125,7 +126,7 @@ export default async function CalendarioPage({
     proxima_accion: string | null;
   }> = [];
   if (user) {
-    const { data } = await supa
+    const { data } = await supabase
       .from("oportunidades")
       .select("id, nombre, fecha_proxima_accion, proxima_accion, vendedor_id")
       .gte("fecha_proxima_accion", fmt(inicio))
@@ -143,13 +144,23 @@ export default async function CalendarioPage({
     fecha_vencimiento: string | null;
   }> = [];
   if (empresasIds.length > 0) {
-    const { data } = await supa
+    const { data } = await supabase
       .from("v_vehiculos_documentos_alertas")
       .select("id, placa, categoria, vehiculo_id, fecha_vencimiento, empresa_id")
       .in("empresa_id", empresasIds)
       .gte("fecha_vencimiento", fmt(inicio))
       .lte("fecha_vencimiento", fmt(fin));
-    vehDocs = data ?? [];
+    vehDocs = (data ?? [])
+      .filter((d): d is typeof d & { id: string; vehiculo_id: string; categoria: string } =>
+        d.id !== null && d.vehiculo_id !== null && d.categoria !== null,
+      )
+      .map((d) => ({
+        id: d.id,
+        placa: d.placa,
+        categoria: d.categoria,
+        vehiculo_id: d.vehiculo_id,
+        fecha_vencimiento: d.fecha_vencimiento,
+      }));
   }
 
   // Construir mapa de eventos por día

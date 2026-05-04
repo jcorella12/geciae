@@ -75,10 +75,7 @@ export default async function VehiculoDetallePage({
     .order("fecha", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(50);
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: documentosRaw } = await supa
+  const { data: documentosRaw } = await supabase
     .from("vehiculos_documentos")
     .select(
       "id, categoria, nombre, descripcion, numero_documento, emisor, fecha_emision, fecha_vencimiento, monto, storage_path, mime_type, tamano_bytes, subido_por_nombre, created_at",
@@ -86,8 +83,12 @@ export default async function VehiculoDetallePage({
     .eq("vehiculo_id", params.id)
     .order("fecha_vencimiento", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const documentos = (documentosRaw ?? []) as any[];
+  // documentos: el componente cliente espera created_at non-null, pero el select
+  // lo devuelve nullable. Filtramos las filas sin created_at (no debería ocurrir
+  // porque la columna tiene default now()).
+  const documentos = (documentosRaw ?? []).filter(
+    (d): d is typeof d & { created_at: string } => d.created_at !== null,
+  );
 
   const empresa = vh.empresas as
     | { codigo: string; razon_social: string }

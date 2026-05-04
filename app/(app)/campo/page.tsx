@@ -34,9 +34,7 @@ export default async function CampoPage() {
     .limit(8);
 
   // Proyectos activos
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: proyectos } = await supa
+  const { data: proyectos } = await supabase
     .from("proyectos")
     .select("id, codigo, nombre")
     .in("empresa_id", empresasIds)

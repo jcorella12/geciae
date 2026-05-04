@@ -27,8 +27,7 @@ export default async function NuevoMovimientoPage({
       .in("id", empresasIds)
       .eq("activa", true)
       .order("codigo"),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
+    supabase
       .from("catalogo_productos")
       .select("id, codigo, nombre, unidad_medida, costo_promedio, empresa_id")
       .in("empresa_id", empresasIds)
@@ -74,11 +73,9 @@ export default async function NuevoMovimientoPage({
       </div>
       <MovimientoForm
         empresas={empresas ?? []}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        items={(items as any[]) ?? []}
+        items={items ?? []}
         almacenes={almacenes ?? []}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        proyectos={(proyectos as any[]) ?? []}
+        proyectos={proyectos ?? []}
         proveedores={proveedores ?? []}
         defaults={{
           producto_id: searchParams.producto,

@@ -33,14 +33,16 @@ export default async function NuevoTicketPage() {
     ]);
 
   // Empleados con cuenta de auth
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: candidatos } = await supa
+  const { data: candidatosRaw } = await supabase
     .from("empleados")
     .select("usuario_id, nombre_completo, puesto, empresa_id")
     .not("usuario_id", "is", null)
     .eq("activo", true)
     .order("nombre_completo");
+  // usuario_id ya está garantizado not null por el .not(...) above; lo narramos en TS.
+  const candidatos = (candidatosRaw ?? []).filter(
+    (c): c is typeof c & { usuario_id: string } => c.usuario_id !== null,
+  );
 
   return (
     <div className="mx-auto w-full max-w-3xl px-6 py-8">
@@ -59,8 +61,7 @@ export default async function NuevoTicketPage() {
         empresas={empresas ?? []}
         clientes={clientes ?? []}
         proyectos={proyectos ?? []}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        candidatos={(candidatos as any[]) ?? []}
+        candidatos={candidatos}
       />
     </div>
   );

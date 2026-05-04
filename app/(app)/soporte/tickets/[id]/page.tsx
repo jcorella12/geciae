@@ -80,17 +80,16 @@ export default async function TicketDetallePage({
   }
 
   // Empleados con cuenta para asignar
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: candidatosRaw } = await supa
+  const { data: candidatosRaw } = await supabase
     .from("empleados")
     .select("usuario_id, nombre_completo, puesto, empresa_id")
     .not("usuario_id", "is", null)
     .eq("activo", true)
     .eq("empresa_id", ticket.empresa_id)
     .order("nombre_completo");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const candidatos = (candidatosRaw ?? []) as any[];
+  const candidatos = (candidatosRaw ?? []).filter(
+    (c): c is typeof c & { usuario_id: string } => c.usuario_id !== null,
+  );
 
   const empresa = ticket.empresas as
     | { codigo: string; razon_social: string }

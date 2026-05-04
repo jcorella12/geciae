@@ -106,10 +106,7 @@ export default async function MiDiaPage() {
   });
   const empresasUser = filtro.empresasIds;
 
-  // Para queries que necesitan supa cast (tablas/views nuevas)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
+  // Para queries que necesitan supabase cast (tablas/views nuevas)
   // Datos para KPIs y secciones
   const [
     { data: ocsPendientes },
@@ -161,7 +158,7 @@ export default async function MiDiaPage() {
       : Promise.resolve({ data: [] as never[] }),
     // Tareas asignadas a mí (no completadas/canceladas)
     user
-      ? supa
+      ? supabase
           .from("proyecto_tareas")
           .select(
             "id, titulo, estado, prioridad, fecha_fin_planeada, porcentaje_avance, es_hito, proyecto_id, proyectos(codigo, nombre, empresas(codigo))",
@@ -173,7 +170,7 @@ export default async function MiDiaPage() {
       : Promise.resolve({ data: [] }),
     // Oportunidades con próxima acción esta semana o vencida
     user
-      ? supa
+      ? supabase
           .from("oportunidades")
           .select(
             "id, nombre, estado, monto_estimado, probabilidad, fecha_proxima_accion, proxima_accion, empresa_id, clientes(razon_social, nombre_comercial), empresas(codigo)",
@@ -186,23 +183,23 @@ export default async function MiDiaPage() {
       : Promise.resolve({ data: [] }),
     // Obligaciones SAT que vencen en 30 días
     empresasUser.length > 0
-      ? supa
+      ? supabase
           .from("obligaciones_sat")
-          .select("id, periodo, fecha_limite, tipo, monto_calculado, empresas(codigo)")
+          .select("id, periodo_label, fecha_vencimiento, tipo, monto_calculado, empresas(codigo)")
           .in("empresa_id", empresasUser)
-          .in("estado", ["pendiente", "calculado"])
+          .in("estado", ["pendiente", "en_proceso"])
           .lte(
-            "fecha_limite",
+            "fecha_vencimiento",
             new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
               .toISOString()
               .slice(0, 10),
           )
-          .order("fecha_limite", { ascending: true })
+          .order("fecha_vencimiento", { ascending: true })
           .limit(6)
       : Promise.resolve({ data: [] }),
     // Vehículos con seguros venciendo (solo si gestiona vehículos)
     empresasUser.length > 0
-      ? supa
+      ? supabase
           .from("v_vehiculos_lista")
           .select(
             "id, placa, marca, modelo, fecha_vencimiento_seguro, estatus, empresa_id",
@@ -235,7 +232,7 @@ export default async function MiDiaPage() {
     vehiculo_id: string;
   }> = [];
   if (empresasUser.length > 0) {
-    const { data } = await supa
+    const { data } = await supabase
       .from("v_vehiculos_documentos_alertas")
       .select(
         "id, vehiculo_id, placa, marca, modelo, categoria, nombre, fecha_vencimiento, dias_para_vencer, estado_vencimiento, empresa_id",
@@ -244,7 +241,40 @@ export default async function MiDiaPage() {
       .in("estado_vencimiento", ["vencido", "urgente", "proximo"])
       .order("fecha_vencimiento", { ascending: true })
       .limit(8);
-    documentosVehVencen = data ?? [];
+    documentosVehVencen = (data ?? [])
+      .filter(
+        (d): d is typeof d & {
+          id: string;
+          marca: string;
+          modelo: string;
+          categoria: string;
+          nombre: string;
+          estado_vencimiento: string;
+          empresa_id: string;
+          vehiculo_id: string;
+        } =>
+          d.id !== null &&
+          d.marca !== null &&
+          d.modelo !== null &&
+          d.categoria !== null &&
+          d.nombre !== null &&
+          d.estado_vencimiento !== null &&
+          d.empresa_id !== null &&
+          d.vehiculo_id !== null,
+      )
+      .map((d) => ({
+        id: d.id,
+        placa: d.placa,
+        marca: d.marca,
+        modelo: d.modelo,
+        categoria: d.categoria,
+        nombre: d.nombre,
+        fecha_vencimiento: d.fecha_vencimiento,
+        dias_para_vencer: d.dias_para_vencer,
+        estado_vencimiento: d.estado_vencimiento,
+        empresa_id: d.empresa_id,
+        vehiculo_id: d.vehiculo_id,
+      }));
   }
   const repseAlertas = (repseAlertasRaw as Array<{
     id: string;
@@ -293,7 +323,23 @@ export default async function MiDiaPage() {
     monto_calculado: number | null;
     empresas: { codigo: string } | null;
   };
-  const obligaciones = (obligacionesRaw ?? []) as ObligacionSat[];
+  const obligaciones: ObligacionSat[] = (
+    (obligacionesRaw as Array<{
+      id: string;
+      periodo_label: string | null;
+      fecha_vencimiento: string;
+      tipo: string;
+      monto_calculado: number | null;
+      empresas: { codigo: string } | null;
+    }> | null) ?? []
+  ).map((o) => ({
+    id: o.id,
+    periodo: o.periodo_label ?? "",
+    fecha_limite: o.fecha_vencimiento,
+    tipo: o.tipo,
+    monto_calculado: o.monto_calculado,
+    empresas: o.empresas,
+  }));
 
   type VehiculoAlerta = {
     id: string;

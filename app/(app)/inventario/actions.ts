@@ -71,9 +71,7 @@ export async function crearItemInventario(
   if (!g.ok) return { ...initialItemState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: nuevo, error } = await supa
+  const { data: nuevo, error } = await supabase
     .from("catalogo_productos")
     .insert({
       empresa_id: empresaId,
@@ -128,9 +126,7 @@ export async function actualizarValorMercado(
   if (!g.ok) return { ...initialMovimientoState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("catalogo_productos")
     .update({
       valor_mercado: valor,
@@ -189,15 +185,13 @@ export async function registrarMovimiento(
 
   const supabase = createClient();
   const { data: usr } = await supabase.auth.getUser();
-  const userMeta = usr.user?.user_metadata as
+  if (!usr.user)
+    return { ...initialMovimientoState, error: "Sesión expirada" };
+  const userMeta = usr.user.user_metadata as
     | { full_name?: string; nombre?: string }
     | undefined;
   const userNombre =
-    userMeta?.full_name ?? userMeta?.nombre ?? usr.user?.email ?? null;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
+    userMeta?.full_name ?? userMeta?.nombre ?? usr.user.email ?? null;
   // Validar stock suficiente para salidas
   const esSalida = [
     "salida_obra",
@@ -208,7 +202,7 @@ export async function registrarMovimiento(
     "traspaso_salida",
   ].includes(tipo);
   if (esSalida) {
-    const { data: stockRow } = await supa
+    const { data: stockRow } = await supabase
       .from("v_inventario_stock_almacen")
       .select("stock")
       .eq("producto_id", productoId)
@@ -223,7 +217,7 @@ export async function registrarMovimiento(
     }
   }
 
-  const { error } = await supa.from("inventario_movimientos").insert({
+  const { error } = await supabase.from("inventario_movimientos").insert({
     empresa_id: empresaId,
     producto_id: productoId,
     almacen_id: almacenId,
@@ -238,7 +232,7 @@ export async function registrarMovimiento(
     numero_documento: numeroDocumento,
     motivo: observaciones,
     observaciones,
-    capturado_por: usr.user?.id,
+    capturado_por: usr.user.id,
     capturado_por_nombre: userNombre,
   });
 
@@ -246,7 +240,7 @@ export async function registrarMovimiento(
 
   // Si es traspaso_salida, crear automáticamente entrada en almacén destino
   if (tipo === "traspaso_salida" && almacenDestinoId) {
-    await supa.from("inventario_movimientos").insert({
+    await supabase.from("inventario_movimientos").insert({
       empresa_id: empresaId,
       producto_id: productoId,
       almacen_id: almacenDestinoId,
@@ -257,7 +251,7 @@ export async function registrarMovimiento(
       numero_documento: numeroDocumento,
       motivo: `Traspaso desde otro almacén · ${observaciones ?? ""}`,
       observaciones: `Traspaso desde otro almacén · ${observaciones ?? ""}`,
-      capturado_por: usr.user?.id,
+      capturado_por: usr.user.id,
       capturado_por_nombre: userNombre,
     });
   }

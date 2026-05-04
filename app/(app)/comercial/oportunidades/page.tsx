@@ -238,6 +238,8 @@ export default async function OportunidadesPage({
 
       {vista === "kanban" ? (
         <KanbanPipeline
+          // OportunidadKanban usa `any` para joins anidados (clientes/empresas);
+          // cast requerido para alinear shapes pese a tipos generados.
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           oportunidades={lista as any[]}
           puedeEditar={puedeEditarPipeline}

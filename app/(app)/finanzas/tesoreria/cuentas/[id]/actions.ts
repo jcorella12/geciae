@@ -166,10 +166,7 @@ export async function extraerSaldoEdocuentaIA(
 }> {
   const supabase = createClient();
   // estados_cuenta_bancarios no está en types regenerados — cast minimo
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: edocta } = await supa
+  const { data: edocta } = await supabase
     .from("estados_cuenta_bancarios")
     .select(
       "id, cuenta_id, empresa_id, url_archivo, periodo_fin, bancos_cuentas(banco, empresa_id)",
@@ -238,14 +235,15 @@ export async function extraerSaldoEdocuentaIA(
   if (d.periodo_inicio) updatePayload.periodo_inicio = d.periodo_inicio;
   if (d.periodo_fin) updatePayload.periodo_fin = d.periodo_fin;
 
-  const { error: upErr } = await supa
+  const { error: upErr } = await supabase
     .from("estados_cuenta_bancarios")
-    .update(updatePayload)
+    // Patch dinámico (Record<string,unknown>); cast localizado al tipo Update.
+    .update(updatePayload as never)
     .eq("id", estadoId);
   if (upErr) return { ok: false, error: upErr.message };
 
   // Si es el último estado de la cuenta, actualizar saldo_actual
-  const { data: ultimo } = await supa
+  const { data: ultimo } = await supabase
     .from("estados_cuenta_bancarios")
     .select("id, periodo_fin, saldo_final")
     .eq("cuenta_id", edocta.cuenta_id)
@@ -253,7 +251,7 @@ export async function extraerSaldoEdocuentaIA(
     .limit(1)
     .maybeSingle();
   if (ultimo && ultimo.id === estadoId) {
-    await supa
+    await supabase
       .from("bancos_cuentas")
       .update({
         saldo_actual: d.saldo_final,
@@ -282,9 +280,7 @@ export async function descartarEdocuenta(
   motivo: string,
 ): Promise<{ ok: boolean; error: string | null }> {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: edocta } = await supa
+  const { data: edocta } = await supabase
     .from("estados_cuenta_bancarios")
     .select("cuenta_id, empresa_id, bancos_cuentas(empresa_id)")
     .eq("id", estadoId)
@@ -297,7 +293,7 @@ export async function descartarEdocuenta(
     return { ok: false, error: "Sin permiso." };
   }
 
-  const { error } = await supa
+  const { error } = await supabase
     .from("estados_cuenta_bancarios")
     .update({
       observaciones: `Descartado: ${motivo.trim() || "no aplica"}`,
@@ -371,9 +367,6 @@ export async function autoConciliarMes(
   sin_match: number;
 }> {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
   // Permiso
   const { data: cuenta } = await supabase
     .from("bancos_cuentas")
@@ -429,7 +422,7 @@ export async function autoConciliarMes(
   const hasta = hastaDate.toISOString().slice(0, 10);
 
   // Cargar movs no conciliados del mes
-  const { data: movs } = await supa
+  const { data: movs } = await supabase
     .from("bancos_movimientos")
     .select("id, fecha, monto, tipo, conciliado")
     .eq("cuenta_id", cuentaId)
@@ -455,10 +448,8 @@ export async function autoConciliarMes(
   for (const m of movs) {
     // Pedir sugerencias
     const { data: sugerencias } = await supabase.rpc(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      "sugerir_match_movimiento" as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { p_movimiento_id: m.id } as any,
+      "sugerir_match_movimiento",
+      { p_movimiento_id: m.id },
     );
     const lista =
       (sugerencias as Array<{
@@ -492,9 +483,10 @@ export async function autoConciliarMes(
       updatePayload.oc_relacionada_id = top.match_id;
     }
 
-    const { error: upErr } = await supa
+    const { error: upErr } = await supabase
       .from("bancos_movimientos")
-      .update(updatePayload)
+      // Patch dinámico; cast localizado al tipo Update.
+      .update(updatePayload as never)
       .eq("id", m.id);
 
     if (!upErr) {
@@ -536,9 +528,6 @@ export async function subirArchivoEdocta(
   filename?: string;
 }> {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
   const file = formData.get("file") as File | null;
   if (!file || !file.name) return { ok: false, error: "Sin archivo." };
 
@@ -589,7 +578,7 @@ export async function subirArchivoEdocta(
     return { ok: false, error: `Error al subir al bucket: ${upErr.message}` };
   }
 
-  const { data: nuevo, error: insErr } = await supa
+  const { data: nuevo, error: insErr } = await supabase
     .from("estados_cuenta_bancarios")
     .insert({
       cuenta_id: cuentaId,
@@ -634,10 +623,7 @@ export async function procesarExpFile(estadoId: string): Promise<{
   saldo_final?: number | null;
 }> {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: edocta } = await supa
+  const { data: edocta } = await supabase
     .from("estados_cuenta_bancarios")
     .select(
       "id, cuenta_id, empresa_id, url_archivo, formato, bancos_cuentas(empresa_id)",
@@ -765,7 +751,7 @@ export async function procesarExpFile(estadoId: string): Promise<{
     .filter((m) => m.cargo)
     .reduce((a, m) => a + (m.cargo ?? 0), 0);
 
-  await supa
+  await supabase
     .from("estados_cuenta_bancarios")
     .update({
       saldo_final: saldoFinal ?? 0,

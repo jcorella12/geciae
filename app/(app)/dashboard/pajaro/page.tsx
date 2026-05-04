@@ -91,8 +91,7 @@ export default async function VistaPajaroPage() {
           .select("id, total, estado")
           .eq("empresa_id", e.id)
           .eq("estado", "pendiente_aprobacion"),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (supabase as any)
+        supabase
           .from("v_repse_alertas")
           .select("id")
           .eq("empresa_id", e.id)

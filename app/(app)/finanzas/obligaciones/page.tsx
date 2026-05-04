@@ -90,22 +90,19 @@ export default async function ObligacionesSatPage({
   const estado = sp.estado ?? "";
   const tipo = sp.tipo ?? "";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("v_obligaciones_lista")
     .select("*")
     .eq("periodo_anio", anio)
     .order("fecha_vencimiento", { ascending: true });
 
   if (empresaId) query = query.eq("empresa_id", empresaId);
-  if (estado) query = query.eq("estado_efectivo", estado);
-  if (tipo) query = query.eq("tipo", tipo);
+  // estado/tipo vienen de query string; cast al enum (BD valida).
+  if (estado) query = query.eq("estado_efectivo", estado as never);
+  if (tipo) query = query.eq("tipo", tipo as never);
 
-  const { data, error } = (await query) as {
-    data: Array<Record<string, unknown>> | null;
-    error: { message: string } | null;
-  };
-  const lista = data ?? [];
+  const { data, error } = await query;
+  const lista = (data ?? []) as Array<Record<string, unknown>>;
 
   const { data: empresas } = await supabase
     .from("empresas")

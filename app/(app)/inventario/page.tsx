@@ -57,10 +57,7 @@ export default async function InventarioPage({
     empresasUsuario: v.map((x) => x.empresa_id),
     puedeConsolidado: puedeVerConsolidado(v),
   });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  let q = supa
+  let q = supabase
     .from("v_inventario_stock")
     .select(
       "producto_id, empresa_id, sku, nombre, categoria, marca, modelo, unidad_medida, stock_minimo, stock_actual, costo_promedio, costo_ultimo, valor_mercado, valor_costo, valor_mercado_total, ultimo_movimiento_fecha, estado_stock",

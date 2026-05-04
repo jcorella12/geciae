@@ -152,8 +152,6 @@ export default async function DashboardPage() {
   ]);
 
   // Datos adicionales: crédito + inversión + obligaciones + cotizaciones + EFM + gastos recurrentes
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
   const [
     { data: cuentasFull },
     { data: obligaciones },
@@ -163,13 +161,13 @@ export default async function DashboardPage() {
     { data: gastosRec },
     { data: inventarioFull },
   ] = await Promise.all([
-    supa
+    supabase
       .from("v_bancos_cuentas_full")
       .select(
         "id, empresa_id, empresa_codigo, banco, alias, tipo, moneda, saldo_actual, linea_credito_monto_aprobado, linea_credito_dispuesto, linea_credito_disponible, linea_credito_proximo_pago_monto, linea_credito_proximo_pago_fecha, inversion_es_garantia",
       )
       .eq("activa", true),
-    supa
+    supabase
       .from("v_obligaciones_lista")
       .select(
         "id, empresa_id, empresa_codigo, tipo, periodo_label, fecha_vencimiento, dias_al_vencer, estado_efectivo, monto_calculado",
@@ -177,11 +175,11 @@ export default async function DashboardPage() {
       .in("estado_efectivo", ["pendiente", "fuera_plazo"])
       .lte("dias_al_vencer", 30)
       .order("fecha_vencimiento"),
-    supa
+    supabase
       .from("cotizaciones")
       .select("id, empresa_id, total, estado")
       .neq("estado", "convertida"),
-    supa
+    supabase
       .from("estados_financieros_mensuales")
       .select(
         "empresa_id, anio, mes, utilidad_neta, ingresos_totales, egresos_totales",
@@ -189,7 +187,7 @@ export default async function DashboardPage() {
       .order("anio", { ascending: false })
       .order("mes", { ascending: false })
       .limit(50),
-    supa
+    supabase
       .from("bancos_movimientos")
       .select("conciliado, fecha")
       .gte(
@@ -198,13 +196,13 @@ export default async function DashboardPage() {
           .toISOString()
           .slice(0, 10),
       ),
-    supa
+    supabase
       .from("v_gastos_recurrentes_lista")
       .select(
         "id, empresa_id, empresa_codigo, categoria, descripcion, monto, monto_mensualizado, frecuencia",
       )
       .eq("activo", true),
-    supa
+    supabase
       .from("v_inventario_stock")
       .select(
         "producto_id, empresa_id, sku, nombre, categoria, stock_actual, costo_promedio, valor_mercado, valor_costo, valor_mercado_total, estado_stock, unidad_medida",

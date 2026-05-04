@@ -48,11 +48,8 @@ export async function WidgetsPorRol({
 // ============================================================================
 async function ResidenteWidgets({ empresasIds }: { empresasIds: string[] }) {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
   // Vehículos asignados al user (a través de la flota disponible)
-  const { data: vehiculos } = await supa
+  const { data: vehiculos } = await supabase
     .from("v_vehiculos_lista")
     .select("id, placa, marca, modelo, estatus, empresa_id")
     .in("empresa_id", empresasIds)
@@ -60,7 +57,7 @@ async function ResidenteWidgets({ empresasIds }: { empresasIds: string[] }) {
     .limit(4);
 
   // Stock bajo en inventario (riesgo en obra)
-  const { data: stockBajo } = await supa
+  const { data: stockBajo } = await supabase
     .from("v_inventario_stock")
     .select("producto_id, sku, nombre, stock_actual, unidad_medida, estado_stock")
     .in("empresa_id", empresasIds)
@@ -112,13 +109,13 @@ async function ResidenteWidgets({ empresasIds }: { empresasIds: string[] }) {
             Vehículos disponibles
           </h3>
           <div className="grid gap-1.5 sm:grid-cols-2 lg:grid-cols-4">
-            {vehiculos?.map(
-              (v: {
-                id: string;
-                placa: string | null;
-                marca: string;
-                modelo: string;
-              }) => (
+            {(vehiculos as Array<{
+              id: string;
+              placa: string | null;
+              marca: string;
+              modelo: string;
+            }> | null)?.map(
+              (v) => (
                 <Link
                   key={v.id}
                   href={`/activos/vehiculos/${v.id}`}
@@ -144,14 +141,14 @@ async function ResidenteWidgets({ empresasIds }: { empresasIds: string[] }) {
             Stock crítico
           </h3>
           <ul className="space-y-0.5 text-[11px]">
-            {stockBajo?.map(
-              (s: {
-                producto_id: string;
-                sku: string;
-                nombre: string;
-                stock_actual: number;
-                unidad_medida: string;
-              }) => (
+            {(stockBajo as Array<{
+              producto_id: string;
+              sku: string;
+              nombre: string;
+              stock_actual: number;
+              unidad_medida: string;
+            }> | null)?.map(
+              (s) => (
                 <li key={s.producto_id}>
                   <Link
                     href={`/inventario/${s.producto_id}`}
@@ -277,10 +274,7 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
 // ============================================================================
 async function AlmacenistaWidgets({ empresasIds }: { empresasIds: string[] }) {
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
-  const { data: stockBajo } = await supa
+  const { data: stockBajo } = await supabase
     .from("v_inventario_stock")
     .select(
       "producto_id, sku, nombre, stock_actual, unidad_medida, stock_minimo, estado_stock, valor_costo",
@@ -289,8 +283,8 @@ async function AlmacenistaWidgets({ empresasIds }: { empresasIds: string[] }) {
     .in("estado_stock", ["agotado", "bajo"])
     .limit(8);
 
-  const valorCritico = (stockBajo ?? []).reduce(
-    (a: number, s: { valor_costo?: number }) => a + Number(s.valor_costo ?? 0),
+  const valorCritico = ((stockBajo ?? []) as Array<{ valor_costo: number | null }>).reduce(
+    (a: number, s) => a + Number(s.valor_costo ?? 0),
     0,
   );
 
@@ -338,16 +332,16 @@ async function AlmacenistaWidgets({ empresasIds }: { empresasIds: string[] }) {
             Stock crítico (valor a costo: {fmtMxn.format(valorCritico)})
           </h3>
           <ul className="grid gap-1 sm:grid-cols-2">
-            {stockBajo?.map(
-              (s: {
-                producto_id: string;
-                sku: string;
-                nombre: string;
-                stock_actual: number;
-                stock_minimo: number;
-                unidad_medida: string;
-                estado_stock: string;
-              }) => (
+            {(stockBajo as Array<{
+              producto_id: string;
+              sku: string;
+              nombre: string;
+              stock_actual: number;
+              stock_minimo: number;
+              unidad_medida: string;
+              estado_stock: string;
+            }> | null)?.map(
+              (s) => (
                 <li
                   key={s.producto_id}
                   className="flex items-center justify-between gap-2 rounded-md border border-divider bg-card px-2.5 py-1 text-[11px]"
@@ -383,9 +377,7 @@ async function RrhhWidgets({ empresasIds }: { empresasIds: string[] }) {
   const supabase = createClient();
 
   // REPSE alertas
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data: repseAlertas } = await supa
+  const { data: repseAlertas } = await supabase
     .from("v_repse_alertas")
     .select("id, nombre_completo, dias_para_vencer, estado_repse, empresa_id")
     .in("empresa_id", empresasIds)
@@ -432,13 +424,13 @@ async function RrhhWidgets({ empresasIds }: { empresasIds: string[] }) {
             Constancias REPSE críticas
           </h3>
           <ul className="space-y-1 text-[11.5px]">
-            {repseAlertas?.map(
-              (r: {
-                id: string;
-                nombre_completo: string;
-                dias_para_vencer: number | null;
-                estado_repse: string;
-              }) => (
+            {(repseAlertas as Array<{
+              id: string;
+              nombre_completo: string;
+              dias_para_vencer: number | null;
+              estado_repse: string;
+            }> | null)?.map(
+              (r) => (
                 <li key={r.id} className="flex items-center justify-between">
                   <Link
                     href={`/personas/${r.id}`}

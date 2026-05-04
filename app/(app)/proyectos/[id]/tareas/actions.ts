@@ -108,12 +108,10 @@ export async function crearTarea(
     ...parsed.data,
     capturado_por: usr.user?.id,
   });
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { data, error } = await supa
+  // Insert dinámico (zod ya valida); cast al tipo Insert<proyecto_tareas>.
+  const { data, error } = await supabase
     .from("proyecto_tareas")
-    .insert(insertData)
+    .insert(insertData as never)
     .select("id")
     .single();
 
@@ -185,10 +183,8 @@ export async function actualizarTarea(
   if (!g.ok) return { ...initialTareaState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
   const updateData = clean(parsed.data);
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_tareas")
     .update(updateData)
     .eq("id", tareaId);
@@ -220,12 +216,11 @@ export async function moverTareaEstado(
   if (!g.ok) return { ...initialSimpleState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_tareas")
+    // estado validado vs whitelist arriba; cast al enum estado_tarea_proyecto.
     .update({
-      estado: nuevoEstado,
+      estado: nuevoEstado as never,
       ...(nuevoEstado === "completada"
         ? { porcentaje_avance: 100 }
         : nuevoEstado === "en_curso"
@@ -252,16 +247,14 @@ export async function actualizarAvanceTarea(
   if (!g.ok) return { ...initialSimpleState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-
   const patch: Record<string, unknown> = { porcentaje_avance: porcentaje };
   if (porcentaje === 100) patch.estado = "completada";
   else if (porcentaje > 0) patch.estado = "en_curso";
 
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_tareas")
-    .update(patch)
+    // Patch dinámico; cast al tipo Update<proyecto_tareas>.
+    .update(patch as never)
     .eq("id", tareaId);
 
   if (error) return { ...initialSimpleState, error: error.message };
@@ -316,10 +309,7 @@ export async function adjuntarArchivoATarea(
       upsert: false,
     });
   if (upErr) return { ...initialSimpleState, error: upErr.message };
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error: insErr } = await supa.from("proyecto_documentos").insert({
+  const { error: insErr } = await supabase.from("proyecto_documentos").insert({
     proyecto_id: proyectoId,
     categoria: "otro",
     nombre: file.name,
@@ -348,9 +338,7 @@ export async function eliminarTarea(
   if (!g.ok) return { ...initialSimpleState, error: g.error };
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const supa = supabase as any;
-  const { error } = await supa
+  const { error } = await supabase
     .from("proyecto_tareas")
     .delete()
     .eq("id", tareaId);
