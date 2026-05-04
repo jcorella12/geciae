@@ -160,6 +160,7 @@ export default async function DashboardPage() {
     { data: efmRecientes },
     { data: movsConcil },
     { data: gastosRec },
+    { data: inventarioFull },
   ] = await Promise.all([
     supa
       .from("v_bancos_cuentas_full")
@@ -202,6 +203,11 @@ export default async function DashboardPage() {
         "id, empresa_id, empresa_codigo, categoria, descripcion, monto, monto_mensualizado, frecuencia",
       )
       .eq("activo", true),
+    supa
+      .from("v_inventario_stock")
+      .select(
+        "producto_id, empresa_id, sku, nombre, categoria, stock_actual, costo_promedio, valor_mercado, valor_costo, valor_mercado_total, estado_stock, unidad_medida",
+      ),
   ]);
 
   // Filtrado por empresas visibles — respeta el switcher del topbar
@@ -283,6 +289,49 @@ export default async function DashboardPage() {
   const cfdisVisibles = (cfdis ?? []).filter((c) =>
     empresasVisibles.includes(c.empresa_id),
   );
+
+  // Inventario consolidado
+  type InventarioRow = {
+    producto_id: string;
+    empresa_id: string;
+    sku: string;
+    nombre: string;
+    categoria: string;
+    stock_actual: number;
+    costo_promedio: number | null;
+    valor_mercado: number | null;
+    valor_costo: number;
+    valor_mercado_total: number;
+    estado_stock: "agotado" | "bajo" | "normal";
+    unidad_medida: string | null;
+  };
+  const inventarioVisible = (
+    (inventarioFull ?? []) as InventarioRow[]
+  ).filter((i) => empresasVisibles.includes(i.empresa_id));
+  const invValorCosto = inventarioVisible.reduce(
+    (a, i) => a + Number(i.valor_costo ?? 0),
+    0,
+  );
+  const invValorMercado = inventarioVisible.reduce(
+    (a, i) => a + Number(i.valor_mercado_total ?? 0),
+    0,
+  );
+  const invItemsTotal = inventarioVisible.length;
+  const invItemsAlerta = inventarioVisible.filter(
+    (i) => i.estado_stock === "agotado" || i.estado_stock === "bajo",
+  ).length;
+  const invDeltaPct =
+    invValorCosto > 0
+      ? ((invValorMercado - invValorCosto) / invValorCosto) * 100
+      : 0;
+
+  // Top items por valor
+  const invTopItems = [...inventarioVisible]
+    .sort(
+      (a, b) =>
+        Number(b.valor_mercado_total ?? 0) - Number(a.valor_mercado_total ?? 0),
+    )
+    .slice(0, 5);
 
   // KPIs consolidados
   const ahora = new Date();
@@ -812,6 +861,141 @@ export default async function DashboardPage() {
           }
         />
       </div>
+
+      {/* Fila 4.6: Inventario consolidado */}
+      {invItemsTotal > 0 && (
+        <section className="mb-5 rounded-md border border-border bg-card shadow-xs">
+          <header className="flex items-center justify-between border-b border-divider px-5 py-3">
+            <div>
+              <h2 className="text-[13.5px] font-semibold">
+                Inventario · valor consolidado
+              </h2>
+              <p className="mt-0.5 text-[11.5px] text-ink-3">
+                {invItemsTotal} items activos
+                {invItemsAlerta > 0 && (
+                  <>
+                    {" · "}
+                    <span className="font-medium text-amber-700">
+                      {invItemsAlerta} en alerta
+                    </span>
+                  </>
+                )}
+              </p>
+            </div>
+            <Link
+              href="/inventario"
+              className="text-[12px] text-brand hover:text-brand-deep"
+            >
+              Ver inventario completo →
+            </Link>
+          </header>
+
+          <div className="grid grid-cols-2 gap-px border-b border-divider bg-divider lg:grid-cols-4">
+            <div className="bg-card px-5 py-4">
+              <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+                Valor a costo
+              </p>
+              <p className="mt-1 font-mono text-[20px] font-semibold tabular-nums tracking-[-0.02em]">
+                {fmtMxn.format(invValorCosto)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-ink-3">
+                stock × costo promedio
+              </p>
+            </div>
+            <div className="bg-card px-5 py-4">
+              <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+                Valor a mercado
+              </p>
+              <p className="mt-1 font-mono text-[20px] font-semibold tabular-nums tracking-[-0.02em]">
+                {fmtMxn.format(invValorMercado)}
+              </p>
+              <p
+                className={`mt-0.5 text-[11px] font-medium ${
+                  invDeltaPct > 2
+                    ? "text-emerald-700"
+                    : invDeltaPct < -2
+                      ? "text-red-700"
+                      : "text-ink-3"
+                }`}
+              >
+                {Math.abs(invDeltaPct) < 0.5
+                  ? "≈ costo"
+                  : `${invDeltaPct > 0 ? "▲ +" : "▼ "}${invDeltaPct.toFixed(1)}% vs costo`}
+              </p>
+            </div>
+            <div className="bg-card px-5 py-4">
+              <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+                Plusvalía / merma
+              </p>
+              <p
+                className={`mt-1 font-mono text-[20px] font-semibold tabular-nums tracking-[-0.02em] ${
+                  invValorMercado - invValorCosto >= 0
+                    ? "text-emerald-700"
+                    : "text-red-700"
+                }`}
+              >
+                {invValorMercado - invValorCosto >= 0 ? "+" : ""}
+                {fmtMxn.format(invValorMercado - invValorCosto)}
+              </p>
+              <p className="mt-0.5 text-[11px] text-ink-3">
+                potencial vs costo histórico
+              </p>
+            </div>
+            <div className="bg-card px-5 py-4">
+              <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+                Items en alerta
+              </p>
+              <p
+                className={`mt-1 font-mono text-[20px] font-semibold tabular-nums tracking-[-0.02em] ${
+                  invItemsAlerta > 0 ? "text-amber-700" : "text-emerald-700"
+                }`}
+              >
+                {invItemsAlerta}
+              </p>
+              <p className="mt-0.5 text-[11px] text-ink-3">
+                {invItemsAlerta > 0
+                  ? "agotados o stock bajo"
+                  : "stock OK"}
+              </p>
+            </div>
+          </div>
+
+          {invTopItems.length > 0 && (
+            <div className="px-5 py-3">
+              <p className="mb-2 font-mono text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
+                Top 5 por valor a mercado
+              </p>
+              <ul className="space-y-1">
+                {invTopItems.map((it) => (
+                  <li
+                    key={it.producto_id}
+                    className="flex items-center justify-between gap-3 text-[12.5px]"
+                  >
+                    <Link
+                      href={`/inventario/${it.producto_id}`}
+                      className="min-w-0 flex-1 truncate hover:text-brand"
+                    >
+                      <code className="font-mono text-[10.5px] text-ink-3">
+                        {it.sku}
+                      </code>{" "}
+                      {it.nombre}
+                    </Link>
+                    <span className="text-[11px] text-ink-3 tabular-nums">
+                      {Number(it.stock_actual).toLocaleString("es-MX", {
+                        maximumFractionDigits: 1,
+                      })}{" "}
+                      {it.unidad_medida}
+                    </span>
+                    <span className="font-mono text-[12.5px] font-medium tabular-nums">
+                      {fmtMxn.format(Number(it.valor_mercado_total ?? 0))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Fila 4.6: Obligaciones SAT próximas + conciliación */}
       <div
