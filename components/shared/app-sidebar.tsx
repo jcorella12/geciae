@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Inbox,
   LifeBuoy,
   Package,
   FileBarChart,
@@ -98,6 +99,7 @@ export function AppSidebar({
     label: "OPERACIÓN",
     items: [
       { href: "/proyectos", label: "Proyectos", icon: Briefcase },
+      { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
       { href: "/inventario", label: "Inventario", icon: Package },
       { href: "/finanzas/oc", label: "Compras (OC)", icon: ShoppingCart },
       { href: "/finanzas/ot", label: "OT inter-co", icon: ClipboardList },

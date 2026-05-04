@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Clock,
   HardHat,
+  Inbox,
   Package,
   Receipt,
   Repeat,
@@ -20,6 +21,13 @@ import {
   ETIQUETA_TIPO_OBLIGACION,
   type TipoObligacion,
 } from "@/lib/obligaciones/state";
+import {
+  COLOR_URGENCIA,
+  ETIQUETA_TIPO_SOLICITUD,
+  ETIQUETA_URGENCIA,
+  type TipoSolicitud,
+  type UrgenciaSolicitud,
+} from "@/lib/solicitudes/state";
 
 const fmtMxn = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -192,37 +200,58 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
     .toISOString()
     .slice(0, 10);
 
-  const [{ data: porCobrar }, { data: porPagar }, { data: proximasOblig }] =
-    await Promise.all([
-      supabase
-        .from("cfdi")
-        .select("id, total, saldo_pendiente, fecha_emision")
-        .in("empresa_id", empresasIds)
-        .eq("es_emitido", true)
-        .eq("estado", "timbrado")
-        .gt("saldo_pendiente", 0),
-      supabase
-        .from("cfdi")
-        .select("id, total, saldo_pendiente, fecha_emision")
-        .in("empresa_id", empresasIds)
-        .eq("es_emitido", false)
-        .eq("estado", "timbrado")
-        .gt("saldo_pendiente", 0)
-        .gte("fecha_emision", hace30d),
-      empresasIds.length > 0
-        ? supabase
-            .from("v_obligaciones_lista")
-            .select(
-              "id, empresa_codigo, tipo, periodo_label, fecha_vencimiento, dias_al_vencer, estado_efectivo",
-            )
-            .in("empresa_id", empresasIds)
-            .gte("fecha_vencimiento", hoy)
-            .lte("fecha_vencimiento", en14)
-            .in("estado_efectivo", ["pendiente", "en_proceso"])
-            .order("fecha_vencimiento", { ascending: true })
-            .limit(5)
-        : Promise.resolve({ data: [] }),
-    ]);
+  const { data: usrSession } = await supabase.auth.getUser();
+  const yo = usrSession.user?.id ?? null;
+
+  const [
+    { data: porCobrar },
+    { data: porPagar },
+    { data: proximasOblig },
+    { data: solicitudesPorAtender },
+  ] = await Promise.all([
+    supabase
+      .from("cfdi")
+      .select("id, total, saldo_pendiente, fecha_emision")
+      .in("empresa_id", empresasIds)
+      .eq("es_emitido", true)
+      .eq("estado", "timbrado")
+      .gt("saldo_pendiente", 0),
+    supabase
+      .from("cfdi")
+      .select("id, total, saldo_pendiente, fecha_emision")
+      .in("empresa_id", empresasIds)
+      .eq("es_emitido", false)
+      .eq("estado", "timbrado")
+      .gt("saldo_pendiente", 0)
+      .gte("fecha_emision", hace30d),
+    empresasIds.length > 0
+      ? supabase
+          .from("v_obligaciones_lista")
+          .select(
+            "id, empresa_codigo, tipo, periodo_label, fecha_vencimiento, dias_al_vencer, estado_efectivo",
+          )
+          .in("empresa_id", empresasIds)
+          .gte("fecha_vencimiento", hoy)
+          .lte("fecha_vencimiento", en14)
+          .in("estado_efectivo", ["pendiente", "en_proceso"])
+          .order("fecha_vencimiento", { ascending: true })
+          .limit(5)
+      : Promise.resolve({ data: [] }),
+    // Solicitudes asignadas al usuario o sin asignar (pendientes)
+    yo
+      ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ((supabase as any)
+          .from("v_proyecto_solicitudes_lista")
+          .select(
+            "id, proyecto_id, proyecto_codigo, numero, tipo, titulo, urgencia, estado, asignado_a_id",
+          )
+          .in("estado", ["solicitada", "en_revision", "aprobada"])
+          .or(`asignado_a_id.eq.${yo},asignado_a_id.is.null`)
+          .order("urgencia", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(5))
+      : Promise.resolve({ data: [] }),
+  ]);
 
   const totalCxC = (porCobrar ?? []).reduce(
     (a, c) => a + Number(c.saldo_pendiente ?? 0),
@@ -347,6 +376,57 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
                 </li>
               );
             })}
+          </ul>
+        </div>
+      )}
+
+      {/* Solicitudes por atender (sprint 4.4) */}
+      {(solicitudesPorAtender?.length ?? 0) > 0 && (
+        <div className="mt-4 rounded-md border border-border bg-card p-3">
+          <h3 className="mb-2 flex items-center gap-1.5 text-[12.5px] font-semibold">
+            <Inbox className="h-3.5 w-3.5 text-blue-700" />
+            Solicitudes por atender
+            <Link
+              href="/solicitudes?tab=atender"
+              className="ml-auto text-[10.5px] font-normal text-brand hover:underline"
+            >
+              Ver todas →
+            </Link>
+          </h3>
+          <ul className="space-y-1">
+            {(solicitudesPorAtender ?? []).map((s: Record<string, unknown>) => (
+              <li key={s.id as string}>
+                <Link
+                  href={`/proyectos/${s.proyecto_id}?tab=solicitudes&sol=${s.id}`}
+                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[11.5px] hover:bg-bg-2"
+                >
+                  <span className="flex min-w-0 items-center gap-2">
+                    <span
+                      className={`rounded-full px-1.5 py-0.5 text-[9.5px] font-medium ${
+                        COLOR_URGENCIA[s.urgencia as UrgenciaSolicitud]
+                      }`}
+                    >
+                      {ETIQUETA_URGENCIA[s.urgencia as UrgenciaSolicitud]}
+                    </span>
+                    <code className="font-mono text-[10px] text-ink-3">
+                      {s.numero as string}
+                    </code>
+                    <span className="font-medium text-ink-2">
+                      {s.proyecto_codigo as string}
+                    </span>
+                    <span className="truncate text-ink-3">
+                      {ETIQUETA_TIPO_SOLICITUD[s.tipo as TipoSolicitud]}:{" "}
+                      {s.titulo as string}
+                    </span>
+                  </span>
+                  {!s.asignado_a_id && (
+                    <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9.5px] font-medium text-amber-800">
+                      sin asignar
+                    </span>
+                  )}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
       )}
