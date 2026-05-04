@@ -386,19 +386,20 @@ export default async function CotizacionesPage({
                       "es-MX",
                     );
                   return (
-                    <TableRow key={c.id}>
+                    <TableRow
+                      key={c.id}
+                      href={`/comercial/cotizaciones/${c.id}`}
+                      linkLabel={`Abrir cotización ${c.numero}`}
+                    >
                       <TableCell className="font-mono">
-                        <Link
-                          href={`/comercial/cotizaciones/${c.id}`}
-                          className="font-medium hover:text-brand hover:underline"
-                        >
+                        <span className="font-medium">
                           {c.numero}
                           {(c.version ?? 1) > 1 && (
                             <span className="ml-1 text-[10px] text-ink-3">
                               v{c.version}
                             </span>
                           )}
-                        </Link>
+                        </span>
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center gap-1.5 text-xs">

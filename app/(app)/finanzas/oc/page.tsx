@@ -424,14 +424,13 @@ export default async function OCPage({
                       }
                     | null;
                   return (
-                    <TableRow key={oc.id}>
+                    <TableRow
+                      key={oc.id}
+                      href={`/finanzas/oc/${oc.id}`}
+                      linkLabel={`Abrir OC ${oc.numero}`}
+                    >
                       <TableCell className="font-mono">
-                        <Link
-                          href={`/finanzas/oc/${oc.id}`}
-                          className="font-medium hover:text-brand hover:underline"
-                        >
-                          {oc.numero}
-                        </Link>
+                        <span className="font-medium">{oc.numero}</span>
                       </TableCell>
                       <TableCell>
                         <span className="inline-flex items-center gap-1.5 text-xs">

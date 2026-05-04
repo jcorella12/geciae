@@ -235,7 +235,11 @@ export default async function EstadosFinancierosPage({
                 const tieneCompleto = r.paquete_completo as boolean;
                 const tieneFirma = r.firmados as boolean;
                 return (
-                  <TableRow key={r.id as string}>
+                  <TableRow
+                    key={r.id as string}
+                    href={`/finanzas/estados-financieros/${r.id}`}
+                    linkLabel={`Abrir paquete ${MESES[(r.mes as number) - 1]} ${r.anio} ${codigo}`}
+                  >
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 text-xs">
                         <span
@@ -294,13 +298,10 @@ export default async function EstadosFinancierosPage({
                             Firmado
                           </span>
                         )}
-                        <Link
-                          href={`/finanzas/estados-financieros/${r.id}`}
-                          className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] hover:bg-bg-2"
-                        >
+                        <span className="inline-flex items-center gap-1 rounded-md border border-border bg-card px-2 py-0.5 text-[11px] text-ink-3">
                           <FileText className="h-2.5 w-2.5" />
-                          Ver
-                        </Link>
+                          Abrir →
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>

@@ -328,15 +328,12 @@ export default async function ProveedoresPage({
                 {lista.map((p) => (
                   <TableRow
                     key={p.id}
+                    href={`/finanzas/proveedores/${p.id}`}
+                    linkLabel={`Abrir proveedor ${p.razon_social}`}
                     className={!p.activo ? "opacity-60" : undefined}
                   >
                     <TableCell>
-                      <Link
-                        href={`/finanzas/proveedores/${p.id}`}
-                        className="font-medium hover:text-brand"
-                      >
-                        {p.razon_social}
-                      </Link>
+                      <p className="font-medium">{p.razon_social}</p>
                       {p.nombre_comercial && (
                         <p className="text-[11px] text-ink-3">
                           {p.nombre_comercial}

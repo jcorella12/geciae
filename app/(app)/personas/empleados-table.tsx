@@ -1,7 +1,6 @@
 "use client";
 
 import { Search } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
@@ -178,15 +177,12 @@ export function EmpleadosTable({
               {empleados.map((e) => (
                 <TableRow
                   key={e.id}
+                  href={`/personas/${e.id}`}
+                  linkLabel={`Abrir empleado ${e.nombre_completo}`}
                   className={e.activo === false ? "opacity-60" : undefined}
                 >
                   <TableCell>
-                    <Link
-                      href={`/personas/${e.id}`}
-                      className="font-medium hover:text-brand hover:underline"
-                    >
-                      {e.nombre_completo}
-                    </Link>
+                    <p className="font-medium">{e.nombre_completo}</p>
                     <p className="font-mono text-xs text-ink-3">
                       {e.curp}
                     </p>

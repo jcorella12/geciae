@@ -334,15 +334,12 @@ export default async function ClientesPage({
                 {lista.map((c) => (
                   <TableRow
                     key={c.id}
+                    href={`/clientes/${c.id}`}
+                    linkLabel={`Abrir cliente ${c.razon_social}`}
                     className={!c.activo ? "opacity-60" : undefined}
                   >
                     <TableCell>
-                      <Link
-                        href={`/clientes/${c.id}`}
-                        className="font-medium hover:text-brand"
-                      >
-                        {c.razon_social}
-                      </Link>
+                      <p className="font-medium">{c.razon_social}</p>
                       {c.nombre_comercial && (
                         <p className="text-[11px] text-ink-3">
                           {c.nombre_comercial}

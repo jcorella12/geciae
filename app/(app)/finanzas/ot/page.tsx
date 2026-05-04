@@ -132,14 +132,13 @@ export default async function OTListPage({
                 const destino = o.destino as { codigo: string; razon_social: string } | null;
                 const proyecto = o.proyecto as { id: string; codigo: string; nombre: string } | null;
                 return (
-                  <TableRow key={o.id}>
+                  <TableRow
+                    key={o.id}
+                    href={`/finanzas/ot/${o.id}`}
+                    linkLabel={`Abrir OT ${o.numero}`}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/finanzas/ot/${o.id}`}
-                        className="font-mono text-xs text-brand hover:underline"
-                      >
-                        {o.numero}
-                      </Link>
+                      <span className="font-mono text-xs">{o.numero}</span>
                     </TableCell>
                     <TableCell>
                       <span

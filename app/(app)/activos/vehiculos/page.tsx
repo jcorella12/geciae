@@ -252,7 +252,11 @@ export default async function VehiculosPage({
                   new Date(fechaSeguro) >= hoy &&
                   new Date(fechaSeguro) <= en30d;
                 return (
-                  <TableRow key={v.id as string}>
+                  <TableRow
+                    key={v.id as string}
+                    href={`/activos/vehiculos/${v.id}`}
+                    linkLabel={`Abrir vehículo ${v.placa ?? v.numero_economico ?? ""}`}
+                  >
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 text-xs">
                         <span
@@ -262,12 +266,9 @@ export default async function VehiculosPage({
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Link
-                        href={`/activos/vehiculos/${v.id}`}
-                        className="font-mono font-medium hover:text-brand hover:underline"
-                      >
+                      <span className="font-mono font-medium">
                         {(v.placa as string) ?? (v.numero_economico as string) ?? "—"}
-                      </Link>
+                      </span>
                       {v.numero_economico && v.placa && (
                         <p className="text-[10px] text-ink-3">
                           #{v.numero_economico as string}

@@ -249,14 +249,13 @@ export default async function InventarioPage({
                       100
                     : 0;
                 return (
-                  <TableRow key={i.producto_id}>
+                  <TableRow
+                    key={i.producto_id}
+                    href={`/inventario/${i.producto_id}`}
+                    linkLabel={`Abrir producto ${i.sku ?? i.nombre}`}
+                  >
                     <TableCell className="font-mono text-xs">
-                      <Link
-                        href={`/inventario/${i.producto_id}`}
-                        className="text-brand hover:underline"
-                      >
-                        {i.sku}
-                      </Link>
+                      {i.sku}
                     </TableCell>
                     <TableCell>
                       <p className="text-[12.5px] font-medium leading-tight">

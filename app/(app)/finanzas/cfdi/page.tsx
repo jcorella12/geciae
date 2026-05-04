@@ -518,7 +518,11 @@ export default async function CfdiListPage({
                     : c.rfc_emisor;
                   const saldo = Number(c.saldo_pendiente ?? c.total ?? 0);
                   return (
-                    <TableRow key={c.id}>
+                    <TableRow
+                      key={c.id}
+                      href={`/finanzas/cfdi/${c.id}`}
+                      linkLabel={`Abrir CFDI ${c.serie ?? ""}${c.folio ?? ""}`}
+                    >
                       <TableCell className="text-xs">
                         <span className="inline-flex items-center gap-1.5">
                           <span
@@ -544,13 +548,10 @@ export default async function CfdiListPage({
                         )}
                       </TableCell>
                       <TableCell>
-                        <Link
-                          href={`/finanzas/cfdi/${c.id}`}
-                          className="font-mono text-xs text-brand hover:underline"
-                        >
+                        <p className="font-mono text-xs">
                           {c.serie}
                           {c.folio ?? ""}
-                        </Link>
+                        </p>
                         {c.uuid_sat && (
                           <p className="font-mono text-[10px] text-ink-3">
                             {String(c.uuid_sat).slice(0, 8)}…

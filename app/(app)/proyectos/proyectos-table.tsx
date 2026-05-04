@@ -1,7 +1,6 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
@@ -229,12 +228,13 @@ export function ProyectosTable({
                   p.clientes?.razon_social ??
                   "—";
                 return (
-                  <TableRow key={p.id}>
+                  <TableRow
+                    key={p.id}
+                    href={`/proyectos/${p.id}`}
+                    linkLabel={`Abrir proyecto ${p.codigo} ${p.nombre}`}
+                  >
                     <TableCell>
-                      <Link
-                        href={`/proyectos/${p.id}`}
-                        className="flex items-center gap-2.5 hover:text-brand"
-                      >
+                      <div className="flex items-center gap-2.5">
                         <StatusDot status={status} />
                         <div className="min-w-0">
                           <div className="truncate font-medium">
@@ -244,7 +244,7 @@ export function ProyectosTable({
                             {p.codigo}
                           </div>
                         </div>
-                      </Link>
+                      </div>
                     </TableCell>
                     <TableCell className="text-ink-3">{cliente}</TableCell>
                     <TableCell>
