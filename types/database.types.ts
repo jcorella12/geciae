@@ -1146,6 +1146,364 @@ export type Database = {
         }
         Relationships: []
       }
+      centros: {
+        Row: {
+          activo: boolean
+          centro_padre_id: string | null
+          codigo: string
+          created_at: string | null
+          descripcion: string | null
+          empresa_id: string
+          id: string
+          nombre: string
+          observaciones: string | null
+          presupuesto_anual: number | null
+          responsable_id: string | null
+          subtipo: Database["public"]["Enums"]["subtipo_centro"]
+          tipo: Database["public"]["Enums"]["tipo_centro"]
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean
+          centro_padre_id?: string | null
+          codigo: string
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id: string
+          id?: string
+          nombre: string
+          observaciones?: string | null
+          presupuesto_anual?: number | null
+          responsable_id?: string | null
+          subtipo: Database["public"]["Enums"]["subtipo_centro"]
+          tipo: Database["public"]["Enums"]["tipo_centro"]
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean
+          centro_padre_id?: string | null
+          codigo?: string
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id?: string
+          id?: string
+          nombre?: string
+          observaciones?: string | null
+          presupuesto_anual?: number | null
+          responsable_id?: string | null
+          subtipo?: Database["public"]["Enums"]["subtipo_centro"]
+          tipo?: Database["public"]["Enums"]["tipo_centro"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centros_cierres_mensuales: {
+        Row: {
+          anio: number
+          cerrado: boolean
+          cerrado_at: string | null
+          cerrado_por: string | null
+          empresa_id: string
+          id: string
+          mes: number
+          observaciones: string | null
+          reabierto_at: string | null
+          reabierto_motivo: string | null
+          reabierto_por: string | null
+          total_gastos: number | null
+          total_repartos_emitidos: number | null
+          total_repartos_recibidos: number | null
+        }
+        Insert: {
+          anio: number
+          cerrado?: boolean
+          cerrado_at?: string | null
+          cerrado_por?: string | null
+          empresa_id: string
+          id?: string
+          mes: number
+          observaciones?: string | null
+          reabierto_at?: string | null
+          reabierto_motivo?: string | null
+          reabierto_por?: string | null
+          total_gastos?: number | null
+          total_repartos_emitidos?: number | null
+          total_repartos_recibidos?: number | null
+        }
+        Update: {
+          anio?: number
+          cerrado?: boolean
+          cerrado_at?: string | null
+          cerrado_por?: string | null
+          empresa_id?: string
+          id?: string
+          mes?: number
+          observaciones?: string | null
+          reabierto_at?: string | null
+          reabierto_motivo?: string | null
+          reabierto_por?: string | null
+          total_gastos?: number | null
+          total_repartos_emitidos?: number | null
+          total_repartos_recibidos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_cierres_mensuales_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centros_movimientos: {
+        Row: {
+          capturado_por: string
+          centro_id: string
+          cfdi_id: string | null
+          concepto: string
+          created_at: string | null
+          empresa_id: string
+          fecha: string
+          gasto_recurrente_id: string | null
+          id: string
+          monto: number
+          observaciones: string | null
+          oc_id: string | null
+          origen_movimiento_id: string | null
+          ot_id: string | null
+          proyecto_id: string | null
+          regla_reparto_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimiento_centro"]
+        }
+        Insert: {
+          capturado_por: string
+          centro_id: string
+          cfdi_id?: string | null
+          concepto: string
+          created_at?: string | null
+          empresa_id: string
+          fecha: string
+          gasto_recurrente_id?: string | null
+          id?: string
+          monto: number
+          observaciones?: string | null
+          oc_id?: string | null
+          origen_movimiento_id?: string | null
+          ot_id?: string | null
+          proyecto_id?: string | null
+          regla_reparto_id?: string | null
+          tipo: Database["public"]["Enums"]["tipo_movimiento_centro"]
+        }
+        Update: {
+          capturado_por?: string
+          centro_id?: string
+          cfdi_id?: string | null
+          concepto?: string
+          created_at?: string | null
+          empresa_id?: string
+          fecha?: string
+          gasto_recurrente_id?: string | null
+          id?: string
+          monto?: number
+          observaciones?: string | null
+          oc_id?: string | null
+          origen_movimiento_id?: string | null
+          ot_id?: string | null
+          proyecto_id?: string | null
+          regla_reparto_id?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_movimiento_centro"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_cfdi_id_fkey"
+            columns: ["cfdi_id"]
+            isOneToOne: false
+            referencedRelation: "cfdi"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_oc_id_fkey"
+            columns: ["oc_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_compra"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_origen_movimiento_id_fkey"
+            columns: ["origen_movimiento_id"]
+            isOneToOne: false
+            referencedRelation: "centros_movimientos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_ot_id_fkey"
+            columns: ["ot_id"]
+            isOneToOne: false
+            referencedRelation: "ordenes_trabajo_inter_co"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_regla_reparto_id_fkey"
+            columns: ["regla_reparto_id"]
+            isOneToOne: false
+            referencedRelation: "centros_reglas_reparto"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cm_gasto_recurrente"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "gastos_recurrentes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_cm_gasto_recurrente"
+            columns: ["gasto_recurrente_id"]
+            isOneToOne: false
+            referencedRelation: "v_gastos_recurrentes_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      centros_reglas_reparto: {
+        Row: {
+          activa: boolean
+          centro_destino_id: string | null
+          centro_origen_id: string
+          created_at: string | null
+          emision: Database["public"]["Enums"]["tipo_emision_reparto"]
+          empresa_destino_id: string
+          id: string
+          metodo: Database["public"]["Enums"]["metodo_reparto"]
+          observaciones: string | null
+          valor: number | null
+          vigencia_desde: string
+          vigencia_hasta: string | null
+        }
+        Insert: {
+          activa?: boolean
+          centro_destino_id?: string | null
+          centro_origen_id: string
+          created_at?: string | null
+          emision?: Database["public"]["Enums"]["tipo_emision_reparto"]
+          empresa_destino_id: string
+          id?: string
+          metodo: Database["public"]["Enums"]["metodo_reparto"]
+          observaciones?: string | null
+          valor?: number | null
+          vigencia_desde: string
+          vigencia_hasta?: string | null
+        }
+        Update: {
+          activa?: boolean
+          centro_destino_id?: string | null
+          centro_origen_id?: string
+          created_at?: string | null
+          emision?: Database["public"]["Enums"]["tipo_emision_reparto"]
+          empresa_destino_id?: string
+          id?: string
+          metodo?: Database["public"]["Enums"]["metodo_reparto"]
+          observaciones?: string | null
+          valor?: number | null
+          vigencia_desde?: string
+          vigencia_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_reglas_reparto_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_reglas_reparto_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_reglas_reparto_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_reglas_reparto_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_reglas_reparto_empresa_destino_id_fkey"
+            columns: ["empresa_destino_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cfdi: {
         Row: {
           capturado_por: string | null
@@ -8014,6 +8372,47 @@ export type Database = {
           },
         ]
       }
+      v_centros_balance: {
+        Row: {
+          anio: number | null
+          centro_id: string | null
+          centro_padre_id: string | null
+          codigo: string | null
+          empresa_id: string | null
+          mes: number | null
+          nombre: string | null
+          num_movimientos: number | null
+          resultado_neto: number | null
+          subtipo: Database["public"]["Enums"]["subtipo_centro"] | null
+          tipo: Database["public"]["Enums"]["tipo_centro"] | null
+          total_costos: number | null
+          total_ingresos: number | null
+          total_repartos_emitidos: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_clientes_inactividad: {
         Row: {
           activo: boolean | null
@@ -9422,6 +9821,12 @@ export type Database = {
         | "trimestral"
         | "semestral"
         | "anual"
+      metodo_reparto:
+        | "porcentaje_fijo"
+        | "por_ingresos"
+        | "por_empleados"
+        | "por_proyectos"
+        | "por_horas"
       nivel_autonomia_ia: "verde" | "amarillo" | "rojo"
       prioridad_tarea: "baja" | "media" | "alta" | "urgente"
       prioridad_ticket: "baja" | "media" | "alta" | "critica"
@@ -9439,7 +9844,17 @@ export type Database = {
       rol_usuario: "ceo" | "director" | "operativo" | "empleado" | "cliente"
       severidad_no_conformidad: "observacion" | "menor" | "mayor"
       severidad_reporte: "info" | "baja" | "media" | "alta" | "critica"
+      subtipo_centro:
+        | "servicio_compartido"
+        | "operativo"
+        | "comercial"
+        | "mantenimiento"
+        | "capacitacion"
+        | "certificacion"
+        | "otro"
+      tipo_centro: "costo" | "utilidad"
       tipo_cfdi: "ingreso" | "egreso" | "traslado" | "pago" | "nomina"
+      tipo_emision_reparto: "cfdi_inter_co" | "asiento_interno"
       tipo_evento_bitacora:
         | "avance"
         | "problema"
@@ -9462,6 +9877,13 @@ export type Database = {
         | "multa"
         | "lavado"
         | "otros"
+      tipo_movimiento_centro:
+        | "gasto_directo"
+        | "reparto_recibido"
+        | "ingreso_directo"
+        | "ajuste"
+        | "cierre_mensual"
+        | "reparto_emitido"
       tipo_obligacion_sat:
         | "iva_mensual"
         | "isr_provisional"
@@ -9835,6 +10257,13 @@ export const Constants = {
         "semestral",
         "anual",
       ],
+      metodo_reparto: [
+        "porcentaje_fijo",
+        "por_ingresos",
+        "por_empleados",
+        "por_proyectos",
+        "por_horas",
+      ],
       nivel_autonomia_ia: ["verde", "amarillo", "rojo"],
       prioridad_tarea: ["baja", "media", "alta", "urgente"],
       prioridad_ticket: ["baja", "media", "alta", "critica"],
@@ -9853,7 +10282,18 @@ export const Constants = {
       rol_usuario: ["ceo", "director", "operativo", "empleado", "cliente"],
       severidad_no_conformidad: ["observacion", "menor", "mayor"],
       severidad_reporte: ["info", "baja", "media", "alta", "critica"],
+      subtipo_centro: [
+        "servicio_compartido",
+        "operativo",
+        "comercial",
+        "mantenimiento",
+        "capacitacion",
+        "certificacion",
+        "otro",
+      ],
+      tipo_centro: ["costo", "utilidad"],
       tipo_cfdi: ["ingreso", "egreso", "traslado", "pago", "nomina"],
+      tipo_emision_reparto: ["cfdi_inter_co", "asiento_interno"],
       tipo_evento_bitacora: [
         "avance",
         "problema",
@@ -9877,6 +10317,14 @@ export const Constants = {
         "multa",
         "lavado",
         "otros",
+      ],
+      tipo_movimiento_centro: [
+        "gasto_directo",
+        "reparto_recibido",
+        "ingreso_directo",
+        "ajuste",
+        "cierre_mensual",
+        "reparto_emitido",
       ],
       tipo_obligacion_sat: [
         "iva_mensual",
