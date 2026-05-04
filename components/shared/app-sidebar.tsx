@@ -137,6 +137,11 @@ export function AppSidebar({
         icon: FileBarChart,
       },
       {
+        href: "/finanzas/cumplimiento",
+        label: "Cumplimiento fiscal",
+        icon: ShieldCheck,
+      },
+      {
         href: "/finanzas/obligaciones",
         label: "Obligaciones SAT",
         icon: CalendarDays,
