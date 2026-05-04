@@ -18,8 +18,11 @@ import {
 } from "@/components/ui/table";
 import {
   empresasDondeCreaOC,
+  esCEO,
+  esRolEn,
   obtenerVinculos,
   puedeGestionarProyectosEn,
+  tieneAtributo,
 } from "@/lib/auth/permisos";
 import { ESTADOS_OC } from "@/lib/oc/state";
 import {
@@ -33,6 +36,10 @@ import { DocumentosPanel } from "./documentos/documentos-panel";
 import { EquipoPanel } from "./equipo/equipo-panel";
 import { ProyectoTabs, type TabConfig } from "./proyecto-tabs";
 import { ReportesPanel, type ReporteRow } from "./reportes/reportes-panel";
+import {
+  SolicitudesPanel,
+  type SolicitudListItem,
+} from "./solicitudes/solicitudes-panel";
 import { TareasPanel, type TareaRow } from "./tareas/tareas-panel";
 
 const empresaCodigoColor: Record<string, string> = {
@@ -315,6 +322,71 @@ export default async function ProyectoDetailPage({
   const estado =
     ESTADOS_PROYECTO.find((s) => s.value === p.estado) ?? ESTADOS_PROYECTO[0];
 
+  // ====================================================================
+  // Sprint 4.2 — Solicitudes del proyecto (vista enriquecida)
+  // ====================================================================
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: solicitudesRaw } = await (supabase as any)
+    .from("v_proyecto_solicitudes_lista")
+    .select(
+      "id, numero, tipo, titulo, descripcion, monto_estimado, urgencia, estado, solicitante_id, asignado_a_id, campos_tipo, entidades_relacionadas, razon_rechazo, resuelta_at, created_at, num_comentarios, num_adjuntos",
+    )
+    .eq("proyecto_id", params.id)
+    .order("created_at", { ascending: false });
+  const solicitudes: SolicitudListItem[] = (solicitudesRaw ?? []) as SolicitudListItem[];
+  const solicitudesActivas = solicitudes.filter((s) =>
+    ["solicitada", "en_revision", "aprobada"].includes(s.estado),
+  ).length;
+
+  // Servicios y empresas del grupo para los pickers contextuales
+  const { data: empresasGrupoRaw } = await supabase
+    .from("empresas")
+    .select("id, codigo, razon_social, nombre_comercial")
+    .eq("activa", true)
+    .order("codigo");
+  const empresasGrupo = (empresasGrupoRaw ?? []).map((e) => ({
+    id: e.id,
+    codigo: e.codigo,
+    nombre: e.nombre_comercial ?? e.razon_social,
+  }));
+  const { data: serviciosRaw } = await supabase
+    .from("catalogo_servicios")
+    .select(
+      "id, empresa_id, codigo, nombre, unidad, costo_base, margen_inter_co, precio_inter_co",
+    )
+    .eq("activo", true)
+    .order("codigo")
+    .limit(500);
+  const serviciosGrupo = (serviciosRaw ?? []).map((s) => ({
+    id: s.id,
+    empresa_id: s.empresa_id,
+    codigo: s.codigo,
+    nombre: s.nombre,
+    unidad: s.unidad,
+    costo_base: s.costo_base != null ? Number(s.costo_base) : null,
+    margen_inter_co:
+      s.margen_inter_co != null ? Number(s.margen_inter_co) : null,
+    precio_inter_co:
+      s.precio_inter_co != null ? Number(s.precio_inter_co) : null,
+  }));
+  const { data: proveedoresRaw } = await supabase
+    .from("proveedores")
+    .select("id, razon_social, nombre_comercial")
+    .eq("activo", true)
+    .order("razon_social")
+    .limit(300);
+
+  // Permisos sobre solicitudes
+  const { data: usrSession } = await supabase.auth.getUser();
+  const yo = usrSession.user?.id ?? null;
+  const puedeAprobar =
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "aprobador_financiero") ||
+    esRolEn(vinculos, p.empresa_id, ["director", "operativo"]) ||
+    p.pm_id === yo;
+  const esCEOoDirector =
+    esCEO(vinculos) || esRolEn(vinculos, p.empresa_id, "director");
+
   const margen =
     p.monto_contratado != null && p.presupuesto_costo != null
       ? Number(p.monto_contratado) - Number(p.presupuesto_costo)
@@ -327,6 +399,11 @@ export default async function ProyectoDetailPage({
   const tabs: TabConfig[] = [
     { key: "resumen", label: "Resumen" },
     { key: "tareas", label: "Tareas", count: tareas.length },
+    {
+      key: "solicitudes",
+      label: "Solicitudes",
+      count: solicitudesActivas,
+    },
     { key: "costos", label: "Costos" },
     { key: "oc", label: "Compras", count: ocs?.length ?? 0 },
     {
@@ -684,6 +761,31 @@ export default async function ProyectoDetailPage({
               proyectoId={params.id}
               tareas={tareas}
               puedeEditar={puedeGestionar}
+            />
+          ),
+          solicitudes: (
+            <SolicitudesPanel
+              proyectoId={params.id}
+              empresaId={p.empresa_id}
+              proyectoCodigo={p.codigo}
+              clienteId={(p.cliente_id as string | null) ?? null}
+              clienteRazonSocial={cliente?.razon_social ?? null}
+              empresasGrupo={empresasGrupo}
+              serviciosGrupo={serviciosGrupo}
+              proveedores={(proveedoresRaw ?? []).map((pr) => ({
+                id: pr.id,
+                razon_social: pr.razon_social,
+                rfc: null,
+                nombre_comercial: pr.nombre_comercial,
+              }))}
+              candidatosAsignacion={candidatos.map((c) => ({
+                user_id: c.usuario_id,
+                nombre: c.nombre_completo,
+              }))}
+              initialSolicitudes={solicitudes}
+              puedeAprobar={puedeAprobar}
+              esCEOoDirector={esCEOoDirector}
+              yo={yo}
             />
           ),
           bitacora: (

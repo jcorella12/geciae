@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 export type TabKey =
   | "resumen"
   | "tareas"
+  | "solicitudes"
   | "costos"
   | "oc"
   | "etapas"
