@@ -45,9 +45,12 @@ type Cuenta = {
 export function CuentasList({
   cuentas,
   empresasGestionables,
+  agrupar = false,
 }: {
   cuentas: Cuenta[];
   empresasGestionables: string[];
+  /** Si true, separa la lista en bloques por empresa con header. */
+  agrupar?: boolean;
 }) {
   const [editId, setEditId] = useState<string | null>(null);
   const [editValor, setEditValor] = useState("");
@@ -87,12 +90,102 @@ export function CuentasList({
     );
   }
 
+  // Modo agrupado: separamos en bloques por empresa y renderizamos un Table
+  // por bloque con su header.
+  if (agrupar) {
+    const grupos = new Map<string, { codigo: string; cuentas: Cuenta[] }>();
+    for (const c of cuentas) {
+      const codigo = c.empresas?.codigo ?? "?";
+      if (!grupos.has(codigo)) {
+        grupos.set(codigo, { codigo, cuentas: [] });
+      }
+      grupos.get(codigo)!.cuentas.push(c);
+    }
+    return (
+      <div className="space-y-4">
+        {Array.from(grupos.values()).map((g) => (
+          <section key={g.codigo}>
+            <header className="mb-2 flex items-center gap-2">
+              <span
+                className={`inline-block h-2.5 w-2.5 rounded-full ${
+                  empresaCodigoColor[g.codigo] ?? "bg-muted-foreground"
+                }`}
+              />
+              <h3 className="text-[13px] font-semibold tracking-wide">
+                {g.codigo}
+              </h3>
+              <span className="text-[11.5px] text-ink-3">
+                · {g.cuentas.length}{" "}
+                {g.cuentas.length === 1 ? "cuenta" : "cuentas"}
+              </span>
+            </header>
+            <CuentasTable
+              cuentas={g.cuentas}
+              empresasGestionables={empresasGestionables}
+              editId={editId}
+              editValor={editValor}
+              setEditValor={setEditValor}
+              setEditId={setEditId}
+              iniciarEdicion={iniciarEdicion}
+              guardarSaldo={guardarSaldo}
+              toggleActiva={toggleActiva}
+              showEmpresaColumn={false}
+            />
+          </section>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <CuentasTable
+      cuentas={cuentas}
+      empresasGestionables={empresasGestionables}
+      editId={editId}
+      editValor={editValor}
+      setEditValor={setEditValor}
+      setEditId={setEditId}
+      iniciarEdicion={iniciarEdicion}
+      guardarSaldo={guardarSaldo}
+      toggleActiva={toggleActiva}
+      showEmpresaColumn={true}
+    />
+  );
+}
+
+/**
+ * Tabla interna reutilizable. Se extrae para que la modalidad agrupada
+ * pueda renderizar un sub-table por empresa sin duplicar la lógica de filas.
+ */
+function CuentasTable({
+  cuentas,
+  empresasGestionables,
+  editId,
+  editValor,
+  setEditValor,
+  setEditId,
+  iniciarEdicion,
+  guardarSaldo,
+  toggleActiva,
+  showEmpresaColumn,
+}: {
+  cuentas: Cuenta[];
+  empresasGestionables: string[];
+  editId: string | null;
+  editValor: string;
+  setEditValor: (v: string) => void;
+  setEditId: (id: string | null) => void;
+  iniciarEdicion: (c: Cuenta) => void;
+  guardarSaldo: () => void;
+  toggleActiva: (c: Cuenta) => void;
+  showEmpresaColumn: boolean;
+}) {
   return (
     <TableSurface>
       <Table>
         <TableHeader>
           <TableRow interactive={false}>
-            <TableHead>Empresa</TableHead>
+            {showEmpresaColumn && <TableHead>Empresa</TableHead>}
             <TableHead>Banco / Tipo</TableHead>
             <TableHead>Cuenta</TableHead>
             <TableHead>Alias</TableHead>
@@ -114,17 +207,19 @@ export function CuentasList({
                 linkLabel={`Abrir cuenta ${c.banco} ${c.numero_cuenta}`}
                 className={c.activa === false ? "opacity-60" : undefined}
               >
-                <TableCell className="text-xs">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        empresaCodigoColor[c.empresas?.codigo ?? ""] ??
-                        "bg-muted-foreground"
-                      }`}
-                    />
-                    {c.empresas?.codigo ?? "?"}
-                  </span>
-                </TableCell>
+                {showEmpresaColumn && (
+                  <TableCell className="text-xs">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full ${
+                          empresaCodigoColor[c.empresas?.codigo ?? ""] ??
+                          "bg-muted-foreground"
+                        }`}
+                      />
+                      {c.empresas?.codigo ?? "?"}
+                    </span>
+                  </TableCell>
+                )}
                 <TableCell>
                   <p className="font-medium">{c.banco}</p>
                   {c.tipo && (
