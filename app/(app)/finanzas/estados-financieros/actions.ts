@@ -8,7 +8,7 @@ import {
   obtenerVinculos,
   tieneAtributo,
 } from "@/lib/auth/permisos";
-import { clasificarDocumento, safeFilename } from "@/lib/efm/clasificador";
+import { clasificarDocumento } from "@/lib/efm/clasificador";
 import { extraerKPIsIA } from "@/lib/efm/extractor-ia";
 import {
   ActualizarKPIsManualSchema,

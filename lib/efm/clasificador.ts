@@ -32,12 +32,17 @@ const PATTERNS: Array<[TipoDocEFM, RegExp]> = [
  *   "1.Balance General Marzo 2026.pdf" → "balance_general"
  *   "2_Estado de Resultados.pdf"        → "estado_resultados"
  *   "Polizas Mar26.pdf"                 → "polizas"
+ *   "balance_general.pdf"               → "balance_general"  (slug literal)
  *   "factura_xyz.pdf"                   → null
  */
 export function clasificarDocumento(filename: string): TipoDocEFM | null {
   const base = filename
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
+  // Slug literal al inicio (cuando el wizard renombra el archivo al tipo).
+  for (const [tipo] of PATTERNS) {
+    if (base.toLowerCase().startsWith(`${tipo}.`)) return tipo;
+  }
   for (const [tipo, re] of PATTERNS) {
     if (re.test(base)) return tipo;
   }

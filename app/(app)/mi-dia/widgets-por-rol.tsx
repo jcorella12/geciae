@@ -1,7 +1,9 @@
 import {
   AlertTriangle,
   ArrowDownToLine,
+  Calendar,
   CheckCircle2,
+  Clock,
   HardHat,
   Package,
   Receipt,
@@ -14,6 +16,10 @@ import Link from "next/link";
 
 import { createClient } from "@/lib/supabase/server";
 import type { RolMiDia } from "@/lib/auth/rol-mi-dia";
+import {
+  ETIQUETA_TIPO_OBLIGACION,
+  type TipoObligacion,
+} from "@/lib/obligaciones/state";
 
 const fmtMxn = new Intl.NumberFormat("es-MX", {
   style: "currency",
@@ -180,23 +186,43 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
     .toISOString()
     .slice(0, 10);
 
-  const [{ data: porCobrar }, { data: porPagar }] = await Promise.all([
-    supabase
-      .from("cfdi")
-      .select("id, total, saldo_pendiente, fecha_emision")
-      .in("empresa_id", empresasIds)
-      .eq("es_emitido", true)
-      .eq("estado", "timbrado")
-      .gt("saldo_pendiente", 0),
-    supabase
-      .from("cfdi")
-      .select("id, total, saldo_pendiente, fecha_emision")
-      .in("empresa_id", empresasIds)
-      .eq("es_emitido", false)
-      .eq("estado", "timbrado")
-      .gt("saldo_pendiente", 0)
-      .gte("fecha_emision", hace30d),
-  ]);
+  // Próximas obligaciones (next 14 days)
+  const hoy = new Date().toISOString().slice(0, 10);
+  const en14 = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [{ data: porCobrar }, { data: porPagar }, { data: proximasOblig }] =
+    await Promise.all([
+      supabase
+        .from("cfdi")
+        .select("id, total, saldo_pendiente, fecha_emision")
+        .in("empresa_id", empresasIds)
+        .eq("es_emitido", true)
+        .eq("estado", "timbrado")
+        .gt("saldo_pendiente", 0),
+      supabase
+        .from("cfdi")
+        .select("id, total, saldo_pendiente, fecha_emision")
+        .in("empresa_id", empresasIds)
+        .eq("es_emitido", false)
+        .eq("estado", "timbrado")
+        .gt("saldo_pendiente", 0)
+        .gte("fecha_emision", hace30d),
+      empresasIds.length > 0
+        ? supabase
+            .from("v_obligaciones_lista")
+            .select(
+              "id, empresa_codigo, tipo, periodo_label, fecha_vencimiento, dias_al_vencer, estado_efectivo",
+            )
+            .in("empresa_id", empresasIds)
+            .gte("fecha_vencimiento", hoy)
+            .lte("fecha_vencimiento", en14)
+            .in("estado_efectivo", ["pendiente", "en_proceso"])
+            .order("fecha_vencimiento", { ascending: true })
+            .limit(5)
+        : Promise.resolve({ data: [] }),
+    ]);
 
   const totalCxC = (porCobrar ?? []).reduce(
     (a, c) => a + Number(c.saldo_pendiente ?? 0),
@@ -265,6 +291,65 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
           </Link>
         </div>
       </div>
+
+      {/* Próximas obligaciones SAT (sprint 3.4) */}
+      {(proximasOblig?.length ?? 0) > 0 && (
+        <div className="mt-4 rounded-md border border-border bg-card p-3">
+          <h3 className="mb-2 flex items-center gap-1.5 text-[12.5px] font-semibold">
+            <Calendar className="h-3.5 w-3.5 text-violet-700" />
+            Próximas obligaciones SAT
+            <Link
+              href="/finanzas/cumplimiento?tab=obligaciones"
+              className="ml-auto text-[10.5px] font-normal text-brand hover:underline"
+            >
+              Ver todas →
+            </Link>
+          </h3>
+          <ul className="space-y-1">
+            {(proximasOblig ?? []).map((o) => {
+              const dias = Number(o.dias_al_vencer ?? 0);
+              return (
+                <li key={o.id as string}>
+                  <Link
+                    href={`/finanzas/obligaciones/${o.id}`}
+                    className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-[11.5px] hover:bg-bg-2"
+                  >
+                    <span className="flex min-w-0 items-center gap-2">
+                      <Clock
+                        className={`h-3 w-3 shrink-0 ${
+                          dias <= 3
+                            ? "text-red-700"
+                            : dias <= 7
+                              ? "text-amber-700"
+                              : "text-ink-4"
+                        }`}
+                      />
+                      <span className="font-medium">
+                        {o.empresa_codigo as string}
+                      </span>
+                      <span className="truncate text-ink-3">
+                        {ETIQUETA_TIPO_OBLIGACION[
+                          o.tipo as TipoObligacion
+                        ] ?? (o.tipo as string)}
+                      </span>
+                      <span className="hidden text-[10.5px] text-ink-4 sm:inline">
+                        {o.periodo_label as string}
+                      </span>
+                    </span>
+                    <span className="font-mono text-[10.5px] text-ink-3">
+                      {dias === 0
+                        ? "Hoy"
+                        : dias === 1
+                          ? "Mañana"
+                          : `${dias}d`}
+                    </span>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
     </section>
   );
 }
