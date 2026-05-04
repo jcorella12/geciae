@@ -152,22 +152,52 @@ export function SolicitudDetalle({
 
         {/* Entidades vinculadas (sprint 4.3 link inverso) */}
         {Object.keys(solicitud.entidades_relacionadas).length > 0 && (
-          <div className="sm:col-span-2 rounded-md border border-border bg-card p-2">
-            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-ink-3">
+          <div className="sm:col-span-2 rounded-md border border-emerald-300/40 bg-emerald-50 p-2">
+            <p className="text-[10.5px] font-semibold uppercase tracking-wider text-emerald-800">
               Entidades vinculadas
             </p>
             <ul className="mt-1 space-y-0.5 text-[11.5px]">
               {Object.entries(solicitud.entidades_relacionadas).map(
-                ([k, v]) => (
-                  <li key={k}>
-                    {k}: <code className="font-mono">{v}</code>
-                  </li>
-                ),
+                ([k, v]) => {
+                  const linkBase =
+                    k === "oc_id"
+                      ? "/finanzas/oc/"
+                      : k === "ot_id"
+                        ? "/finanzas/ot/"
+                        : k === "cfdi_id"
+                          ? "/finanzas/cfdi/"
+                          : null;
+                  return (
+                    <li key={k}>
+                      {k}:{" "}
+                      {linkBase ? (
+                        <Link
+                          href={`${linkBase}${v}`}
+                          className="font-mono text-brand hover:underline"
+                        >
+                          {v}
+                        </Link>
+                      ) : (
+                        <code className="font-mono">{v}</code>
+                      )}
+                    </li>
+                  );
+                },
               )}
             </ul>
           </div>
         )}
       </div>
+
+      {/* Acción contextual cuando aprobada (Sprint 4.3) */}
+      {solicitud.estado === "aprobada" &&
+        !solicitud.entidades_relacionadas.oc_id &&
+        !solicitud.entidades_relacionadas.ot_id && (
+          <AccionContextual
+            solicitud={solicitud}
+            proyectoId={proyectoId}
+          />
+        )}
 
       {/* Acciones por estado */}
       <ActionsBlock
@@ -235,6 +265,74 @@ function Field({
         {label}
       </p>
       <p className={`mt-0.5 ${mono ? "font-mono" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
+/**
+ * Acción contextual sugerida cuando la solicitud está aprobada y aún no
+ * tiene entidad vinculada. El botón lleva a la página de creación
+ * correspondiente con `?solicitud_origen={id}` para que el server action
+ * vincule automáticamente al guardar.
+ */
+function AccionContextual({
+  solicitud,
+  proyectoId,
+}: {
+  solicitud: SolicitudListItem;
+  proyectoId: string;
+}) {
+  const baseQs = `solicitud_origen=${solicitud.id}&proyecto=${proyectoId}`;
+  let href: string | null = null;
+  let label: string | null = null;
+  let hint: string | null = null;
+  switch (solicitud.tipo) {
+    case "compra":
+      href = `/finanzas/oc/nueva?${baseQs}`;
+      label = "Crear OC desde esta solicitud";
+      hint =
+        "Te lleva al alta de OC con el proyecto pre-seleccionado. Al guardar, esta solicitud quedará marcada como ejecutada.";
+      break;
+    case "ot_inter_co":
+      href = `/finanzas/ot/nueva?${baseQs}`;
+      label = "Crear OT inter-co";
+      hint =
+        "Alta de OT entre empresas del grupo. Al guardar, esta solicitud quedará marcada como ejecutada.";
+      break;
+    case "facturacion":
+      href = `/finanzas/cfdi/nuevo?${baseQs}`;
+      label = "Subir CFDI emitido";
+      hint =
+        "Te lleva al alta de CFDI. Una vez timbrado, podrás ligarlo manualmente a esta solicitud.";
+      break;
+    default:
+      return (
+        <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-2 text-[11.5px] text-amber-900">
+          Esta solicitud está aprobada. Procede según corresponda
+          (
+          {solicitud.tipo === "anticipo_proveedor"
+            ? "registra el pago al proveedor"
+            : solicitud.tipo === "reembolso_gasto"
+              ? "captura el gasto a reembolsar"
+              : solicitud.tipo === "cambio_alcance"
+                ? "actualiza el monto contratado del proyecto"
+                : "ejecuta lo solicitado"}
+          ) y márcala como ejecutada manualmente.
+        </div>
+      );
+  }
+  return (
+    <div className="mt-3 flex items-center justify-between gap-3 rounded-md border border-blue-300 bg-blue-50 p-2">
+      <div>
+        <p className="text-[12.5px] font-medium text-blue-900">{label}</p>
+        {hint && <p className="text-[11px] text-blue-800">{hint}</p>}
+      </div>
+      <Link
+        href={href!}
+        className="shrink-0 rounded-md bg-blue-600 px-3 py-1 text-[12px] font-medium text-white hover:bg-blue-700"
+      >
+        Crear →
+      </Link>
     </div>
   );
 }
@@ -620,9 +718,3 @@ function ComentarioSubmit() {
   );
 }
 
-/**
- * Helper para que ESLint no se queje del Link import si no se usa
- * directamente. La acción contextual de "Crear OC desde solicitud"
- * vive en sprint 4.3 — la sintaxis quedará lista cuando se conecte.
- */
-export const _kept = Link;

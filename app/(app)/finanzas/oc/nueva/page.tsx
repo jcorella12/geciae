@@ -9,7 +9,7 @@ import { OCForm } from "../oc-form";
 export default async function NuevaOCPage({
   searchParams,
 }: {
-  searchParams: { proyecto?: string };
+  searchParams: { proyecto?: string; solicitud_origen?: string };
 }) {
   const vinculos = await obtenerVinculos();
   const empresasIds = empresasDondeCreaOC(vinculos);
@@ -57,16 +57,26 @@ export default async function NuevaOCPage({
     <div className="mx-auto w-full max-w-4xl px-6 py-8">
       <div className="mb-6">
         <Link
-          href="/finanzas/oc"
+          href={
+            searchParams.proyecto
+              ? `/proyectos/${searchParams.proyecto}?tab=solicitudes`
+              : "/finanzas/oc"
+          }
           className="text-sm text-muted-foreground hover:text-foreground"
         >
-          ← Órdenes de compra
+          ← {searchParams.proyecto ? "Volver al proyecto" : "Órdenes de compra"}
         </Link>
         <h1 className="mt-2 text-2xl font-semibold leading-tight">Nueva OC</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Captura los conceptos. La OC arranca como <strong>borrador</strong>.
           Cuando esté lista, la envías a aprobación.
         </p>
+        {searchParams.solicitud_origen && (
+          <div className="mt-3 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-[12.5px] text-blue-900">
+            Creando OC desde una solicitud aprobada · al guardar, la solicitud
+            quedará marcada como <strong>ejecutada</strong> y vinculada a esta OC.
+          </div>
+        )}
       </div>
 
       <OCForm
@@ -75,6 +85,7 @@ export default async function NuevaOCPage({
         proyectos={proyectos ?? []}
         defaultProyectoId={searchParams.proyecto ?? null}
         defaultEmpresaId={empresaPreseleccionada}
+        solicitudOrigenId={searchParams.solicitud_origen ?? null}
       />
     </div>
   );

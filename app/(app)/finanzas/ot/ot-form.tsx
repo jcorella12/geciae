@@ -58,11 +58,14 @@ export function OTForm({
   servicios: serviciosIniciales,
   proyectos,
   empresasOrigenIds,
+  solicitudOrigenId = null,
 }: {
   empresas: Empresa[];
   servicios: Servicio[];
   proyectos: Proyecto[];
   empresasOrigenIds: string[];
+  /** Si la OT se crea desde una solicitud, ID — se vincula post-creación. */
+  solicitudOrigenId?: string | null;
 }) {
   const [state, formAction] = useFormState(createOT, initialOTState);
   const [origenId, setOrigenId] = useState("");
@@ -146,6 +149,13 @@ export function OTForm({
     <form action={formAction} className="space-y-6">
       <input type="hidden" name="proyecto_id" value={proyectoId} />
       <input type="hidden" name="servicio_id" value={servicioId} />
+      {solicitudOrigenId && (
+        <input
+          type="hidden"
+          name="solicitud_origen"
+          value={solicitudOrigenId}
+        />
+      )}
 
       {/* Empresas */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">

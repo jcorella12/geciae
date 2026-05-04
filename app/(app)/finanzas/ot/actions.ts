@@ -142,6 +142,25 @@ export async function createOT(
     );
   }
 
+  // Sprint 4.3: si la OT se crea desde una solicitud, vincular y marcar
+  // la solicitud como ejecutada.
+  const solicitudOrigen = formData.get("solicitud_origen") as string | null;
+  if (solicitudOrigen) {
+    try {
+      const { vincularEntidadASolicitud } = await import(
+        "@/app/(app)/proyectos/[id]/solicitudes/actions"
+      );
+      await vincularEntidadASolicitud(
+        solicitudOrigen,
+        "ot_id",
+        nueva.id,
+        true,
+      );
+    } catch {
+      // Best-effort
+    }
+  }
+
   revalidatePath("/finanzas/ot");
   redirect(`/finanzas/ot/${nueva.id}`);
 }

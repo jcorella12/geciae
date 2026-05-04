@@ -86,12 +86,15 @@ export function OCForm({
   proyectos = [],
   defaultProyectoId = null,
   defaultEmpresaId,
+  solicitudOrigenId = null,
 }: {
   empresas: Empresa[];
   proveedores: Proveedor[];
   proyectos?: Proyecto[];
   defaultProyectoId?: string | null;
   defaultEmpresaId?: string;
+  /** Si la OC se crea desde una solicitud, su ID — se vincula post-creación. */
+  solicitudOrigenId?: string | null;
 }) {
   const [state, formAction] = useFormState(createOC, initialOCState);
   const [conceptos, setConceptos] = useState<ConceptoLocal[]>([
@@ -232,6 +235,14 @@ export function OCForm({
 
   return (
     <form action={formAction} className="space-y-6">
+      {/* Solicitud de origen (si la OC se crea desde una solicitud aprobada) */}
+      {solicitudOrigenId && (
+        <input
+          type="hidden"
+          name="solicitud_origen"
+          value={solicitudOrigenId}
+        />
+      )}
       {/* IA: cargar cotización */}
       <DocumentExtractor
         accept="image/jpeg,image/png,image/webp,application/pdf"

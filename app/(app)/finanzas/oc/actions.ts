@@ -165,6 +165,25 @@ export async function createOC(
     return { ok: false, error: `Error al guardar conceptos: ${cErr.message}` };
   }
 
+  // Sprint 4.3: si la OC se crea desde una solicitud, vincular bi-direccionalmente
+  // y marcar la solicitud como ejecutada.
+  const solicitudOrigen = formData.get("solicitud_origen") as string | null;
+  if (solicitudOrigen) {
+    try {
+      const { vincularEntidadASolicitud } = await import(
+        "@/app/(app)/proyectos/[id]/solicitudes/actions"
+      );
+      await vincularEntidadASolicitud(
+        solicitudOrigen,
+        "oc_id",
+        ocNueva.id,
+        true,
+      );
+    } catch {
+      // Best-effort: si falla la vinculación no abortamos la OC ya creada.
+    }
+  }
+
   revalidatePath("/finanzas/oc");
   redirect(`/finanzas/oc/${ocNueva.id}`);
 }

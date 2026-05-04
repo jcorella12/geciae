@@ -6,7 +6,11 @@ import { createClient } from "@/lib/supabase/server";
 
 import { OTForm } from "../ot-form";
 
-export default async function NuevaOTPage() {
+export default async function NuevaOTPage({
+  searchParams,
+}: {
+  searchParams?: { solicitud_origen?: string; proyecto?: string };
+}) {
   const vinculos = await obtenerVinculos();
   const empresasOrigenIds = empresasDondeCreaOC(vinculos);
   if (empresasOrigenIds.length === 0) redirect("/finanzas/ot");
@@ -59,11 +63,19 @@ export default async function NuevaOTPage() {
         </p>
       </div>
 
+      {searchParams?.solicitud_origen && (
+        <div className="mb-3 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-[12.5px] text-blue-900">
+          Creando OT desde una solicitud aprobada · al guardar, la solicitud
+          quedará marcada como <strong>ejecutada</strong> y vinculada a esta OT.
+        </div>
+      )}
+
       <OTForm
         empresas={empresas ?? []}
         servicios={(servicios ?? []) as never}
         proyectos={proyectos ?? []}
         empresasOrigenIds={empresasOrigenIds}
+        solicitudOrigenId={searchParams?.solicitud_origen ?? null}
       />
     </div>
   );
