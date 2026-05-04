@@ -32,6 +32,12 @@
 *.pem
 Thumbs.db
 
+# Python bytecode (los seed scripts en Python lo generan)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # debug
 npm-debug.log*
 yarn-debug.log*
@@ -61,3 +67,5 @@ supabase/.temp/
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
+
+.vercel
