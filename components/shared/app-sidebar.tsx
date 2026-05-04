@@ -11,6 +11,7 @@ import {
   ClipboardList,
   Inbox,
   LifeBuoy,
+  Lightbulb,
   Package,
   FileBarChart,
   FileSignature,
@@ -176,6 +177,23 @@ export function AppSidebar({
   const transversales: NavItem[] = [
     ...(puedeVerConfiguracion
       ? [{ href: "/configuracion", label: "Configuración", icon: Settings }]
+      : []),
+    // Admin de feedback y métricas — sólo CEO ve útil pero el RLS bloquea
+    // a otros, así que el item siempre aparece para no obligar a checks
+    // adicionales en el sidebar (la página redirige si no es CEO).
+    ...(puedeVerConfiguracion
+      ? [
+          {
+            href: "/admin/sugerencias",
+            label: "Sugerencias",
+            icon: Lightbulb,
+          },
+          {
+            href: "/admin/uso",
+            label: "Métricas de uso",
+            icon: BarChart3,
+          },
+        ]
       : []),
     { href: "/ayuda", label: "Ayuda", icon: HelpCircle },
   ];

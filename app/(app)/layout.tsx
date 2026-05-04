@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/shared/app-sidebar";
+import { PageviewTracker } from "@/components/shared/pageview-tracker";
 import { PeekProvider } from "@/components/shared/peek-provider";
 
 // Todo el grupo (app) requiere sesión y consulta Supabase en cada request,
@@ -70,6 +71,7 @@ export default async function AppLayout({
 
   return (
     <PeekProvider>
+      <PageviewTracker />
       <div className="flex h-screen overflow-hidden bg-bg-2">
         <AppSidebar
           puedeVerConfiguracion={puedeConfiguracion}
