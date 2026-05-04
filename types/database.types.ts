@@ -1507,6 +1507,7 @@ export type Database = {
       cfdi: {
         Row: {
           capturado_por: string | null
+          centro_id: string | null
           cliente_id: string | null
           contrato_id: string | null
           created_at: string | null
@@ -1555,6 +1556,7 @@ export type Database = {
         }
         Insert: {
           capturado_por?: string | null
+          centro_id?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
@@ -1603,6 +1605,7 @@ export type Database = {
         }
         Update: {
           capturado_por?: string | null
+          centro_id?: string | null
           cliente_id?: string | null
           contrato_id?: string | null
           created_at?: string | null
@@ -1650,6 +1653,20 @@ export type Database = {
           uuid_sustituye?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "cfdi_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cfdi_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
           {
             foreignKeyName: "cfdi_cliente_id_fkey"
             columns: ["cliente_id"]
@@ -3126,6 +3143,7 @@ export type Database = {
       empresas: {
         Row: {
           activa: boolean | null
+          centro_default_gastos_id: string | null
           codigo: string
           configuracion: Json | null
           cp_fiscal: string
@@ -3145,6 +3163,7 @@ export type Database = {
         }
         Insert: {
           activa?: boolean | null
+          centro_default_gastos_id?: string | null
           codigo: string
           configuracion?: Json | null
           cp_fiscal: string
@@ -3164,6 +3183,7 @@ export type Database = {
         }
         Update: {
           activa?: boolean | null
+          centro_default_gastos_id?: string | null
           codigo?: string
           configuracion?: Json | null
           cp_fiscal?: string
@@ -3181,7 +3201,22 @@ export type Database = {
           rfc_representante?: string | null
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "empresas_centro_default_gastos_id_fkey"
+            columns: ["centro_default_gastos_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empresas_centro_default_gastos_id_fkey"
+            columns: ["centro_default_gastos_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+        ]
       }
       encuestas_satisfaccion: {
         Row: {
@@ -3683,6 +3718,7 @@ export type Database = {
           activo: boolean | null
           capturado_por: string | null
           categoria: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          centro_id: string | null
           cfdi_relacionado_id: string | null
           contrato_url: string | null
           created_at: string | null
@@ -3706,6 +3742,7 @@ export type Database = {
           activo?: boolean | null
           capturado_por?: string | null
           categoria: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          centro_id?: string | null
           cfdi_relacionado_id?: string | null
           contrato_url?: string | null
           created_at?: string | null
@@ -3729,6 +3766,7 @@ export type Database = {
           activo?: boolean | null
           capturado_por?: string | null
           categoria?: Database["public"]["Enums"]["categoria_gasto_recurrente"]
+          centro_id?: string | null
           cfdi_relacionado_id?: string | null
           contrato_url?: string | null
           created_at?: string | null
@@ -3749,6 +3787,20 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "gastos_recurrentes_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
           {
             foreignKeyName: "gastos_recurrentes_cfdi_relacionado_id_fkey"
             columns: ["cfdi_relacionado_id"]
@@ -4767,6 +4819,7 @@ export type Database = {
           aprobado_por: string | null
           archivos_adjuntos: Json | null
           capturado_por: string
+          centro_id: string | null
           cfdi_recibido_id: string | null
           comentarios: string | null
           condiciones_pago: string | null
@@ -4795,6 +4848,7 @@ export type Database = {
           aprobado_por?: string | null
           archivos_adjuntos?: Json | null
           capturado_por: string
+          centro_id?: string | null
           cfdi_recibido_id?: string | null
           comentarios?: string | null
           condiciones_pago?: string | null
@@ -4823,6 +4877,7 @@ export type Database = {
           aprobado_por?: string | null
           archivos_adjuntos?: Json | null
           capturado_por?: string
+          centro_id?: string | null
           cfdi_recibido_id?: string | null
           comentarios?: string | null
           condiciones_pago?: string | null
@@ -4848,6 +4903,20 @@ export type Database = {
           url_pdf?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ordenes_compra_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_compra_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
           {
             foreignKeyName: "ordenes_compra_empresa_id_fkey"
             columns: ["empresa_id"]
@@ -4964,6 +5033,8 @@ export type Database = {
           aprobado_origen_por: string | null
           cantidad: number | null
           capturado_por: string
+          centro_destino_id: string | null
+          centro_origen_id: string | null
           cfdi_id: string | null
           costo_base: number
           created_at: string | null
@@ -4994,6 +5065,8 @@ export type Database = {
           aprobado_origen_por?: string | null
           cantidad?: number | null
           capturado_por: string
+          centro_destino_id?: string | null
+          centro_origen_id?: string | null
           cfdi_id?: string | null
           costo_base: number
           created_at?: string | null
@@ -5024,6 +5097,8 @@ export type Database = {
           aprobado_origen_por?: string | null
           cantidad?: number | null
           capturado_por?: string
+          centro_destino_id?: string | null
+          centro_origen_id?: string | null
           cfdi_id?: string | null
           costo_base?: number
           created_at?: string | null
@@ -5050,6 +5125,34 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
           {
             foreignKeyName: "ordenes_trabajo_inter_co_empresa_destino_id_fkey"
             columns: ["empresa_destino_id"]
@@ -9437,6 +9540,19 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_transacciones_sin_centro: {
+        Row: {
+          empresa_id: string | null
+          estado: string | null
+          fecha: string | null
+          id: string | null
+          monto: number | null
+          numero: string | null
+          proyecto_id: string | null
+          tipo: string | null
+        }
+        Relationships: []
       }
       v_vehiculos_documentos_alertas: {
         Row: {

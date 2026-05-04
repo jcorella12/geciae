@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { empresasDondeCreaOC, obtenerVinculos } from "@/lib/auth/permisos";
+import { listarCentrosActivos } from "@/lib/centros/listar";
 import { createClient } from "@/lib/supabase/server";
 
 import { OCForm } from "../oc-form";
@@ -17,11 +18,13 @@ export default async function NuevaOCPage({
 
   const supabase = createClient();
 
-  const [{ data: empresas }, { data: proveedores }, { data: proyectos }] =
+  const [{ data: empresas }, { data: proveedores }, { data: proyectos }, centros] =
     await Promise.all([
       supabase
         .from("empresas")
-        .select("id, codigo, razon_social, nombre_comercial")
+        .select(
+          "id, codigo, razon_social, nombre_comercial, centro_default_gastos_id",
+        )
         .in("id", empresasIds)
         .eq("activa", true)
         .order("codigo"),
@@ -42,7 +45,15 @@ export default async function NuevaOCPage({
           "en_cierre",
         ])
         .order("codigo"),
+      listarCentrosActivos(),
     ]);
+
+  const centroDefaultPorEmpresa: Record<string, string | null> = {};
+  for (const e of empresas ?? []) {
+    centroDefaultPorEmpresa[e.id] =
+      (e as { centro_default_gastos_id?: string | null })
+        .centro_default_gastos_id ?? null;
+  }
 
   // Si llega ?proyecto=ID, validar y pre-seleccionar empresa.
   let empresaPreseleccionada: string | undefined;
@@ -83,6 +94,8 @@ export default async function NuevaOCPage({
         empresas={empresas ?? []}
         proveedores={proveedores ?? []}
         proyectos={proyectos ?? []}
+        centros={centros}
+        centroDefaultPorEmpresa={centroDefaultPorEmpresa}
         defaultProyectoId={searchParams.proyecto ?? null}
         defaultEmpresaId={empresaPreseleccionada}
         solicitudOrigenId={searchParams.solicitud_origen ?? null}

@@ -1,13 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { CentroSelector } from "@/components/centros/centro-selector";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import type { CentroOpcion } from "@/lib/centros/listar";
 import { initialGastoState } from "@/lib/gastos-recurrentes/state";
 
 import {
@@ -43,6 +45,7 @@ type Defaults = {
   fecha_fin?: string | null;
   identificador?: string | null;
   observaciones?: string | null;
+  centro_id?: string | null;
 };
 
 const CATEGORIAS = [
@@ -64,11 +67,15 @@ const CATEGORIAS = [
 export function GastoForm({
   empresas,
   proveedores,
+  centros,
+  centroDefaultPorEmpresa,
   gastoId,
   defaults,
 }: {
   empresas: Empresa[];
   proveedores: Proveedor[];
+  centros: CentroOpcion[];
+  centroDefaultPorEmpresa: Record<string, string | null>;
   gastoId?: string;
   defaults?: Defaults;
 }) {
@@ -77,6 +84,9 @@ export function GastoForm({
     ? actualizarGastoRecurrente.bind(null, gastoId)
     : crearGastoRecurrente;
   const [state, formAction] = useFormState(action, initialGastoState);
+  const [empresaId, setEmpresaId] = useState<string>(
+    defaults?.empresa_id ?? "",
+  );
 
   useEffect(() => {
     if (state.ok) {
@@ -85,6 +95,9 @@ export function GastoForm({
   }, [state.ok, router]);
 
   const today = new Date().toISOString().slice(0, 10);
+  const centroDefault =
+    defaults?.centro_id ??
+    (empresaId ? centroDefaultPorEmpresa[empresaId] ?? null : null);
 
   return (
     <form action={formAction} className="space-y-6">
@@ -99,7 +112,8 @@ export function GastoForm({
               id="empresa_id"
               name="empresa_id"
               required
-              defaultValue={defaults?.empresa_id ?? ""}
+              value={empresaId}
+              onChange={(e) => setEmpresaId(e.target.value)}
               className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="">— Selecciona —</option>
@@ -182,6 +196,17 @@ export function GastoForm({
               defaultValue={defaults?.proveedor_nombre ?? ""}
               placeholder="Arrendadora Sonora SA — solo si no quieres registrarlo en proveedores"
               className="mt-1"
+            />
+          </div>
+          <div className="col-span-2">
+            <CentroSelector
+              id="centro_id"
+              label="Centro de costo"
+              empresaId={empresaId || undefined}
+              filtroTipo="costo"
+              defaultValue={centroDefault}
+              centros={centros}
+              hint="Centro al que se cargará el gasto. Sugerido: centro_default de la empresa."
             />
           </div>
         </div>

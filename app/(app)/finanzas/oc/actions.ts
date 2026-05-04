@@ -37,6 +37,7 @@ function parseFormData(formData: FormData): unknown {
     comentarios: formData.get("comentarios") || undefined,
     descuento: formData.get("descuento") || 0,
     retenciones: formData.get("retenciones") || 0,
+    centro_id: formData.get("centro_id") || undefined,
     conceptos,
   };
 }
@@ -121,6 +122,7 @@ export async function createOC(
       empresa_id: d.empresa_id,
       proveedor_id: d.proveedor_id,
       proyecto_id: d.proyecto_id,
+      centro_id: d.centro_id,
       numero,
       fecha_emision: d.fecha_emision,
       fecha_entrega_esperada: d.fecha_entrega_esperada,
@@ -181,6 +183,16 @@ export async function createOC(
       );
     } catch {
       // Best-effort: si falla la vinculación no abortamos la OC ya creada.
+    }
+  }
+
+  // Sprint 5.5.3: si la OC quedó autoAprobada y tiene centro, registrar movimiento
+  if (autoAprobada && d.centro_id) {
+    try {
+      const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
+      await registrarMovimientoOC(ocNueva.id);
+    } catch {
+      // Best-effort
     }
   }
 
@@ -274,6 +286,15 @@ export async function aprobarOC(
     })
     .eq("id", ocId);
   if (error) return { ok: false, error: error.message };
+
+  // Sprint 5.5.3: registrar movimiento en centro de costo (best-effort)
+  try {
+    const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
+    await registrarMovimientoOC(ocId);
+  } catch {
+    // ignore
+  }
+
   revalidatePath(`/finanzas/oc/${ocId}`);
   revalidatePath("/finanzas/oc");
   return { ok: true, error: null };

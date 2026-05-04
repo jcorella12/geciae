@@ -4,10 +4,12 @@ import { Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { CentroSelector } from "@/components/centros/centro-selector";
 import { DocumentExtractor } from "@/components/shared/document-extractor";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { CentroOpcion } from "@/lib/centros/listar";
 import { calcularTotalesOC } from "@/lib/oc/schemas";
 import { initialOCState, TASA_IVA_DEFAULT } from "@/lib/oc/state";
 
@@ -84,6 +86,8 @@ export function OCForm({
   empresas,
   proveedores,
   proyectos = [],
+  centros = [],
+  centroDefaultPorEmpresa = {},
   defaultProyectoId = null,
   defaultEmpresaId,
   solicitudOrigenId = null,
@@ -91,6 +95,8 @@ export function OCForm({
   empresas: Empresa[];
   proveedores: Proveedor[];
   proyectos?: Proyecto[];
+  centros?: CentroOpcion[];
+  centroDefaultPorEmpresa?: Record<string, string | null>;
   defaultProyectoId?: string | null;
   defaultEmpresaId?: string;
   /** Si la OC se crea desde una solicitud, su ID — se vincula post-creación. */
@@ -326,6 +332,28 @@ export function OCForm({
         {fieldErr("empresa_id") && (
           <p className="mt-2 text-xs text-destructive">{fieldErr("empresa_id")}</p>
         )}
+      </section>
+
+      {/* Centro de costo */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Centro de costo</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Centro al que se cargará el costo de esta OC. Si la empresa tiene
+          uno por defecto se sugiere automáticamente.
+        </p>
+        <div className="mt-3">
+          <CentroSelector
+            id="centro_id"
+            label="Centro"
+            empresaId={empresaId || undefined}
+            filtroTipo="costo"
+            defaultValue={
+              empresaId ? centroDefaultPorEmpresa[empresaId] ?? null : null
+            }
+            centros={centros}
+            warnVacio={Boolean(empresaId)}
+          />
+        </div>
       </section>
 
       {/* Proyecto */}

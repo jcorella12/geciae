@@ -66,6 +66,12 @@ export const OCFormSchema = z
       .transform((v) => (v ? v : null)),
     descuento: z.coerce.number().nonnegative().default(0),
     retenciones: z.coerce.number().nonnegative().default(0),
+    centro_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
     conceptos: z.array(ConceptoSchema).min(1, "Agrega al menos un concepto"),
   });
 

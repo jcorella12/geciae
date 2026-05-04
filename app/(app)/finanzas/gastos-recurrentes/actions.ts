@@ -85,6 +85,12 @@ const GastoSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
+  centro_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
 });
 
 async function gateGasto(empresaId: string): Promise<boolean> {
@@ -115,6 +121,7 @@ export async function crearGastoRecurrente(
     fecha_fin: formData.get("fecha_fin") || undefined,
     identificador: formData.get("identificador") || undefined,
     observaciones: formData.get("observaciones") || undefined,
+    centro_id: formData.get("centro_id") || undefined,
   });
   if (!parsed.success) {
     return {
@@ -145,6 +152,7 @@ export async function crearGastoRecurrente(
       fecha_fin: d.fecha_fin,
       identificador: d.identificador,
       observaciones: d.observaciones,
+      centro_id: d.centro_id,
       activo: true,
     })
     .select("id")
@@ -174,6 +182,7 @@ export async function actualizarGastoRecurrente(
     fecha_fin: formData.get("fecha_fin") || undefined,
     identificador: formData.get("identificador") || undefined,
     observaciones: formData.get("observaciones") || undefined,
+    centro_id: formData.get("centro_id") || undefined,
   });
   if (!parsed.success) {
     return {
@@ -204,6 +213,7 @@ export async function actualizarGastoRecurrente(
       fecha_fin: d.fecha_fin,
       identificador: d.identificador,
       observaciones: d.observaciones,
+      centro_id: d.centro_id,
       updated_at: new Date().toISOString(),
     })
     .eq("id", gastoId);

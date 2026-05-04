@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { obtenerVinculos } from "@/lib/auth/permisos";
+import { listarCentrosActivos } from "@/lib/centros/listar";
 import { createClient } from "@/lib/supabase/server";
 
 import { GastoForm } from "../gasto-form";
@@ -10,20 +11,31 @@ export default async function NuevoGastoPage() {
   const vinculos = await obtenerVinculos();
   const empresasIds = Array.from(new Set(vinculos.map((v) => v.empresa_id)));
 
-  const [{ data: empresas }, { data: proveedores }] = await Promise.all([
-    supabase
-      .from("empresas")
-      .select("id, codigo, razon_social, nombre_comercial")
-      .in("id", empresasIds)
-      .eq("activa", true)
-      .order("codigo"),
-    supabase
-      .from("proveedores")
-      .select("id, razon_social, rfc")
-      .eq("activo", true)
-      .order("razon_social")
-      .limit(500),
-  ]);
+  const [{ data: empresas }, { data: proveedores }, centros] =
+    await Promise.all([
+      supabase
+        .from("empresas")
+        .select(
+          "id, codigo, razon_social, nombre_comercial, centro_default_gastos_id",
+        )
+        .in("id", empresasIds)
+        .eq("activa", true)
+        .order("codigo"),
+      supabase
+        .from("proveedores")
+        .select("id, razon_social, rfc")
+        .eq("activo", true)
+        .order("razon_social")
+        .limit(500),
+      listarCentrosActivos(),
+    ]);
+
+  const centroDefaultPorEmpresa: Record<string, string | null> = {};
+  for (const e of empresas ?? []) {
+    centroDefaultPorEmpresa[e.id] =
+      (e as { centro_default_gastos_id?: string | null })
+        .centro_default_gastos_id ?? null;
+  }
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-8">
@@ -43,7 +55,12 @@ export default async function NuevoGastoPage() {
         </p>
       </div>
 
-      <GastoForm empresas={empresas ?? []} proveedores={proveedores ?? []} />
+      <GastoForm
+        empresas={empresas ?? []}
+        proveedores={proveedores ?? []}
+        centros={centros}
+        centroDefaultPorEmpresa={centroDefaultPorEmpresa}
+      />
     </div>
   );
 }
