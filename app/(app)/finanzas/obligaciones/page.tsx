@@ -11,8 +11,15 @@ import {
   TableRow,
   TableSurface,
 } from "@/components/ui/table";
-import { obtenerVinculos } from "@/lib/auth/permisos";
+import {
+  esCEO,
+  esRolEn,
+  obtenerVinculos,
+  tieneAtributo,
+} from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
+
+import { GenerarAnualesButton } from "./generar-anuales-form";
 
 export const dynamic = "force-dynamic";
 
@@ -82,7 +89,7 @@ export default async function ObligacionesSatPage({
   searchParams?: SearchParams;
 }) {
   const supabase = createClient();
-  await obtenerVinculos();
+  const vinculos = await obtenerVinculos();
 
   const sp = searchParams ?? {};
   const empresaId = sp.empresa ?? "";
@@ -150,6 +157,20 @@ export default async function ObligacionesSatPage({
             cada obligación como presentada cuando subas el acuse.
           </p>
         </div>
+        <GenerarAnualesButton
+          empresas={(empresas ?? [])
+            .filter(
+              (e) =>
+                esCEO(vinculos) ||
+                tieneAtributo(vinculos, "tesorero_corporativo") ||
+                esRolEn(vinculos, e.id, ["director", "operativo"]),
+            )
+            .map((e) => ({
+              id: e.id,
+              codigo: e.codigo,
+              nombre: e.nombre_comercial ?? e.razon_social,
+            }))}
+        />
       </div>
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -292,7 +313,11 @@ export default async function ObligacionesSatPage({
                 const estadoEf = r.estado_efectivo as string;
                 const venc = r.fecha_vencimiento as string;
                 return (
-                  <TableRow key={r.id as string}>
+                  <TableRow
+                    key={r.id as string}
+                    href={`/finanzas/obligaciones/${r.id}`}
+                    linkLabel={`Abrir obligación ${TIPO_LABELS[r.tipo as string] ?? r.tipo} ${r.periodo_label ?? ""}`}
+                  >
                     <TableCell>
                       <span className="inline-flex items-center gap-1.5 text-xs">
                         <span
