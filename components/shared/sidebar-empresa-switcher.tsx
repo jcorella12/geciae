@@ -30,6 +30,8 @@ type Props = {
   empresas: EmpresaResumen[];
   activaId: string | null;
   puedeConsolidado: boolean;
+  /** Modo compacto cuando el sidebar está colapsado a iconos. */
+  collapsed?: boolean;
 };
 
 /**
@@ -40,6 +42,7 @@ export function SidebarEmpresaSwitcher({
   empresas,
   activaId,
   puedeConsolidado,
+  collapsed = false,
 }: Props) {
   const [isPending, startTransition] = useTransition();
   const enConsolidado = activaId === VISTA_CONSOLIDADA;
@@ -62,38 +65,60 @@ export function SidebarEmpresaSwitcher({
     });
   };
 
+  // Vista compacta: solo el dot/globo de empresa activa, sin label ni chevron.
+  const titulo = enConsolidado
+    ? "Vista consolidada del grupo"
+    : empresaActiva?.nombre_comercial ?? empresaActiva?.razon_social ?? "—";
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-2 text-left transition hover:border-white/20 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
+          collapsed
+            ? "mx-auto my-3 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] transition hover:border-white/20 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+            : "mx-3 mt-3 flex items-center gap-2 rounded-md border border-white/10 bg-white/[0.04] px-2.5 py-2 text-left transition hover:border-white/20 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/30",
           isPending && "opacity-60",
         )}
-        aria-label="Cambiar empresa activa"
+        aria-label={
+          collapsed
+            ? `Empresa activa: ${titulo}. Click para cambiar.`
+            : "Cambiar empresa activa"
+        }
+        title={collapsed ? titulo : undefined}
       >
         {enConsolidado ? (
-          <Globe className="h-3 w-3 shrink-0 text-white/60" />
+          <Globe
+            className={cn(
+              "shrink-0 text-white/60",
+              collapsed ? "h-3.5 w-3.5 text-white/70" : "h-3 w-3",
+            )}
+          />
         ) : (
           <span
             className={cn(
-              "inline-block h-2 w-2 shrink-0 rounded-full",
+              "inline-block shrink-0 rounded-full",
+              collapsed ? "h-2.5 w-2.5" : "h-2 w-2",
               codigoColor[empresaActiva?.codigo ?? ""] ?? "bg-white/40",
             )}
           />
         )}
-        <span className="min-w-0 flex-1">
-          <span className="block text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/55">
-            Empresa activa
-          </span>
-          <span className="block truncate text-[13px] font-medium text-white">
-            {enConsolidado
-              ? "Vista consolidada"
-              : empresaActiva?.nombre_comercial ??
-                empresaActiva?.razon_social ??
-                "—"}
-          </span>
-        </span>
-        <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/55" />
+        {!collapsed && (
+          <>
+            <span className="min-w-0 flex-1">
+              <span className="block text-[9.5px] font-semibold uppercase tracking-[0.14em] text-white/55">
+                Empresa activa
+              </span>
+              <span className="block truncate text-[13px] font-medium text-white">
+                {enConsolidado
+                  ? "Vista consolidada"
+                  : empresaActiva?.nombre_comercial ??
+                    empresaActiva?.razon_social ??
+                    "—"}
+              </span>
+            </span>
+            <ChevronsUpDown className="h-3.5 w-3.5 shrink-0 text-white/55" />
+          </>
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="min-w-[16rem]">

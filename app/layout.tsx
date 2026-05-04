@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { SWRegister } from "@/components/shared/sw-register";
+import { SIDEBAR_COOKIE } from "@/lib/preferences/sidebar-state";
 import { cn } from "@/lib/utils";
 
 const THEME_COOKIE = "pse_theme";
@@ -31,6 +32,8 @@ export default function RootLayout({
   // Tema desde cookie — aplicado en SSR para evitar flash en oscuro
   const themeCookie = cookies().get(THEME_COOKIE)?.value;
   const isDark = themeCookie === "dark";
+  // Sidebar colapsado desde cookie — aplicado en SSR para evitar layout shift
+  const sidebarCollapsed = cookies().get(SIDEBAR_COOKIE)?.value === "1";
 
   return (
     <html
@@ -38,6 +41,7 @@ export default function RootLayout({
       suppressHydrationWarning
       data-density="comfy"
       data-theme={isDark ? "dark" : undefined}
+      data-sidebar={sidebarCollapsed ? "collapsed" : undefined}
       className={cn(
         GeistSans.variable,
         GeistMono.variable,

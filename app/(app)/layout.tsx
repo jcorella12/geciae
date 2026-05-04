@@ -18,6 +18,7 @@ import {
   puedeVerConsolidado,
   type EmpresaResumen,
 } from "@/lib/empresa-activa";
+import { getSidebarCollapsed } from "@/lib/preferences/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AppLayout({
@@ -65,6 +66,8 @@ export default async function AppLayout({
     ? primerVinculo.rol.toUpperCase()
     : "USUARIO";
 
+  const sidebarCollapsed = await getSidebarCollapsed();
+
   return (
     <PeekProvider>
       <div className="flex h-screen overflow-hidden bg-bg-2">
@@ -73,6 +76,7 @@ export default async function AppLayout({
           empresas={empresas}
           activaId={activaId}
           puedeConsolidado={puedeConsolidado}
+          collapsed={sidebarCollapsed}
           user={{
             name: nombreUsuario,
             initials,

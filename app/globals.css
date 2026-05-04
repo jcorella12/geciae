@@ -120,9 +120,21 @@
     --shadow-glow: 0 0 0 4px color-mix(in oklch, var(--brand) 12%, transparent);
 
     /* ---------- Layout ---------- */
-    --sidebar-w: 232px;
+    --sidebar-w-expanded: 232px;
+    --sidebar-w-collapsed: 60px;
+    --sidebar-w: var(--sidebar-w-expanded);
     --sidebar-w-compact: 64px;
     --topbar-h: 56px;
+  }
+
+  /* Cuando la cookie indica colapsado, reducimos el ancho del sidebar.
+     Server-side se aplica como atributo en <html data-sidebar="collapsed">,
+     evitando layout shift al cargar. */
+  :root[data-sidebar="collapsed"] {
+    --sidebar-w: var(--sidebar-w-collapsed);
+  }
+
+  :root {
 
     /* ============================================================
        Compatibilidad shadcn/ui (HSL tokens)
