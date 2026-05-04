@@ -72,6 +72,97 @@ export async function crearServicio(
   return { ok: true, error: null };
 }
 
+/**
+ * Quick Create — crea un servicio mínimo y devuelve la fila completa.
+ *
+ * Usado por QuickCreatePicker en formularios padres (p.ej. OT inter-co)
+ * para que la nueva entidad pueda quedar seleccionada inmediatamente.
+ *
+ * No se invoca con FormData; se llama directo desde Client con args tipados.
+ */
+export async function crearServicioRapido(input: {
+  empresa_id: string;
+  codigo: string;
+  nombre: string;
+  unidad?: string | null;
+  costo_base: number;
+  margen_inter_co?: number;
+}): Promise<{
+  ok: boolean;
+  error: string | null;
+  servicio?: {
+    id: string;
+    empresa_id: string;
+    codigo: string;
+    nombre: string;
+    unidad: string | null;
+    costo_base: number | null;
+    margen_inter_co: number | null;
+    precio_inter_co: number | null;
+  };
+}> {
+  const v = await obtenerVinculos();
+  if (!puedeCrearOCEn(v, input.empresa_id)) {
+    return {
+      ok: false,
+      error: "Sin permiso para gestionar servicios de esta empresa.",
+    };
+  }
+  if (!input.codigo?.trim() || !input.nombre?.trim()) {
+    return { ok: false, error: "Código y nombre son requeridos." };
+  }
+  if (!Number.isFinite(input.costo_base) || input.costo_base < 0) {
+    return { ok: false, error: "Costo base inválido." };
+  }
+  const margen = input.margen_inter_co ?? 0.15;
+  const precio_inter_co =
+    Math.round(input.costo_base * (1 + margen) * 100) / 100;
+
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from("catalogo_servicios")
+    .insert({
+      empresa_id: input.empresa_id,
+      codigo: input.codigo.trim(),
+      nombre: input.nombre.trim(),
+      unidad: input.unidad?.trim() || null,
+      costo_base: input.costo_base,
+      margen_inter_co: margen,
+      precio_inter_co,
+      iva_aplicable: true,
+      activo: true,
+    })
+    .select(
+      "id, empresa_id, codigo, nombre, unidad, costo_base, margen_inter_co, precio_inter_co",
+    )
+    .single();
+  if (error || !data) {
+    return {
+      ok: false,
+      error: error?.message?.includes("duplicate")
+        ? "Ya existe un servicio con ese código en esta empresa."
+        : `Error: ${error?.message ?? "no se pudo crear"}`,
+    };
+  }
+  revalidatePath("/finanzas/servicios");
+  return {
+    ok: true,
+    error: null,
+    servicio: {
+      id: data.id,
+      empresa_id: data.empresa_id,
+      codigo: data.codigo,
+      nombre: data.nombre,
+      unidad: data.unidad,
+      costo_base: data.costo_base != null ? Number(data.costo_base) : null,
+      margen_inter_co:
+        data.margen_inter_co != null ? Number(data.margen_inter_co) : null,
+      precio_inter_co:
+        data.precio_inter_co != null ? Number(data.precio_inter_co) : null,
+    },
+  };
+}
+
 export async function toggleServicioActivo(
   servicioId: string,
   proximo: boolean,

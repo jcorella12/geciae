@@ -3,6 +3,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { QuickCreatePicker } from "@/components/shared/quick-create-picker";
+import {
+  QuickCreateServicioForm,
+  type ServicioQuickItem,
+} from "@/components/shared/quick-create-servicio-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,7 +55,7 @@ type Proyecto = {
 
 export function OTForm({
   empresas,
-  servicios,
+  servicios: serviciosIniciales,
   proyectos,
   empresasOrigenIds,
 }: {
@@ -70,6 +75,8 @@ export function OTForm({
   const [iva, setIva] = useState("0.16");
   const [retenciones, setRetenciones] = useState("0");
   const [unidad, setUnidad] = useState("");
+  // Lista local de servicios para soportar Quick Create (append en cliente).
+  const [servicios, setServicios] = useState(serviciosIniciales);
 
   // Servicios disponibles: los de la empresa destino.
   const serviciosDestino = useMemo(
@@ -222,23 +229,61 @@ export function OTForm({
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div className="space-y-1">
             <Label htmlFor="servicio_select">Servicio (opcional)</Label>
-            <select
-              id="servicio_select"
+            <QuickCreatePicker<Servicio>
+              items={serviciosDestino}
               value={servicioId}
-              onChange={(e) => setServicioId(e.target.value)}
+              onChange={setServicioId}
               disabled={!destinoId}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
-            >
-              <option value="">— Sin servicio (manual) —</option>
-              {serviciosDestino.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.codigo} — {s.nombre}{" "}
-                  {s.precio_inter_co != null
-                    ? `· ${fmtMxn.format(Number(s.precio_inter_co))}`
-                    : ""}
-                </option>
-              ))}
-            </select>
+              placeholder={
+                destinoId
+                  ? "Buscar o crear servicio…"
+                  : "Selecciona destino primero"
+              }
+              getLabel={(s) => `${s.codigo} — ${s.nombre}`}
+              getSecondary={(s) =>
+                s.precio_inter_co != null
+                  ? `Precio inter-co: ${fmtMxn.format(Number(s.precio_inter_co))}`
+                  : null
+              }
+              matchesQuery={(s, q) =>
+                s.codigo.toLowerCase().includes(q) ||
+                s.nombre.toLowerCase().includes(q)
+              }
+              newItemLabel="Nuevo servicio"
+              emptyHint="Sin servicios para esta empresa destino"
+              renderCreateForm={({ onCreated, onCancel, initialQuery }) => {
+                const empDestino = empresas.find((e) => e.id === destinoId);
+                return (
+                  <QuickCreateServicioForm
+                    empresaId={destinoId}
+                    empresaLabel={
+                      empDestino?.nombre_comercial ??
+                      empDestino?.razon_social ??
+                      destinoId
+                    }
+                    initialNombre={initialQuery}
+                    onCreated={(s: ServicioQuickItem) => {
+                      // Append a la lista local y selecciona automáticamente
+                      setServicios((prev) => [
+                        ...prev,
+                        {
+                          id: s.id,
+                          empresa_id: s.empresa_id,
+                          codigo: s.codigo,
+                          nombre: s.nombre,
+                          unidad: s.unidad,
+                          costo_base: s.costo_base,
+                          margen_inter_co: s.margen_inter_co,
+                          precio_inter_co: s.precio_inter_co,
+                        },
+                      ]);
+                      onCreated(s as Servicio);
+                    }}
+                    onCancel={onCancel}
+                  />
+                );
+              }}
+            />
             <p className="text-xs text-muted-foreground">
               Si seleccionas, autocompleta costo, unidad y margen.
             </p>
