@@ -12,8 +12,15 @@ import {
   TableRow,
   TableSurface,
 } from "@/components/ui/table";
-import { obtenerVinculos } from "@/lib/auth/permisos";
+import {
+  esCEO,
+  esRolEn,
+  obtenerVinculos,
+  tieneAtributo,
+} from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
+
+import { EFMPanel } from "./efm-panel";
 
 export const dynamic = "force-dynamic";
 
@@ -61,7 +68,7 @@ export default async function EstadoFinancieroDetallePage({
   params: { id: string };
 }) {
   const supabase = createClient();
-  await obtenerVinculos();
+  const v = await obtenerVinculos();
 
   // La tabla/vista es nueva — cast minimo
   const { data: ef } = await supabase
@@ -71,6 +78,21 @@ export default async function EstadoFinancieroDetallePage({
     .maybeSingle();
 
   if (!ef) notFound();
+
+  // KPIs IVA + flujo no están en la vista; los traemos del registro base.
+  const { data: kpisExtra } = await supabase
+    .from("estados_financieros_mensuales")
+    .select("iva_trasladado, iva_acreditable, flujo_efectivo")
+    .eq("id", params.id)
+    .maybeSingle();
+
+  const empresaId = (ef.empresa_id as string | null) ?? "";
+  const puedeEditar =
+    esCEO(v) ||
+    tieneAtributo(v, "tesorero_corporativo") ||
+    (empresaId
+      ? esRolEn(v, empresaId, ["director", "operativo"])
+      : false);
 
   const documentos = (ef.documentos ?? {}) as Record<string, string>;
   const empresa_codigo = ef.empresa_codigo as string;
@@ -263,6 +285,28 @@ export default async function EstadoFinancieroDetallePage({
           </TableBody>
         </Table>
       </TableSurface>
+
+      {/* Panel de acciones (KPIs IA + manual + firmados) */}
+      {puedeEditar && (
+        <div className="mt-6">
+          <h2 className="mb-3 text-base font-semibold">Acciones</h2>
+          <EFMPanel
+            efmId={params.id}
+            kpisActuales={{
+              utilidad_neta: ef.utilidad_neta as number | null,
+              ingresos_totales: ef.ingresos_totales as number | null,
+              egresos_totales: ef.egresos_totales as number | null,
+              iva_trasladado: kpisExtra?.iva_trasladado ?? null,
+              iva_acreditable: kpisExtra?.iva_acreditable ?? null,
+              flujo_efectivo: kpisExtra?.flujo_efectivo ?? null,
+            }}
+            firmadosActual={firmados}
+            tieneBalanceOEr={Boolean(
+              documentos.balance_general || documentos.estado_resultados,
+            )}
+          />
+        </div>
+      )}
     </div>
   );
 }

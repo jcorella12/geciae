@@ -110,6 +110,12 @@ export default async function EstadosFinancierosPage({
             resultados, balanza, flujo, IVA, pólizas. Subidos por mes y empresa.
           </p>
         </div>
+        <Link
+          href="/finanzas/estados-financieros/nuevo"
+          className="inline-flex items-center gap-1.5 rounded-md bg-brand px-3 py-1.5 text-[12.5px] font-medium text-brand-fg hover:opacity-90"
+        >
+          + Nuevo paquete
+        </Link>
       </div>
 
       <div className="mb-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
