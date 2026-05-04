@@ -12,6 +12,7 @@ import {
   CashflowLegend,
   type CashflowPoint,
 } from "@/components/dashboard/cashflow-chart";
+import { DraggableKpiGrid } from "@/components/dashboard/draggable-kpi-grid";
 import { AlertItem } from "@/components/ui/alert-item";
 import { Button } from "@/components/ui/button";
 import { DualBar } from "@/components/ui/dual-bar";
@@ -592,38 +593,83 @@ export default async function DashboardPage() {
         />
       </div>
 
-      {/* Fila 2: KPIs operativos */}
-      <div className="mb-5 grid grid-cols-4 gap-5">
-        <KpiCard
-          label="Proyectos activos"
-          value={totalProyectos}
-          sub={`${proyectosVerdes} ok · ${proyectosAmarillos} alerta · ${proyectosRojos} riesgo`}
-        />
-        <KpiCard
-          label="Avance ponderado"
-          value={`${avancePonderado.toFixed(1)}`}
-          unit="%"
-          sub="Por monto contratado"
-        />
-        <KpiCard
-          label="Ingresos · empresa top"
-          value={
-            ingresosPorEmpresa[0]
-              ? ingresosPorEmpresa[0].codigo
-              : "—"
-          }
-          sub={
-            ingresosPorEmpresa[0]
-              ? fmtMxn.format(ingresosPorEmpresa[0].monto)
-              : "Sin datos del mes"
-          }
-        />
-        <KpiCard
-          label="Empresas activas"
-          value={empresasVisibles.length}
-          sub={
-            verConsolidada ? "Vista grupo" : "Solo tu acceso"
-          }
+      {/* Fila 2: KPIs operativos · ARRASTRABLES + CLICKABLES */}
+      <div className="mb-5">
+        <DraggableKpiGrid
+          storageKey="dashboard-kpis-operativos"
+          columns={4}
+          tiles={[
+            {
+              id: "proyectos-activos",
+              label: "Proyectos activos",
+              value: totalProyectos,
+              sub: `${proyectosVerdes} ok · ${proyectosAmarillos} alerta · ${proyectosRojos} riesgo`,
+              href: "/proyectos",
+              accent: proyectosRojos > 0 ? "danger" : proyectosAmarillos > 0 ? "warn" : "brand",
+            },
+            {
+              id: "avance-ponderado",
+              label: "Avance ponderado",
+              value: avancePonderado.toFixed(1),
+              unit: "%",
+              sub: "Por monto contratado",
+              href: "/proyectos",
+              accent: "brand",
+            },
+            {
+              id: "ingresos-empresa-top",
+              label: "Ingresos · empresa top",
+              value: ingresosPorEmpresa[0]?.codigo ?? "—",
+              sub: ingresosPorEmpresa[0]
+                ? fmtMxn.format(ingresosPorEmpresa[0].monto)
+                : "Sin datos del mes",
+              href: "/finanzas/cfdi?direccion=emitidos",
+              accent: "brand",
+            },
+            {
+              id: "inventario-valor",
+              label: "Inventario · valor",
+              value: invValorMercado > 0 ? fmtMxn.format(invValorMercado) : "—",
+              sub:
+                invItemsAlerta > 0
+                  ? `${invItemsAlerta} en alerta · ${invItemsTotal} items`
+                  : `${invItemsTotal} items`,
+              href: "/inventario",
+              accent: invItemsAlerta > 0 ? "warn" : "brand",
+            },
+            {
+              id: "calendario-eventos",
+              label: "Calendario",
+              value: "Ver",
+              sub: "Tareas, SAT, comercial, vehículos",
+              href: "/calendario",
+              accent: "brand",
+            },
+            {
+              id: "tickets-abiertos",
+              label: "Soporte tickets",
+              value: "Ver",
+              sub: "Servicio post-venta · incidencias",
+              href: "/soporte/tickets",
+              accent: "brand",
+            },
+            {
+              id: "vehiculos-flota",
+              label: "Vehículos · flota",
+              value: "Ver",
+              sub: "Bitácora · documentos · seguros",
+              href: "/activos/vehiculos",
+              accent: "brand",
+            },
+            {
+              id: "empresas-activas",
+              label: "Empresas activas",
+              value: empresasVisibles.length,
+              sub: verConsolidada ? "Vista grupo" : "Solo tu acceso",
+              href: verConsolidada ? "/dashboard/pajaro" : "/dashboard",
+              accent: "brand",
+            },
+          ]}
         />
       </div>
 
@@ -818,47 +864,68 @@ export default async function DashboardPage() {
         )}
       </section>
 
-      {/* Fila 4.5: Posición consolidada del grupo (nueva) */}
-      <div className="mb-5 grid grid-cols-2 gap-5 lg:grid-cols-6">
-        <KpiCard
-          label="Cash bancos"
-          value={fmtMxn.format(totalBancos)}
-          accent="ok"
-        />
-        <KpiCard
-          label="Inversiones"
-          value={fmtMxn.format(inversionTotal)}
-          sub="Fondos / valores"
-          accent={inversionTotal > 0 ? "ok" : "brand"}
-        />
-        <KpiCard
-          label="Crédito disponible"
-          value={fmtMxn.format(creditoDisponible)}
-          sub={`Dispuesto ${fmtMxn.format(creditoDispuesto)}`}
-          accent={creditoDispuesto > 0 ? "warn" : "brand"}
-        />
-        <KpiCard
-          label="Indirectos mes"
-          value={fmtMxn.format(indirectosMensual)}
-          sub={`${gastosVisibles.length} gastos recurrentes`}
-          accent="warn"
-        />
-        <KpiCard
-          label="Pipeline cotiz."
-          value={fmtMxn.format(cotizPipeline)}
-          sub={`${cotizsBorrador.length} borr · ${cotizsEnviadas.length} env · ${cotizsAceptadas.length} acep`}
-        />
-        <KpiCard
-          label={`Utilidad ${etiquetaUltimoMes || "EFM"}`}
-          value={fmtMxn.format(utilidadUltimoMes)}
-          sub={efmArr.length > 0 ? "Último cierre cargado" : "Sin EFM cargado"}
-          accent={
-            utilidadUltimoMes > 0
-              ? "ok"
-              : utilidadUltimoMes < 0
-                ? "danger"
-                : "brand"
-          }
+      {/* Fila 4.5: Posición consolidada · ARRASTRABLE + CLICKABLE */}
+      <div className="mb-5">
+        <DraggableKpiGrid
+          storageKey="dashboard-posicion-consolidada"
+          columns={6}
+          tiles={[
+            {
+              id: "cash-bancos",
+              label: "Cash bancos",
+              value: fmtMxn.format(totalBancos),
+              href: "/finanzas/tesoreria",
+              accent: "ok",
+            },
+            {
+              id: "inversiones",
+              label: "Inversiones",
+              value: fmtMxn.format(inversionTotal),
+              sub: "Fondos / valores",
+              href: "/finanzas/tesoreria",
+              accent: inversionTotal > 0 ? "ok" : "brand",
+            },
+            {
+              id: "credito-disp",
+              label: "Crédito disponible",
+              value: fmtMxn.format(creditoDisponible),
+              sub: `Dispuesto ${fmtMxn.format(creditoDispuesto)}`,
+              href: "/finanzas/tesoreria/creditos",
+              accent: creditoDispuesto > 0 ? "warn" : "brand",
+            },
+            {
+              id: "indirectos-mes",
+              label: "Indirectos mes",
+              value: fmtMxn.format(indirectosMensual),
+              sub: `${gastosVisibles.length} gastos recurrentes`,
+              href: "/finanzas/gastos-recurrentes",
+              accent: "warn",
+            },
+            {
+              id: "pipeline-cotiz",
+              label: "Pipeline cotiz.",
+              value: fmtMxn.format(cotizPipeline),
+              sub: `${cotizsBorrador.length} borr · ${cotizsEnviadas.length} env · ${cotizsAceptadas.length} acep`,
+              href: "/comercial/cotizaciones",
+              accent: "brand",
+            },
+            {
+              id: "utilidad-mes",
+              label: `Utilidad ${etiquetaUltimoMes || "EFM"}`,
+              value: fmtMxn.format(utilidadUltimoMes),
+              sub:
+                efmArr.length > 0
+                  ? "Último cierre cargado"
+                  : "Sin EFM cargado",
+              href: "/finanzas/estados-financieros",
+              accent:
+                utilidadUltimoMes > 0
+                  ? "ok"
+                  : utilidadUltimoMes < 0
+                    ? "danger"
+                    : "brand",
+            },
+          ]}
         />
       </div>
 
