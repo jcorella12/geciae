@@ -4,6 +4,7 @@ import Link from "next/link";
 import { DensityToggle } from "@/components/shared/density-toggle";
 import { GlobalSearch } from "@/components/shared/global-search";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { SugerirMejoraButton } from "@/components/shared/sugerir-mejora-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import {
   TopbarCreateButton,
@@ -132,6 +133,8 @@ export async function AppTopbar({ email, initials }: Props) {
       <DensityToggle variant="icon" />
 
       <ThemeToggle compact />
+
+      <SugerirMejoraButton />
 
       <NotificationBell />
 
