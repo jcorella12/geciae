@@ -79,8 +79,7 @@ export default async function SolicitudesGlobalPage({
   // Vista cross-proyecto: la RLS hace el filtro de visibilidad por proyecto
   // (PM, admin, vendedor, director/operativo de empresa, CEO, solicitante,
   // asignado).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("v_proyecto_solicitudes_lista")
     .select(
       "id, proyecto_id, proyecto_codigo, proyecto_nombre, empresa_codigo, empresa_id, numero, tipo, titulo, monto_estimado, urgencia, estado, solicitante_id, asignado_a_id, num_comentarios, num_adjuntos, dias_abierta, created_at",

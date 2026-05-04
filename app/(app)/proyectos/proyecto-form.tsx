@@ -37,7 +37,7 @@ type Empresa = {
 type Cliente = {
   id: string;
   razon_social: string;
-  rfc: string;
+  rfc: string | null;
 };
 
 export type ProyectoFormDefaults = {

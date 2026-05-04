@@ -285,7 +285,7 @@ export async function GET(
             l: "Score pago",
             v: `${Math.round(Number(data.score_pago ?? 0.5) * 100)}%`,
           },
-          { l: "RFC", v: data.rfc },
+          { l: "RFC", v: data.rfc ?? "Sin RFC (potencial)" },
         ],
         sections: [],
         actions: [

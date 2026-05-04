@@ -21,7 +21,7 @@ type Cliente = {
   id: string;
   razon_social: string;
   nombre_comercial: string | null;
-  rfc: string;
+  rfc: string | null;
   tipo: string | null;
   riesgo: string | null;
   activo: boolean | null;

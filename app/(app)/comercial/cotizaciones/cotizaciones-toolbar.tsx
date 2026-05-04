@@ -21,7 +21,7 @@ type Empresa = {
 type Cliente = {
   id: string;
   razon_social: string;
-  rfc: string;
+  rfc: string | null;
 };
 
 const empresaCodigoColor: Record<string, string> = {

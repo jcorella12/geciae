@@ -70,7 +70,7 @@ export default async function EditClientePage({
           id: cliente.id,
           razon_social: cliente.razon_social,
           nombre_comercial: cliente.nombre_comercial,
-          rfc: cliente.rfc,
+          rfc: cliente.rfc ?? undefined,
           curp: cliente.curp,
           regimen_fiscal: cliente.regimen_fiscal ?? undefined,
           cp_fiscal: cliente.cp_fiscal ?? undefined,

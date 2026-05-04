@@ -12,7 +12,7 @@ import { crearClienteRapido } from "@/app/(app)/clientes/actions";
 export type ClientePickerOption = {
   id: string;
   razon_social: string;
-  rfc: string;
+  rfc: string | null;
   nombre_comercial: string | null;
 };
 
@@ -52,7 +52,7 @@ export function ClientePicker({
     ? clientes.filter(
         (c) =>
           c.razon_social.toLowerCase().includes(q) ||
-          c.rfc.toLowerCase().includes(q) ||
+          (c.rfc ?? "").toLowerCase().includes(q) ||
           (c.nombre_comercial ?? "").toLowerCase().includes(q),
       )
     : clientes;

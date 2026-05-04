@@ -37,15 +37,13 @@ export default async function AdminUsoPage({
   const supabase = createClient();
 
   // Top páginas (vía RPC)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: topPaginas } = await (supabase as any).rpc(
+  const { data: topPaginas } = await supabase.rpc(
     "top_paginas_uso",
     { p_dias: dias },
   );
 
   // Eventos del periodo (para KPIs y top usuarios)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: eventos } = await (supabase as any)
+  const { data: eventos } = await supabase
     .from("eventos_uso")
     .select("usuario_id, tipo, created_at, pagina")
     .gte("created_at", desde)

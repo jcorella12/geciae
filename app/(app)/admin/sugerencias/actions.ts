@@ -14,13 +14,6 @@ import {
   type UpdateSugerenciaState,
 } from "@/lib/sugerencias/state";
 
-// Helper local: la tabla es nueva (sprint 5.1) y los types no están regenerados.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function clientSug(): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return createClient() as unknown as any;
-}
-
 const CrearSchema = z.object({
   categoria: z.enum(CATEGORIAS as [string, ...string[]]),
   descripcion: z
@@ -65,10 +58,11 @@ export async function crearSugerencia(
   if (!usr.user)
     return { ...initialCrearSugerenciaState, error: "Sesión expirada." };
 
-  const { error } = await clientSug().from("sugerencias_mejora").insert({
+  const { error } = await supabase.from("sugerencias_mejora").insert({
     usuario_id: usr.user.id,
     empresa_contexto: parsed.data.empresa_contexto,
-    categoria: parsed.data.categoria,
+    // categoria es enum categoria_sugerencia; Zod ya validó el valor.
+    categoria: parsed.data.categoria as "bug" | "mejora_ux" | "feature_nuevo" | "rendimiento" | "otro",
     descripcion: parsed.data.descripcion,
     url_contexto: parsed.data.url_contexto,
     user_agent: parsed.data.user_agent,
@@ -137,9 +131,11 @@ export async function actualizarSugerencia(
   if (Object.keys(patch).length === 0)
     return { ok: true, error: null };
 
-  const { error } = await clientSug()
+  const supabase = createClient();
+  const { error } = await supabase
     .from("sugerencias_mejora")
-    .update(patch)
+    // Patch dinámico; cast localizado al tipo Update.
+    .update(patch as never)
     .eq("id", parsed.data.id);
   if (error)
     return { ...initialUpdateSugerenciaState, error: error.message };

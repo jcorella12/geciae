@@ -35,7 +35,6 @@ const fmtMxn = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0,
 });
 
-
 /**
  * Widgets que se renderizan según el rol Mi Día.
  * Server component para que cada widget haga su propio fetch.
@@ -240,7 +239,7 @@ async function AdminWidgets({ empresasIds }: { empresasIds: string[] }) {
     // Solicitudes asignadas al usuario o sin asignar (pendientes)
     yo
       ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ((supabase as any)
+        (supabase
           .from("v_proyecto_solicitudes_lista")
           .select(
             "id, proyecto_id, proyecto_codigo, numero, tipo, titulo, urgencia, estado, asignado_a_id",

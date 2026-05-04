@@ -325,8 +325,7 @@ export default async function ProyectoDetailPage({
   // ====================================================================
   // Sprint 4.2 — Solicitudes del proyecto (vista enriquecida)
   // ====================================================================
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: solicitudesRaw } = await (supabase as any)
+  const { data: solicitudesRaw } = await supabase
     .from("v_proyecto_solicitudes_lista")
     .select(
       "id, numero, tipo, titulo, descripcion, monto_estimado, urgencia, estado, solicitante_id, asignado_a_id, campos_tipo, entidades_relacionadas, razon_rechazo, resuelta_at, created_at, num_comentarios, num_adjuntos",

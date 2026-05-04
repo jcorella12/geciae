@@ -1,4 +1,4 @@
-// @ts-nocheck — archivo generado por `npx supabase gen types typescript --linked`. No editar a mano.
+// @ts-nocheck
 export type Json =
   | string
   | number
@@ -125,6 +125,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "actividades_comerciales_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -1026,6 +1033,13 @@ export type Database = {
             referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "catalogo_productos_proveedor_preferido_id_fkey"
+            columns: ["proveedor_preferido_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
+            referencedColumns: ["id"]
+          },
         ]
       }
       catalogo_servicios: {
@@ -1286,6 +1300,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cfdi_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cfdi_contrato_id_fkey"
             columns: ["contrato_id"]
             isOneToOne: false
@@ -1318,6 +1339,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cfdi_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -1449,6 +1477,7 @@ export type Database = {
       clientes: {
         Row: {
           activo: boolean | null
+          ciudad_potencial: string | null
           cp_fiscal: string | null
           created_at: string | null
           cuenta_bancaria: Json | null
@@ -1456,22 +1485,31 @@ export type Database = {
           direccion_entrega: Json | null
           direccion_fiscal: Json | null
           email_facturacion: string | null
+          es_potencial: boolean
+          estado: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at: string | null
+          estado_modificado_por: string | null
+          estado_motivo: string | null
+          fecha_conversion: string | null
           id: string
           nombre_comercial: string | null
+          notas_potencial: string | null
           observaciones: string | null
           razon_social: string
           regimen_fiscal: string | null
-          rfc: string
+          rfc: string | null
           riesgo: string | null
           score_pago: number | null
           score_satisfaccion: number | null
           segmento: string | null
+          telefono_potencial: string | null
           tipo: string | null
           updated_at: string | null
           uso_cfdi_default: string | null
         }
         Insert: {
           activo?: boolean | null
+          ciudad_potencial?: string | null
           cp_fiscal?: string | null
           created_at?: string | null
           cuenta_bancaria?: Json | null
@@ -1479,22 +1517,31 @@ export type Database = {
           direccion_entrega?: Json | null
           direccion_fiscal?: Json | null
           email_facturacion?: string | null
+          es_potencial?: boolean
+          estado?: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          fecha_conversion?: string | null
           id?: string
           nombre_comercial?: string | null
+          notas_potencial?: string | null
           observaciones?: string | null
           razon_social: string
           regimen_fiscal?: string | null
-          rfc: string
+          rfc?: string | null
           riesgo?: string | null
           score_pago?: number | null
           score_satisfaccion?: number | null
           segmento?: string | null
+          telefono_potencial?: string | null
           tipo?: string | null
           updated_at?: string | null
           uso_cfdi_default?: string | null
         }
         Update: {
           activo?: boolean | null
+          ciudad_potencial?: string | null
           cp_fiscal?: string | null
           created_at?: string | null
           cuenta_bancaria?: Json | null
@@ -1502,16 +1549,24 @@ export type Database = {
           direccion_entrega?: Json | null
           direccion_fiscal?: Json | null
           email_facturacion?: string | null
+          es_potencial?: boolean
+          estado?: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          fecha_conversion?: string | null
           id?: string
           nombre_comercial?: string | null
+          notas_potencial?: string | null
           observaciones?: string | null
           razon_social?: string
           regimen_fiscal?: string | null
-          rfc?: string
+          rfc?: string | null
           riesgo?: string | null
           score_pago?: number | null
           score_satisfaccion?: number | null
           segmento?: string | null
+          telefono_potencial?: string | null
           tipo?: string | null
           updated_at?: string | null
           uso_cfdi_default?: string | null
@@ -1549,6 +1604,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clientes_empresas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -1676,6 +1738,13 @@ export type Database = {
             referencedRelation: "clientes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contactos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contactos_proveedor: {
@@ -1721,6 +1790,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contactos_proveedor_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -1789,6 +1865,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contratos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -1983,6 +2066,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -2251,6 +2341,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ema_certificaciones_emitidas_ce_externo_id_fkey"
+            columns: ["ce_externo_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ema_certificaciones_emitidas_cfdi_id_fkey"
             columns: ["cfdi_id"]
             isOneToOne: false
@@ -2265,10 +2362,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ema_certificaciones_emitidas_cliente_pagador_id_fkey"
+            columns: ["cliente_pagador_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ema_certificaciones_emitidas_ei_externo_id_fkey"
             columns: ["ei_externo_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ema_certificaciones_emitidas_ei_externo_id_fkey"
+            columns: ["ei_externo_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -2354,6 +2465,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ema_dictamenes_uvie_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -2759,6 +2877,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "encuestas_satisfaccion_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "encuestas_satisfaccion_proyecto_id_fkey"
             columns: ["proyecto_id"]
             isOneToOne: false
@@ -3014,6 +3139,44 @@ export type Database = {
           },
         ]
       }
+      eventos_uso: {
+        Row: {
+          created_at: string | null
+          detalle: Json | null
+          empresa_id: string | null
+          id: string
+          pagina: string | null
+          tipo: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          detalle?: Json | null
+          empresa_id?: string | null
+          id?: string
+          pagina?: string | null
+          tipo: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          detalle?: Json | null
+          empresa_id?: string | null
+          id?: string
+          pagina?: string | null
+          tipo?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_uso_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       finiquitos: {
         Row: {
           aprobado_por: string | null
@@ -3247,6 +3410,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -3669,6 +3839,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -4212,6 +4389,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "oportunidades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "oportunidades_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -4318,6 +4502,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_compra_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -4688,6 +4879,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "pld_operaciones_inusuales_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "pld_operaciones_inusuales_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -4699,6 +4897,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pld_operaciones_inusuales_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -5086,6 +5291,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "productos_serie_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "productos_serie_producto_id_fkey"
             columns: ["producto_id"]
             isOneToOne: false
@@ -5127,6 +5339,10 @@ export type Database = {
           curp: string | null
           direccion_fiscal: Json | null
           esta_aprobado: boolean | null
+          estado: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at: string | null
+          estado_modificado_por: string | null
+          estado_motivo: string | null
           evaluacion_promedio: number | null
           fecha_aprobacion: string | null
           id: string
@@ -5153,6 +5369,10 @@ export type Database = {
           curp?: string | null
           direccion_fiscal?: Json | null
           esta_aprobado?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
           evaluacion_promedio?: number | null
           fecha_aprobacion?: string | null
           id?: string
@@ -5179,6 +5399,10 @@ export type Database = {
           curp?: string | null
           direccion_fiscal?: Json | null
           esta_aprobado?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_entidad"]
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
           evaluacion_promedio?: number | null
           fecha_aprobacion?: string | null
           id?: string
@@ -5247,6 +5471,13 @@ export type Database = {
             referencedRelation: "proveedores"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proveedores_documentacion_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
+            referencedColumns: ["id"]
+          },
         ]
       }
       proveedores_empresas: {
@@ -5284,6 +5515,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedores_empresas_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -5338,6 +5576,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedores_evaluaciones_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -5398,6 +5643,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proveedores_personal_repse_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -5488,6 +5740,7 @@ export type Database = {
           mime_type: string | null
           nombre: string
           proyecto_id: string
+          solicitud_id: string | null
           storage_path: string
           subido_por: string | null
           subido_por_nombre: string | null
@@ -5504,6 +5757,7 @@ export type Database = {
           mime_type?: string | null
           nombre: string
           proyecto_id: string
+          solicitud_id?: string | null
           storage_path: string
           subido_por?: string | null
           subido_por_nombre?: string | null
@@ -5520,6 +5774,7 @@ export type Database = {
           mime_type?: string | null
           nombre?: string
           proyecto_id?: string
+          solicitud_id?: string | null
           storage_path?: string
           subido_por?: string | null
           subido_por_nombre?: string | null
@@ -5542,6 +5797,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_proyecto_avance"
             referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_documentos_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_solicitudes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_documentos_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_solicitudes_lista"
+            referencedColumns: ["id"]
           },
           {
             foreignKeyName: "proyecto_documentos_tarea_id_fkey"
@@ -5732,6 +6001,91 @@ export type Database = {
           },
         ]
       }
+      proyecto_solicitudes: {
+        Row: {
+          asignado_a_id: string | null
+          campos_tipo: Json | null
+          created_at: string | null
+          descripcion: string | null
+          empresa_id: string
+          entidades_relacionadas: Json | null
+          estado: Database["public"]["Enums"]["estado_solicitud"]
+          id: string
+          monto_estimado: number | null
+          numero: string | null
+          proyecto_id: string
+          razon_rechazo: string | null
+          resuelta_at: string | null
+          solicitante_id: string
+          tipo: Database["public"]["Enums"]["tipo_solicitud_proyecto"]
+          titulo: string
+          updated_at: string | null
+          urgencia: Database["public"]["Enums"]["urgencia_solicitud"]
+        }
+        Insert: {
+          asignado_a_id?: string | null
+          campos_tipo?: Json | null
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id: string
+          entidades_relacionadas?: Json | null
+          estado?: Database["public"]["Enums"]["estado_solicitud"]
+          id?: string
+          monto_estimado?: number | null
+          numero?: string | null
+          proyecto_id: string
+          razon_rechazo?: string | null
+          resuelta_at?: string | null
+          solicitante_id: string
+          tipo: Database["public"]["Enums"]["tipo_solicitud_proyecto"]
+          titulo: string
+          updated_at?: string | null
+          urgencia?: Database["public"]["Enums"]["urgencia_solicitud"]
+        }
+        Update: {
+          asignado_a_id?: string | null
+          campos_tipo?: Json | null
+          created_at?: string | null
+          descripcion?: string | null
+          empresa_id?: string
+          entidades_relacionadas?: Json | null
+          estado?: Database["public"]["Enums"]["estado_solicitud"]
+          id?: string
+          monto_estimado?: number | null
+          numero?: string | null
+          proyecto_id?: string
+          razon_rechazo?: string | null
+          resuelta_at?: string | null
+          solicitante_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_solicitud_proyecto"]
+          titulo?: string
+          updated_at?: string | null
+          urgencia?: Database["public"]["Enums"]["urgencia_solicitud"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_solicitudes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+        ]
+      }
       proyecto_tareas: {
         Row: {
           asignado_a: string | null
@@ -5868,6 +6222,7 @@ export type Database = {
       proyectos: {
         Row: {
           activo: boolean | null
+          administrador_id: string | null
           cadencia_reporte_cliente: string | null
           capacidad_kwp: number | null
           cliente_id: string
@@ -5902,6 +6257,7 @@ export type Database = {
         }
         Insert: {
           activo?: boolean | null
+          administrador_id?: string | null
           cadencia_reporte_cliente?: string | null
           capacidad_kwp?: number | null
           cliente_id: string
@@ -5936,6 +6292,7 @@ export type Database = {
         }
         Update: {
           activo?: boolean | null
+          administrador_id?: string | null
           cadencia_reporte_cliente?: string | null
           capacidad_kwp?: number | null
           cliente_id?: string
@@ -5974,6 +6331,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyectos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -6503,6 +6867,104 @@ export type Database = {
           },
         ]
       }
+      solicitud_comentarios: {
+        Row: {
+          autor_id: string
+          created_at: string | null
+          id: string
+          menciones: string[] | null
+          solicitud_id: string
+          texto: string
+        }
+        Insert: {
+          autor_id: string
+          created_at?: string | null
+          id?: string
+          menciones?: string[] | null
+          solicitud_id: string
+          texto: string
+        }
+        Update: {
+          autor_id?: string
+          created_at?: string | null
+          id?: string
+          menciones?: string[] | null
+          solicitud_id?: string
+          texto?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solicitud_comentarios_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "proyecto_solicitudes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solicitud_comentarios_solicitud_id_fkey"
+            columns: ["solicitud_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_solicitudes_lista"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sugerencias_mejora: {
+        Row: {
+          asignado_a: string | null
+          categoria: Database["public"]["Enums"]["categoria_sugerencia"]
+          created_at: string | null
+          descripcion: string
+          empresa_contexto: string | null
+          estado: Database["public"]["Enums"]["estado_sugerencia"]
+          id: string
+          notas_internas: string | null
+          prioridad: number | null
+          updated_at: string | null
+          url_contexto: string | null
+          user_agent: string | null
+          usuario_id: string
+        }
+        Insert: {
+          asignado_a?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_sugerencia"]
+          created_at?: string | null
+          descripcion: string
+          empresa_contexto?: string | null
+          estado?: Database["public"]["Enums"]["estado_sugerencia"]
+          id?: string
+          notas_internas?: string | null
+          prioridad?: number | null
+          updated_at?: string | null
+          url_contexto?: string | null
+          user_agent?: string | null
+          usuario_id: string
+        }
+        Update: {
+          asignado_a?: string | null
+          categoria?: Database["public"]["Enums"]["categoria_sugerencia"]
+          created_at?: string | null
+          descripcion?: string
+          empresa_contexto?: string | null
+          estado?: Database["public"]["Enums"]["estado_sugerencia"]
+          id?: string
+          notas_internas?: string | null
+          prioridad?: number | null
+          updated_at?: string | null
+          url_contexto?: string | null
+          user_agent?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sugerencias_mejora_empresa_contexto_fkey"
+            columns: ["empresa_contexto"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tareas: {
         Row: {
           asignado_id: string | null
@@ -6696,6 +7158,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_soporte_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -7080,6 +7549,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "vehiculos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
             columns: ["proyecto_asignado_id"]
             isOneToOne: false
@@ -7172,6 +7648,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_bitacora_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -7531,6 +8014,96 @@ export type Database = {
           },
         ]
       }
+      v_clientes_inactividad: {
+        Row: {
+          activo: boolean | null
+          cp_fiscal: string | null
+          created_at: string | null
+          cuenta_bancaria: Json | null
+          curp: string | null
+          direccion_entrega: Json | null
+          direccion_fiscal: Json | null
+          email_facturacion: string | null
+          estado: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at: string | null
+          estado_modificado_por: string | null
+          estado_motivo: string | null
+          id: string | null
+          nombre_comercial: string | null
+          observaciones: string | null
+          razon_social: string | null
+          regimen_fiscal: string | null
+          rfc: string | null
+          riesgo: string | null
+          score_pago: number | null
+          score_satisfaccion: number | null
+          segmento: string | null
+          sugerido_archivar: boolean | null
+          tipo: string | null
+          ultima_actividad: string | null
+          updated_at: string | null
+          uso_cfdi_default: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          cp_fiscal?: string | null
+          created_at?: string | null
+          cuenta_bancaria?: Json | null
+          curp?: string | null
+          direccion_entrega?: Json | null
+          direccion_fiscal?: Json | null
+          email_facturacion?: string | null
+          estado?: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          id?: string | null
+          nombre_comercial?: string | null
+          observaciones?: string | null
+          razon_social?: string | null
+          regimen_fiscal?: string | null
+          rfc?: string | null
+          riesgo?: string | null
+          score_pago?: number | null
+          score_satisfaccion?: number | null
+          segmento?: string | null
+          sugerido_archivar?: never
+          tipo?: string | null
+          ultima_actividad?: never
+          updated_at?: string | null
+          uso_cfdi_default?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          cp_fiscal?: string | null
+          created_at?: string | null
+          cuenta_bancaria?: Json | null
+          curp?: string | null
+          direccion_entrega?: Json | null
+          direccion_fiscal?: Json | null
+          email_facturacion?: string | null
+          estado?: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          id?: string | null
+          nombre_comercial?: string | null
+          observaciones?: string | null
+          razon_social?: string | null
+          regimen_fiscal?: string | null
+          rfc?: string | null
+          riesgo?: string | null
+          score_pago?: number | null
+          score_satisfaccion?: number | null
+          segmento?: string | null
+          sugerido_archivar?: never
+          tipo?: string | null
+          ultima_actividad?: never
+          updated_at?: string | null
+          uso_cfdi_default?: string | null
+        }
+        Relationships: []
+      }
       v_conciliacion_mensual: {
         Row: {
           abonos_conciliados: number | null
@@ -7592,6 +8165,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "cotizaciones_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cotizaciones_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -7606,6 +8186,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      v_cumplimiento_mensual: {
+        Row: {
+          anio: number | null
+          efm_completo: boolean | null
+          efm_firmados: boolean | null
+          efm_id: string | null
+          egresos_totales: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          flujo_efectivo: number | null
+          ingresos_totales: number | null
+          iva_acreditable: number | null
+          iva_trasladado: number | null
+          mes: number | null
+          obligaciones_completadas: number | null
+          obligaciones_fuera_plazo: number | null
+          obligaciones_pagadas: number | null
+          semaforo: string | null
+          total_obligaciones: number | null
+          total_pagado_sat: number | null
+          utilidad_neta: number | null
+        }
+        Relationships: []
       }
       v_estados_financieros_lista: {
         Row: {
@@ -7675,6 +8279,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gastos_recurrentes_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
         ]
@@ -7783,6 +8394,13 @@ export type Database = {
             columns: ["proveedor_id"]
             isOneToOne: false
             referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_movimientos_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "v_proveedores_inactividad"
             referencedColumns: ["id"]
           },
           {
@@ -7947,6 +8565,105 @@ export type Database = {
           },
         ]
       }
+      v_proveedores_inactividad: {
+        Row: {
+          activo: boolean | null
+          beneficiario_controlador: Json | null
+          categoria_sat: string | null
+          clasificacion_interna: string | null
+          cp_fiscal: string | null
+          created_at: string | null
+          cuenta_bancaria: Json | null
+          curp: string | null
+          direccion_fiscal: Json | null
+          esta_aprobado: boolean | null
+          estado: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at: string | null
+          estado_modificado_por: string | null
+          estado_motivo: string | null
+          evaluacion_promedio: number | null
+          fecha_aprobacion: string | null
+          id: string | null
+          nombre_comercial: string | null
+          observaciones: string | null
+          razon_social: string | null
+          regimen_fiscal: string | null
+          representante_legal: string | null
+          requiere_repse: boolean | null
+          rfc: string | null
+          rfc_representante: string | null
+          semaforo: string | null
+          sugerido_archivar: boolean | null
+          tipo_proveedor: string | null
+          ultima_actividad: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          beneficiario_controlador?: Json | null
+          categoria_sat?: string | null
+          clasificacion_interna?: string | null
+          cp_fiscal?: string | null
+          created_at?: string | null
+          cuenta_bancaria?: Json | null
+          curp?: string | null
+          direccion_fiscal?: Json | null
+          esta_aprobado?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          evaluacion_promedio?: number | null
+          fecha_aprobacion?: string | null
+          id?: string | null
+          nombre_comercial?: string | null
+          observaciones?: string | null
+          razon_social?: string | null
+          regimen_fiscal?: string | null
+          representante_legal?: string | null
+          requiere_repse?: boolean | null
+          rfc?: string | null
+          rfc_representante?: string | null
+          semaforo?: string | null
+          sugerido_archivar?: never
+          tipo_proveedor?: string | null
+          ultima_actividad?: never
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          beneficiario_controlador?: Json | null
+          categoria_sat?: string | null
+          clasificacion_interna?: string | null
+          cp_fiscal?: string | null
+          created_at?: string | null
+          cuenta_bancaria?: Json | null
+          curp?: string | null
+          direccion_fiscal?: Json | null
+          esta_aprobado?: boolean | null
+          estado?: Database["public"]["Enums"]["estado_entidad"] | null
+          estado_modificado_at?: string | null
+          estado_modificado_por?: string | null
+          estado_motivo?: string | null
+          evaluacion_promedio?: number | null
+          fecha_aprobacion?: string | null
+          id?: string | null
+          nombre_comercial?: string | null
+          observaciones?: string | null
+          razon_social?: string | null
+          regimen_fiscal?: string | null
+          representante_legal?: string | null
+          requiere_repse?: boolean | null
+          rfc?: string | null
+          rfc_representante?: string | null
+          semaforo?: string | null
+          sugerido_archivar?: never
+          tipo_proveedor?: string | null
+          ultima_actividad?: never
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       v_proyecto_avance: {
         Row: {
           avance_ponderado: number | null
@@ -8085,6 +8802,59 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empresas"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyecto_solicitudes_lista: {
+        Row: {
+          administrador_id: string | null
+          asignado_a_id: string | null
+          campos_tipo: Json | null
+          created_at: string | null
+          descripcion: string | null
+          dias_abierta: number | null
+          empresa_codigo: string | null
+          empresa_id: string | null
+          entidades_relacionadas: Json | null
+          estado: Database["public"]["Enums"]["estado_solicitud"] | null
+          id: string | null
+          monto_estimado: number | null
+          num_adjuntos: number | null
+          num_comentarios: number | null
+          numero: string | null
+          pm_id: string | null
+          proyecto_codigo: string | null
+          proyecto_id: string | null
+          proyecto_nombre: string | null
+          razon_rechazo: string | null
+          resuelta_at: string | null
+          solicitante_id: string | null
+          tipo: Database["public"]["Enums"]["tipo_solicitud_proyecto"] | null
+          titulo: string | null
+          updated_at: string | null
+          urgencia: Database["public"]["Enums"]["urgencia_solicitud"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_solicitudes_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -8437,6 +9207,10 @@ export type Database = {
         Args: { p_anio: number; p_empresa_id: string }
         Returns: number
       }
+      limpiar_eventos_uso_antiguos: {
+        Args: { p_dias?: number }
+        Returns: number
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
       sugerir_match_movimiento: {
@@ -8452,6 +9226,14 @@ export type Database = {
         }[]
       }
       tiie_mas_reciente: { Args: never; Returns: number }
+      top_paginas_uso: {
+        Args: { p_dias?: number }
+        Returns: {
+          pagina: string
+          usuarios_unicos: number
+          visitas: number
+        }[]
+      }
       unaccent: { Args: { "": string }; Returns: string }
       usuario_activo_grupo: { Args: never; Returns: boolean }
       usuario_es_ceo: { Args: never; Returns: boolean }
@@ -8517,6 +9299,12 @@ export type Database = {
         | "epp"
         | "otro"
       categoria_personal: "planta" | "por_obra" | "repse"
+      categoria_sugerencia:
+        | "bug"
+        | "mejora_ux"
+        | "feature_nuevo"
+        | "rendimiento"
+        | "otro"
       estado_capacitacion:
         | "inscrito"
         | "en_proceso"
@@ -8529,6 +9317,7 @@ export type Database = {
         | "enviado_cliente"
         | "pagado"
         | "cancelado"
+      estado_entidad: "activo" | "inactivo" | "archivado"
       estado_no_conformidad:
         | "abierta"
         | "en_analisis"
@@ -8596,6 +9385,19 @@ export type Database = {
         | "en_seguimiento"
         | "resuelto"
         | "cerrado"
+      estado_solicitud:
+        | "solicitada"
+        | "en_revision"
+        | "aprobada"
+        | "rechazada"
+        | "ejecutada"
+        | "cerrada"
+      estado_sugerencia:
+        | "nueva"
+        | "en_revision"
+        | "planeada"
+        | "implementada"
+        | "descartada"
       estado_tarea_proyecto:
         | "pendiente"
         | "en_curso"
@@ -8696,6 +9498,15 @@ export type Database = {
         | "siniestro"
         | "auditoria"
         | "otro"
+      tipo_solicitud_proyecto:
+        | "compra"
+        | "facturacion"
+        | "anticipo_proveedor"
+        | "cambio_alcance"
+        | "reembolso_gasto"
+        | "ot_inter_co"
+        | "generica"
+      urgencia_solicitud: "baja" | "normal" | "alta" | "critica"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -8884,6 +9695,13 @@ export const Constants = {
         "otro",
       ],
       categoria_personal: ["planta", "por_obra", "repse"],
+      categoria_sugerencia: [
+        "bug",
+        "mejora_ux",
+        "feature_nuevo",
+        "rendimiento",
+        "otro",
+      ],
       estado_capacitacion: [
         "inscrito",
         "en_proceso",
@@ -8898,6 +9716,7 @@ export const Constants = {
         "pagado",
         "cancelado",
       ],
+      estado_entidad: ["activo", "inactivo", "archivado"],
       estado_no_conformidad: [
         "abierta",
         "en_analisis",
@@ -8972,6 +9791,21 @@ export const Constants = {
         "en_seguimiento",
         "resuelto",
         "cerrado",
+      ],
+      estado_solicitud: [
+        "solicitada",
+        "en_revision",
+        "aprobada",
+        "rechazada",
+        "ejecutada",
+        "cerrada",
+      ],
+      estado_sugerencia: [
+        "nueva",
+        "en_revision",
+        "planeada",
+        "implementada",
+        "descartada",
       ],
       estado_tarea_proyecto: [
         "pendiente",
@@ -9083,6 +9917,16 @@ export const Constants = {
         "auditoria",
         "otro",
       ],
+      tipo_solicitud_proyecto: [
+        "compra",
+        "facturacion",
+        "anticipo_proveedor",
+        "cambio_alcance",
+        "reembolso_gasto",
+        "ot_inter_co",
+        "generica",
+      ],
+      urgencia_solicitud: ["baja", "normal", "alta", "critica"],
     },
   },
 } as const

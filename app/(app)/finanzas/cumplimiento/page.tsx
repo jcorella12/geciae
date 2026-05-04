@@ -93,8 +93,7 @@ export default async function CumplimientoPage({
 
   // v_cumplimiento_mensual es una vista nueva (migración 20260522000000),
   // todavía no está en types regenerados — cast minimal y typamos después.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("v_cumplimiento_mensual")
     .select("*")
     .eq("anio", anio)

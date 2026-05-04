@@ -65,8 +65,7 @@ export default async function AdminSugerenciasPage({
   const estadoF = searchParams?.estado ?? "todos";
   const catF = searchParams?.categoria ?? "todos";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let query: any = (supabase as any)
+  let query = supabase
     .from("sugerencias_mejora")
     .select(
       "id, usuario_id, empresa_contexto, categoria, descripcion, url_contexto, estado, prioridad, asignado_a, created_at",

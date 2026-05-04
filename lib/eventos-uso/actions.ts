@@ -21,9 +21,6 @@ export async function registrarEventoUso(input: {
   const { data: usr } = await supabase.auth.getUser();
   if (!usr.user) return; // Best-effort sin sesión
 
-  // Tablas nuevas (sprint 5.3) no en types regenerados — cast localizado.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any;
   // Truncar página y detalle por seguridad
   const paginaLimpia = (input.pagina ?? "")
     .replace(/\?.*$/, "") // sin query params
@@ -38,10 +35,11 @@ export async function registrarEventoUso(input: {
       detalleSafe[k] = v;
   }
 
-  await sb.from("eventos_uso").insert({
+  await supabase.from("eventos_uso").insert({
     usuario_id: usr.user.id,
     tipo: input.tipo,
     pagina: paginaLimpia || null,
-    detalle: detalleSafe,
+    // Json column acepta Record dynamic — cast localizado para complacer al check de excess.
+    detalle: detalleSafe as never,
   });
 }

@@ -199,7 +199,7 @@ export async function crearClienteRapido(input: {
   cliente?: {
     id: string;
     razon_social: string;
-    rfc: string;
+    rfc: string | null;
     nombre_comercial: string | null;
   };
 }> {

@@ -33,8 +33,7 @@ export default async function SugerenciaDetallePage({
   if (!esCEO(v)) redirect("/mi-dia");
 
   const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: s } = await (supabase as any)
+  const { data: s } = await supabase
     .from("sugerencias_mejora")
     .select(
       "id, usuario_id, empresa_contexto, categoria, descripcion, url_contexto, user_agent, estado, prioridad, notas_internas, asignado_a, created_at, updated_at",

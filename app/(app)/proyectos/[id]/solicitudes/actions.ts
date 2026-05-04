@@ -33,20 +33,6 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * Las tablas `proyecto_solicitudes` y `solicitud_comentarios` se crearon en
- * la migración 20260523000000 (sprint 4.1). Mientras los types no se
- * regeneren, las llamadas .from() para estas tablas se hacen vía cast.
- *
- * El cast vive en este helper local; cuando se regeneren los types,
- * basta con eliminar este wrapper y usar `createClient()` directo.
- */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function clientSol(): any {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return createClient() as unknown as any;
-}
-
-/**
  * Server actions Sprint 4.1 — Solicitudes de proyecto.
  *
  * Permisos generales (gateProyecto):
@@ -78,8 +64,6 @@ async function gateProyecto(
   | { ok: false; error: string }
 > {
   const supabase = createClient();
-  // `administrador_id` se agregó en migración 20260523000000; hasta que se
-  // regeneren los types, hacemos select sin esa columna y luego la
   // pedimos por separado vía cast `as never` (que devuelve el row crudo).
   const { data } = await supabase
     .from("proyectos")
@@ -88,8 +72,7 @@ async function gateProyecto(
     .maybeSingle();
   if (!data) return { ok: false, error: "Proyecto no encontrado." };
   // Pedir administrador_id por separado (post-migration column).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: extra } = await (supabase as any)
+  const { data: extra } = await supabase
     .from("proyectos")
     .select("administrador_id")
     .eq("id", proyectoId)
@@ -151,7 +134,8 @@ async function gateSolicitud(
     }
   | { ok: false; error: string }
 > {
-  const { data } = await clientSol()
+  const supabase = createClient();
+  const { data } = await supabase
     .from("proyecto_solicitudes")
     .select(
       "id, proyecto_id, empresa_id, tipo, estado, solicitante_id, asignado_a_id, titulo, numero, urgencia",
@@ -286,20 +270,23 @@ export async function crearSolicitud(
   if (!usr.user)
     return { ...initialSolicitudState, error: "Sesión expirada." };
 
-  const { data: nuevo, error } = await clientSol()
+  // Insert con `campos_tipo` JSONB y `tipo`/`urgencia` enum: Zod ya validó
+  // las strings; cast localizado para evitar el RejectExcessProperties.
+  const insertPayload = {
+    proyecto_id: d.proyecto_id,
+    empresa_id: g.empresaId,
+    tipo: d.tipo,
+    titulo: d.titulo,
+    descripcion: d.descripcion,
+    monto_estimado: d.monto_estimado ?? null,
+    urgencia: d.urgencia,
+    estado: "solicitada",
+    solicitante_id: usr.user.id,
+    campos_tipo: d.campos_tipo,
+  };
+  const { data: nuevo, error } = await supabase
     .from("proyecto_solicitudes")
-    .insert({
-      proyecto_id: d.proyecto_id,
-      empresa_id: g.empresaId,
-      tipo: d.tipo as never,
-      titulo: d.titulo,
-      descripcion: d.descripcion,
-      monto_estimado: d.monto_estimado ?? null,
-      urgencia: d.urgencia,
-      estado: "solicitada",
-      solicitante_id: usr.user.id,
-      campos_tipo: d.campos_tipo,
-    })
+    .insert(insertPayload as never)
     .select("id, numero")
     .single();
   if (error || !nuevo)
@@ -374,7 +361,8 @@ export async function actualizarSolicitud(
   if (Object.keys(patch).length === 0)
     return { ok: true, error: null };
 
-  const { error } = await clientSol()
+  const supabase = createClient();
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     // Patch dinámico; cast localizado al tipo Update.
     .update(patch as never)
@@ -406,7 +394,8 @@ export async function pasarAEnRevision(
       error: "Solo solicitudes en estado 'solicitada' pueden pasar a revisión.",
     };
 
-  const { error } = await clientSol()
+  const supabase = createClient();
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({ estado: "en_revision" })
     .eq("id", parsed.data.solicitud_id);
@@ -440,7 +429,7 @@ export async function aprobarSolicitud(
 
   const supabase = createClient();
   const { data: usr } = await supabase.auth.getUser();
-  const { error } = await clientSol()
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({
       estado: "aprobada",
@@ -450,10 +439,10 @@ export async function aprobarSolicitud(
   if (error)
     return { ...initialSimpleSolicitudState, error: error.message };
 
-  if (parsed.data.comentario) {
-    await clientSol().from("solicitud_comentarios").insert({
+  if (parsed.data.comentario && usr.user) {
+    await supabase.from("solicitud_comentarios").insert({
       solicitud_id: parsed.data.solicitud_id,
-      autor_id: usr.user?.id ?? null,
+      autor_id: usr.user.id,
       texto: `[Aprobada] ${parsed.data.comentario}`,
     });
   }
@@ -497,7 +486,7 @@ export async function rechazarSolicitud(
 
   const supabase = createClient();
   const { data: usr } = await supabase.auth.getUser();
-  const { error } = await clientSol()
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({
       estado: "rechazada",
@@ -548,17 +537,17 @@ export async function marcarEjecutada(
 
   const supabase = createClient();
   const { data: usr } = await supabase.auth.getUser();
-  const { error } = await clientSol()
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({ estado: "ejecutada" })
     .eq("id", parsed.data.solicitud_id);
   if (error)
     return { ...initialSimpleSolicitudState, error: error.message };
 
-  if (parsed.data.comentario) {
-    await clientSol().from("solicitud_comentarios").insert({
+  if (parsed.data.comentario && usr.user) {
+    await supabase.from("solicitud_comentarios").insert({
       solicitud_id: parsed.data.solicitud_id,
-      autor_id: usr.user?.id ?? null,
+      autor_id: usr.user.id,
       texto: `[Ejecutada] ${parsed.data.comentario}`,
     });
   }
@@ -607,7 +596,8 @@ export async function cerrarSolicitud(
         "Cerrar requiere que la solicitud esté ejecutada, aprobada o rechazada.",
     };
 
-  const { error } = await clientSol()
+  const supabase = createClient();
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({ estado: "cerrada" })
     .eq("id", parsed.data.solicitud_id);
@@ -652,7 +642,7 @@ export async function asignarSolicitud(
 
   const supabase = createClient();
   const { data: usr } = await supabase.auth.getUser();
-  const { error } = await clientSol()
+  const { error } = await supabase
     .from("proyecto_solicitudes")
     .update({ asignado_a_id: parsed.data.asignado_a_id })
     .eq("id", parsed.data.solicitud_id);
@@ -719,7 +709,7 @@ export async function agregarComentario(
   if (!usr.user)
     return { ...initialComentarioState, error: "Sesión expirada." };
 
-  const { error } = await clientSol().from("solicitud_comentarios").insert({
+  const { error } = await supabase.from("solicitud_comentarios").insert({
     solicitud_id: parsed.data.solicitud_id,
     autor_id: usr.user.id,
     texto: parsed.data.texto,
@@ -776,7 +766,8 @@ export async function vincularEntidadASolicitud(
   const g = await gateSolicitud(solicitudId);
   if (!g.ok) return { ...initialSimpleSolicitudState, error: g.error };
 
-  const { data: actual } = await clientSol()
+  const supabase = createClient();
+  const { data: actual } = await supabase
     .from("proyecto_solicitudes")
     .select("entidades_relacionadas")
     .eq("id", solicitudId)
@@ -792,8 +783,9 @@ export async function vincularEntidadASolicitud(
     patch.estado = "ejecutada";
   }
 
-  const { error } = await clientSol()
+  const { error } = await supabase
     .from("proyecto_solicitudes")
+    // Patch dinámico; cast localizado al tipo Update.
     .update(patch as never)
     .eq("id", solicitudId);
   if (error)
