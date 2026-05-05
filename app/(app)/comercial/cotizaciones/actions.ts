@@ -436,6 +436,8 @@ export async function convertirAProyecto(
       presupuesto_costo: presupuestoCosto
         ? parseFloat(presupuestoCosto as string)
         : null,
+      // Marca visible default = empresa que opera
+      marca_visible_id: c.empresa_id,
       semaforo: "verde",
       activo: true,
     })

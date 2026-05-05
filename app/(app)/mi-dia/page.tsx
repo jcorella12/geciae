@@ -130,7 +130,7 @@ export default async function MiDiaPage() {
       .select(
         `id, codigo, nombre, monto_contratado, monto_facturado, fecha_fin_planeado, semaforo, estado,
          clientes(razon_social, nombre_comercial),
-         empresas(codigo)`,
+         empresas!proyectos_empresa_id_fkey(codigo)`,
       )
       .in("estado", ["en_ejecucion", "planeacion", "en_cierre"])
       .or(
@@ -161,7 +161,7 @@ export default async function MiDiaPage() {
       ? supabase
           .from("proyecto_tareas")
           .select(
-            "id, titulo, estado, prioridad, fecha_fin_planeada, porcentaje_avance, es_hito, proyecto_id, proyectos(codigo, nombre, empresas(codigo))",
+            "id, titulo, estado, prioridad, fecha_fin_planeada, porcentaje_avance, es_hito, proyecto_id, proyectos(codigo, nombre, empresas!proyectos_empresa_id_fkey(codigo))",
           )
           .eq("asignado_a", user.id)
           .not("estado", "in", "(completada,cancelada)")

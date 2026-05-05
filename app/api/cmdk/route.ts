@@ -36,7 +36,9 @@ export async function GET(req: NextRequest) {
   ] = await Promise.all([
     supabase
       .from("proyectos")
-      .select("id, codigo, nombre, empresas(codigo)")
+      .select(
+        "id, codigo, nombre, empresas!proyectos_empresa_id_fkey(codigo)",
+      )
       .or(`codigo.ilike.${ilike},nombre.ilike.${ilike}`)
       .limit(8),
     supabase

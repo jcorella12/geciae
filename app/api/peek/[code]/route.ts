@@ -62,7 +62,7 @@ export async function GET(
     let q = supabase
       .from("proyectos")
       .select(
-        "id, codigo, nombre, estado, semaforo, monto_contratado, monto_facturado, monto_cobrado, presupuesto_costo, fecha_fin_planeado, empresas(codigo), clientes(razon_social)",
+        "id, codigo, nombre, estado, semaforo, monto_contratado, monto_facturado, monto_cobrado, presupuesto_costo, fecha_fin_planeado, empresas!proyectos_empresa_id_fkey(codigo), clientes(razon_social)",
       )
       .limit(1);
     if (

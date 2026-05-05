@@ -129,7 +129,7 @@ export default async function DashboardPage() {
       .select(
         `id, codigo, nombre, empresa_id, monto_contratado, monto_facturado, monto_cobrado, presupuesto_costo, costo_real, fecha_inicio_planeado, fecha_fin_planeado, estado, semaforo,
          clientes(razon_social, nombre_comercial),
-         empresas(codigo)`,
+         empresas!proyectos_empresa_id_fkey(codigo)`,
       )
       .in("estado", ["en_ejecucion", "planeacion", "en_cierre"])
       .order("monto_contratado", { ascending: false })

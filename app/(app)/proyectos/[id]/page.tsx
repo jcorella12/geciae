@@ -110,7 +110,7 @@ export default async function ProyectoDetailPage({
   const { data: p } = await supabase
     .from("proyectos")
     .select(
-      "*, empresas!proyectos_empresa_id_fkey(codigo, razon_social, nombre_comercial), marca:empresas!proyectos_marca_visible_id_fkey(codigo, razon_social, nombre_comercial), clientes(id, razon_social, rfc)",
+      "*, empresas!proyectos_empresa_id_fkey(codigo, razon_social, nombre_comercial), marca:empresas!proyectos_marca_visible_id_fkey(codigo, razon_social, nombre_comercial), clientes!proyectos_cliente_id_fkey(id, razon_social, rfc)",
     )
     .eq("id", params.id)
     .maybeSingle();

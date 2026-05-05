@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase
       .from("proyectos")
       .select(
-        "codigo, nombre, tipo, estado, fecha_inicio_planeado, fecha_fin_planeado, monto_contratado, monto_facturado, monto_cobrado, presupuesto_costo, costo_real, semaforo, empresas(codigo), clientes(razon_social)",
+        "codigo, nombre, tipo, estado, fecha_inicio_planeado, fecha_fin_planeado, monto_contratado, monto_facturado, monto_cobrado, presupuesto_costo, costo_real, semaforo, empresas!proyectos_empresa_id_fkey(codigo), clientes(razon_social)",
       )
       .in("empresa_id", filtro.empresasIds)
       .order("created_at", { ascending: false })
