@@ -5652,6 +5652,158 @@ export type Database = {
           },
         ]
       }
+      plantilla_documentos: {
+        Row: {
+          codigo_documento: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          obligatorio: boolean
+          observaciones: string | null
+          plantilla_codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          requerido_para_estado: string | null
+          rol_responsable: string | null
+        }
+        Insert: {
+          codigo_documento: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          obligatorio?: boolean
+          observaciones?: string | null
+          plantilla_codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          requerido_para_estado?: string | null
+          rol_responsable?: string | null
+        }
+        Update: {
+          codigo_documento?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          obligatorio?: boolean
+          observaciones?: string | null
+          plantilla_codigo?: Database["public"]["Enums"]["plantilla_proyecto"]
+          requerido_para_estado?: string | null
+          rol_responsable?: string | null
+        }
+        Relationships: []
+      }
+      plantilla_etapas: {
+        Row: {
+          created_at: string | null
+          descripcion: string | null
+          duracion_estimada_dias: number | null
+          hito_facturacion: boolean | null
+          id: string
+          nombre: string
+          numero: number
+          observaciones: string | null
+          plantilla_codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          porcentaje_facturacion: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          hito_facturacion?: boolean | null
+          id?: string
+          nombre: string
+          numero: number
+          observaciones?: string | null
+          plantilla_codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          porcentaje_facturacion?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          hito_facturacion?: boolean | null
+          id?: string
+          nombre?: string
+          numero?: number
+          observaciones?: string | null
+          plantilla_codigo?: Database["public"]["Enums"]["plantilla_proyecto"]
+          porcentaje_facturacion?: number | null
+        }
+        Relationships: []
+      }
+      plantilla_etapas_sgc: {
+        Row: {
+          etapa_id: string
+          sgc_documento_id: string
+        }
+        Insert: {
+          etapa_id: string
+          sgc_documento_id: string
+        }
+        Update: {
+          etapa_id?: string
+          sgc_documento_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plantilla_etapas_sgc_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "plantilla_etapas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plantilla_etapas_sgc_sgc_documento_id_fkey"
+            columns: ["sgc_documento_id"]
+            isOneToOne: false
+            referencedRelation: "sgc_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plantilla_tareas: {
+        Row: {
+          bloquea_avance: boolean
+          descripcion: string | null
+          duracion_estimada_dias: number | null
+          etapa_id: string
+          id: string
+          numero: number
+          obligatoria: boolean
+          observaciones: string | null
+          rol_responsable: string | null
+          titulo: string
+        }
+        Insert: {
+          bloquea_avance?: boolean
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          etapa_id: string
+          id?: string
+          numero: number
+          obligatoria?: boolean
+          observaciones?: string | null
+          rol_responsable?: string | null
+          titulo: string
+        }
+        Update: {
+          bloquea_avance?: boolean
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          etapa_id?: string
+          id?: string
+          numero?: number
+          obligatoria?: boolean
+          observaciones?: string | null
+          rol_responsable?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plantilla_tareas_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "plantilla_etapas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plantillas_contratos: {
         Row: {
           activa: boolean | null
@@ -6925,6 +7077,89 @@ export type Database = {
           },
         ]
       }
+      proyecto_expediente: {
+        Row: {
+          capturado_por: string | null
+          codigo_documento: string
+          created_at: string | null
+          estado: Database["public"]["Enums"]["estado_doc_expediente"]
+          fecha_aprobacion: string | null
+          fecha_recibido: string | null
+          id: string
+          nombre: string
+          obligatorio: boolean
+          observaciones: string | null
+          proyecto_id: string
+          requerido_para_estado: string | null
+          responsable_id: string | null
+          updated_at: string | null
+          url_archivo: string | null
+        }
+        Insert: {
+          capturado_por?: string | null
+          codigo_documento: string
+          created_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_doc_expediente"]
+          fecha_aprobacion?: string | null
+          fecha_recibido?: string | null
+          id?: string
+          nombre: string
+          obligatorio?: boolean
+          observaciones?: string | null
+          proyecto_id: string
+          requerido_para_estado?: string | null
+          responsable_id?: string | null
+          updated_at?: string | null
+          url_archivo?: string | null
+        }
+        Update: {
+          capturado_por?: string | null
+          codigo_documento?: string
+          created_at?: string | null
+          estado?: Database["public"]["Enums"]["estado_doc_expediente"]
+          fecha_aprobacion?: string | null
+          fecha_recibido?: string | null
+          id?: string
+          nombre?: string
+          obligatorio?: boolean
+          observaciones?: string | null
+          proyecto_id?: string
+          requerido_para_estado?: string | null
+          responsable_id?: string | null
+          updated_at?: string | null
+          url_archivo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyecto_expediente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_expediente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
+          },
+          {
+            foreignKeyName: "proyecto_expediente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_expediente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proyecto_reportes: {
         Row: {
           accion_correctiva: string | null
@@ -7794,6 +8029,89 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sgc_documento_revisiones: {
+        Row: {
+          aprobado_por: string | null
+          cambios_descripcion: string | null
+          created_at: string | null
+          documento_id: string
+          fecha: string
+          id: string
+          responsable_id: string | null
+          revision: number
+          url_pdf: string | null
+        }
+        Insert: {
+          aprobado_por?: string | null
+          cambios_descripcion?: string | null
+          created_at?: string | null
+          documento_id: string
+          fecha: string
+          id?: string
+          responsable_id?: string | null
+          revision: number
+          url_pdf?: string | null
+        }
+        Update: {
+          aprobado_por?: string | null
+          cambios_descripcion?: string | null
+          created_at?: string | null
+          documento_id?: string
+          fecha?: string
+          id?: string
+          responsable_id?: string | null
+          revision?: number
+          url_pdf?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sgc_documento_revisiones_documento_id_fkey"
+            columns: ["documento_id"]
+            isOneToOne: false
+            referencedRelation: "sgc_documentos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sgc_documentos: {
+        Row: {
+          area: string | null
+          codigo: string
+          created_at: string | null
+          descripcion: string | null
+          fecha_aprobacion: string | null
+          id: string
+          nombre: string
+          observaciones: string | null
+          tipo: Database["public"]["Enums"]["tipo_doc_sgc"]
+          vigente: boolean
+        }
+        Insert: {
+          area?: string | null
+          codigo: string
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_aprobacion?: string | null
+          id?: string
+          nombre: string
+          observaciones?: string | null
+          tipo: Database["public"]["Enums"]["tipo_doc_sgc"]
+          vigente?: boolean
+        }
+        Update: {
+          area?: string | null
+          codigo?: string
+          created_at?: string | null
+          descripcion?: string | null
+          fecha_aprobacion?: string | null
+          id?: string
+          nombre?: string
+          observaciones?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_doc_sgc"]
+          vigente?: boolean
+        }
+        Relationships: []
       }
       sgc_indicadores: {
         Row: {
@@ -11005,6 +11323,11 @@ export type Database = {
         | "enviado_cliente"
         | "pagado"
         | "cancelado"
+      estado_doc_expediente:
+        | "pendiente"
+        | "en_revision"
+        | "aprobado"
+        | "no_aplica"
       estado_entidad: "activo" | "inactivo" | "archivado"
       estado_levantamiento:
         | "programado"
@@ -11173,6 +11496,7 @@ export type Database = {
         | "otro"
       tipo_centro: "costo" | "utilidad"
       tipo_cfdi: "ingreso" | "egreso" | "traslado" | "pago" | "nomina"
+      tipo_doc_sgc: "FP" | "FO" | "MA" | "PO"
       tipo_emision_reparto: "cfdi_inter_co" | "asiento_interno"
       tipo_evento_bitacora:
         | "avance"
@@ -11457,6 +11781,12 @@ export const Constants = {
         "pagado",
         "cancelado",
       ],
+      estado_doc_expediente: [
+        "pendiente",
+        "en_revision",
+        "aprobado",
+        "no_aplica",
+      ],
       estado_entidad: ["activo", "inactivo", "archivado"],
       estado_levantamiento: [
         "programado",
@@ -11646,6 +11976,7 @@ export const Constants = {
       ],
       tipo_centro: ["costo", "utilidad"],
       tipo_cfdi: ["ingreso", "egreso", "traslado", "pago", "nomina"],
+      tipo_doc_sgc: ["FP", "FO", "MA", "PO"],
       tipo_emision_reparto: ["cfdi_inter_co", "asiento_interno"],
       tipo_evento_bitacora: [
         "avance",
