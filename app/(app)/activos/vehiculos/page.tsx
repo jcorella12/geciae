@@ -23,6 +23,8 @@ import {
   type TipoPropiedadVehiculo,
 } from "@/lib/vehiculos/state";
 
+import { SubirReporteGasolinaButton } from "./subir-reporte-gasolina";
+
 export const dynamic = "force-dynamic";
 
 const empresaCodigoColor: Record<string, string> = {
@@ -123,6 +125,7 @@ export default async function VehiculosPage({
         </div>
         <div className="flex items-center gap-2">
           <ExportCsvButton tipo="vehiculos" />
+          <SubirReporteGasolinaButton />
           <Link href="/activos/vehiculos/nuevo">
             <Button>
               <Plus className="h-4 w-4" />
