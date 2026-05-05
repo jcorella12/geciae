@@ -18,6 +18,7 @@ import {
   initialMovimientoManualState,
 } from "@/lib/bancos-movimientos/state";
 
+import { EdoctaUploader } from "./edocta-uploader";
 import {
   crearMovimientoManual,
   importarMovimientosCSV,
@@ -29,10 +30,17 @@ import {
  *  - Subir CSV (modal con uploader + resumen)
  *  - Subir estado de cuenta (lleva al uploader IA existente — solo scroll)
  */
-export function NuevoMovimientoButton({ cuentaId }: { cuentaId: string }) {
+export function NuevoMovimientoButton({
+  cuentaId,
+  puedeSubirEdocta = true,
+}: {
+  cuentaId: string;
+  puedeSubirEdocta?: boolean;
+}) {
   const [openMenu, setOpenMenu] = useState(false);
   const [openManual, setOpenManual] = useState(false);
   const [openCSV, setOpenCSV] = useState(false);
+  const [openEdocta, setOpenEdocta] = useState(false);
 
   return (
     <>
@@ -94,22 +102,27 @@ export function NuevoMovimientoButton({ cuentaId }: { cuentaId: string }) {
                   </span>
                 </span>
               </button>
-              <a
-                role="menuitem"
-                href="#edocta-uploader"
-                onClick={() => setOpenMenu(false)}
-                className="flex items-start gap-2 border-t border-border px-3 py-2 text-left text-[13px] hover:bg-bg-2"
-              >
-                <FileUp className="mt-0.5 h-4 w-4 text-ink-3" />
-                <span>
-                  <span className="block font-medium">
-                    Subir estado de cuenta
+              {puedeSubirEdocta && (
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setOpenMenu(false);
+                    setOpenEdocta(true);
+                  }}
+                  className="flex w-full items-start gap-2 border-t border-border px-3 py-2 text-left text-[13px] hover:bg-bg-2"
+                >
+                  <FileUp className="mt-0.5 h-4 w-4 text-ink-3" />
+                  <span>
+                    <span className="block font-medium">
+                      Subir estado de cuenta
+                    </span>
+                    <span className="block text-[11px] text-ink-3">
+                      PDF mensual o .exp · arrastra o selecciona (drag &amp; drop).
+                    </span>
                   </span>
-                  <span className="block text-[11px] text-ink-3">
-                    PDF/XLS · extracción IA (recomendado).
-                  </span>
-                </span>
-              </a>
+                </button>
+              )}
             </div>
           </>
         )}
@@ -124,7 +137,38 @@ export function NuevoMovimientoButton({ cuentaId }: { cuentaId: string }) {
       {openCSV && (
         <CSVForm cuentaId={cuentaId} onClose={() => setOpenCSV(false)} />
       )}
+      {openEdocta && (
+        <EdoctaModal
+          cuentaId={cuentaId}
+          onClose={() => setOpenEdocta(false)}
+        />
+      )}
     </>
+  );
+}
+
+/**
+ * Modal con drag-and-drop para subir estado de cuenta (PDF o .exp).
+ * Reusa EdoctaUploader (que ya implementa el drag/drop + procesar IA/.exp).
+ */
+function EdoctaModal({
+  cuentaId,
+  onClose,
+}: {
+  cuentaId: string;
+  onClose: () => void;
+}) {
+  return (
+    <Modal title="Subir estado de cuenta" onClose={onClose} width="xl">
+      <div className="space-y-3">
+        <p className="text-[11.5px] text-ink-3">
+          Arrastra un archivo PDF mensual (BBVA Maestra PYME) o .exp
+          (export TSV diario) sobre el área de abajo, o haz click para
+          seleccionarlo. La IA leerá el PDF; el .exp se procesa al instante.
+        </p>
+        <EdoctaUploader cuentaId={cuentaId} />
+      </div>
+    </Modal>
   );
 }
 
@@ -132,10 +176,12 @@ function Modal({
   title,
   onClose,
   children,
+  width = "md",
 }: {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
+  width?: "md" | "lg" | "xl";
 }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -159,7 +205,15 @@ function Modal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md rounded-lg border border-border bg-card shadow-lg">
+      <div
+        className={`w-full ${
+          width === "xl"
+            ? "max-w-2xl"
+            : width === "lg"
+              ? "max-w-lg"
+              : "max-w-md"
+        } rounded-lg border border-border bg-card shadow-lg`}
+      >
         <header className="flex items-center justify-between border-b border-border px-4 py-3">
           <h3 className="text-[13.5px] font-semibold">{title}</h3>
           <Button
