@@ -11,6 +11,7 @@ import {
   obtenerVinculos,
   puedeGestionarEmpleadosEn,
   puedeVerNominaEmpleado,
+  tieneAtributo,
 } from "@/lib/auth/permisos";
 import {
   CATEGORIAS_PERSONAL,
@@ -27,6 +28,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { ProyectoTabs } from "../../proyectos/[id]/proyecto-tabs";
 import { DocumentosTab } from "./documentos-tab";
+import { GenerarUsuarioButton } from "./generar-usuario/generar-usuario-button";
 import { RepseCard } from "./repse-card";
 import { ToggleActivoEmpleadoButton } from "./toggle-activo";
 import { VacacionesTab } from "./vacaciones-tab";
@@ -106,6 +108,13 @@ export default async function EmpleadoDetailPage({
     esDuenio: emp.usuario_id === usuarioActual?.id,
     esJefeDirecto: esJefeDirectoEmp,
   });
+
+  // ¿Puede generar usuario para este empleado?
+  const puedeGenerarUsuario =
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "rh") ||
+    tieneAtributo(vinculos, "contralor") ||
+    esRolEn(vinculos, emp.empresa_id, "director");
 
   type Domicilio = {
     calle?: string;
@@ -337,6 +346,21 @@ export default async function EmpleadoDetailPage({
                 </Button>
               </>
             )}
+            {puedeGenerarUsuario &&
+              (emp.usuario_id ? (
+                <span
+                  className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-800"
+                  title={`Tiene cuenta vinculada · puede acceder al portal`}
+                >
+                  ✓ Tiene cuenta
+                </span>
+              ) : (
+                <GenerarUsuarioButton
+                  empleadoId={emp.id}
+                  emailDefault={emp.email_personal ?? ""}
+                  nombreEmpleado={emp.nombre_completo}
+                />
+              ))}
             {puedeGestionar && (
               <>
                 <ToggleActivoEmpleadoButton
