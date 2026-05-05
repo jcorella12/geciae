@@ -13,6 +13,7 @@ const tabs = [
   { href: "/configuracion/centros", label: "Centros" },
   { href: "/configuracion/sgc", label: "SGC" },
   { href: "/configuracion/ia", label: "IA" },
+  { href: "/configuracion/validacion", label: "Validación" },
 ] as const;
 
 export default async function ConfiguracionLayout({
