@@ -201,6 +201,20 @@ export type Database = {
             foreignKeyName: "activos_asignados_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "activos_asignados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "activos_asignados_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -805,6 +819,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bolsa_talento_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "bolsa_talento_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "bolsa_talento_empleado_id_fkey"
@@ -2426,6 +2454,20 @@ export type Database = {
             foreignKeyName: "contratos_laborales_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "contratos_laborales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "contratos_laborales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -2993,6 +3035,100 @@ export type Database = {
           },
         ]
       }
+      empleado_bonos_manuales: {
+        Row: {
+          autorizado_por: string
+          comprobante_url: string | null
+          concepto: string
+          created_at: string | null
+          empleado_id: string
+          empresa_id: string
+          fecha_pago: string
+          id: string
+          monto: number
+          motivo: string | null
+          observaciones: string | null
+          timbrado: boolean
+          tipo: Database["public"]["Enums"]["tipo_bono_manual"]
+          updated_at: string | null
+        }
+        Insert: {
+          autorizado_por: string
+          comprobante_url?: string | null
+          concepto: string
+          created_at?: string | null
+          empleado_id: string
+          empresa_id: string
+          fecha_pago: string
+          id?: string
+          monto: number
+          motivo?: string | null
+          observaciones?: string | null
+          timbrado?: boolean
+          tipo: Database["public"]["Enums"]["tipo_bono_manual"]
+          updated_at?: string | null
+        }
+        Update: {
+          autorizado_por?: string
+          comprobante_url?: string | null
+          concepto?: string
+          created_at?: string | null
+          empleado_id?: string
+          empresa_id?: string
+          fecha_pago?: string
+          id?: string
+          monto?: number
+          motivo?: string | null
+          observaciones?: string | null
+          timbrado?: boolean
+          tipo?: Database["public"]["Enums"]["tipo_bono_manual"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleado_bonos_manuales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleado_bonos_manuales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleado_bonos_manuales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleado_bonos_manuales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleado_bonos_manuales_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleado_bonos_manuales_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       empleados: {
         Row: {
           activo: boolean | null
@@ -3115,6 +3251,20 @@ export type Database = {
             foreignKeyName: "empleados_jefe_directo_id_fkey"
             columns: ["jefe_directo_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleados_jefe_directo_id_fkey"
+            columns: ["jefe_directo_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleados_jefe_directo_id_fkey"
+            columns: ["jefe_directo_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -3132,9 +3282,11 @@ export type Database = {
           calificacion_post: number | null
           calificacion_pre: number | null
           capacitacion_id: string
+          costo_prorrateado: number | null
           created_at: string | null
           empleado_id: string
           estado: Database["public"]["Enums"]["estado_capacitacion"] | null
+          factura_url: string | null
           fecha_evaluacion_eficacia: string | null
           fecha_fin: string | null
           fecha_inicio: string | null
@@ -3148,9 +3300,11 @@ export type Database = {
           calificacion_post?: number | null
           calificacion_pre?: number | null
           capacitacion_id: string
+          costo_prorrateado?: number | null
           created_at?: string | null
           empleado_id: string
           estado?: Database["public"]["Enums"]["estado_capacitacion"] | null
+          factura_url?: string | null
           fecha_evaluacion_eficacia?: string | null
           fecha_fin?: string | null
           fecha_inicio?: string | null
@@ -3164,9 +3318,11 @@ export type Database = {
           calificacion_post?: number | null
           calificacion_pre?: number | null
           capacitacion_id?: string
+          costo_prorrateado?: number | null
           created_at?: string | null
           empleado_id?: string
           estado?: Database["public"]["Enums"]["estado_capacitacion"] | null
+          factura_url?: string | null
           fecha_evaluacion_eficacia?: string | null
           fecha_fin?: string | null
           fecha_inicio?: string | null
@@ -3190,6 +3346,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_capacitaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleados_capacitaciones_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "empleados_capacitaciones_empleado_id_fkey"
@@ -3251,6 +3421,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "empleados_documentos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "empleados_documentos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "empleados_documentos_empleado_id_fkey"
@@ -3669,6 +3853,20 @@ export type Database = {
             foreignKeyName: "evaluaciones_desempeno_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "evaluaciones_desempeno_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "evaluaciones_desempeno_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -3775,6 +3973,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "finiquitos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "finiquitos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "finiquitos_empleado_id_fkey"
@@ -5037,6 +5249,20 @@ export type Database = {
             foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
             columns: ["empleado_consultado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
+            columns: ["empleado_consultado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
+            columns: ["empleado_consultado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -5208,6 +5434,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "nomina_recibos_empleado_id_fkey"
@@ -9241,6 +9481,20 @@ export type Database = {
             foreignKeyName: "vacaciones_solicitudes_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "vacaciones_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "vacaciones_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -9515,6 +9769,13 @@ export type Database = {
             foreignKeyName: "vehiculos_bitacora_vehiculo_id_fkey"
             columns: ["vehiculo_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["vehiculo_id"]
+          },
+          {
+            foreignKeyName: "vehiculos_bitacora_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
             referencedRelation: "v_vehiculos_lista"
             referencedColumns: ["id"]
           },
@@ -9593,6 +9854,13 @@ export type Database = {
             foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
             columns: ["vehiculo_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["vehiculo_id"]
+          },
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
             referencedRelation: "v_vehiculos_lista"
             referencedColumns: ["id"]
           },
@@ -9667,6 +9935,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viajes_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "viajes_solicitudes_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "viajes_solicitudes_empleado_id_fkey"
@@ -9762,6 +10044,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "viaticos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "viaticos_empleado_id_fkey"
@@ -10210,6 +10506,56 @@ export type Database = {
         }
         Relationships: []
       }
+      v_empleado_compensacion_anual: {
+        Row: {
+          anio: number | null
+          empleado_id: string | null
+          empresa_id: string | null
+          total_bonos_no_timbrados: number | null
+          total_capacitacion_recibida: number | null
+          total_combustible_vehiculo: number | null
+          total_deducciones: number | null
+          total_neto_recibido: number | null
+          total_otros_pagos: number | null
+          total_percepciones_timbradas: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_empleado_vehiculo_gasolina: {
+        Row: {
+          anio: number | null
+          anio_vehiculo: number | null
+          empleado_id: string | null
+          empresa_id: string | null
+          marca: string | null
+          mes: number | null
+          modelo: string | null
+          num_cargas: number | null
+          numero_economico: string | null
+          placa: string | null
+          total_combustible: number | null
+          total_litros: number | null
+          usuario_id: string | null
+          vehiculo_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "empleados_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_estados_financieros_lista: {
         Row: {
           anio: number | null
@@ -10566,6 +10912,20 @@ export type Database = {
             foreignKeyName: "nomina_recibos_empleado_id_fkey"
             columns: ["empleado_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
             referencedRelation: "v_repse_alertas"
             referencedColumns: ["id"]
           },
@@ -10604,6 +10964,20 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "empleados"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_compensacion_anual"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["empleado_id"]
           },
           {
             foreignKeyName: "nomina_recibos_empleado_id_fkey"
@@ -11408,6 +11782,13 @@ export type Database = {
             foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
             columns: ["vehiculo_id"]
             isOneToOne: false
+            referencedRelation: "v_empleado_vehiculo_gasolina"
+            referencedColumns: ["vehiculo_id"]
+          },
+          {
+            foreignKeyName: "vehiculos_documentos_vehiculo_id_fkey"
+            columns: ["vehiculo_id"]
+            isOneToOne: false
             referencedRelation: "v_vehiculos_lista"
             referencedColumns: ["id"]
           },
@@ -11539,6 +11920,10 @@ export type Database = {
       }
     }
     Functions: {
+      calcular_costo_prorrateado_capacitacion: {
+        Args: { p_capacitacion_id: string; p_fecha_referencia: string }
+        Returns: number
+      }
       calcular_semaforo_proveedor: {
         Args: { p_proveedor_id: string }
         Returns: string
@@ -11889,6 +12274,14 @@ export type Database = {
         | "mantenimiento"
         | "capacitacion"
         | "certificacion"
+        | "otro"
+      tipo_bono_manual:
+        | "productividad"
+        | "puntualidad"
+        | "desempeno"
+        | "antiguedad"
+        | "evento_especial"
+        | "navidad"
         | "otro"
       tipo_centro: "costo" | "utilidad"
       tipo_cfdi: "ingreso" | "egreso" | "traslado" | "pago" | "nomina"
@@ -12389,6 +12782,15 @@ export const Constants = {
         "mantenimiento",
         "capacitacion",
         "certificacion",
+        "otro",
+      ],
+      tipo_bono_manual: [
+        "productividad",
+        "puntualidad",
+        "desempeno",
+        "antiguedad",
+        "evento_especial",
+        "navidad",
         "otro",
       ],
       tipo_centro: ["costo", "utilidad"],
