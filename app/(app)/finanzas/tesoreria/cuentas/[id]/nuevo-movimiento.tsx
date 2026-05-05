@@ -85,9 +85,12 @@ export function NuevoMovimientoButton({ cuentaId }: { cuentaId: string }) {
               >
                 <FileSpreadsheet className="mt-0.5 h-4 w-4 text-ink-3" />
                 <span>
-                  <span className="block font-medium">Importar CSV</span>
+                  <span className="block font-medium">
+                    Importar CSV / .exp
+                  </span>
                   <span className="block text-[11px] text-ink-3">
-                    Bulk: lista de movimientos exportada del banco.
+                    Bulk: lista de movimientos exportada del banco (BBVA .exp,
+                    CSV, TSV).
                   </span>
                 </span>
               </button>
@@ -371,23 +374,25 @@ function CSVForm({
 
         <p className="text-[11.5px] text-ink-3">
           Formato esperado: encabezado + filas con columnas{" "}
-          <code className="font-mono">fecha</code>,{" "}
+          <code className="font-mono">fecha</code> (o{" "}
+          <code className="font-mono">día</code>),{" "}
           <code className="font-mono">concepto</code>, y al menos una de{" "}
           <code className="font-mono">cargo</code>/
           <code className="font-mono">abono</code> o{" "}
           <code className="font-mono">monto</code> (con signo). Separador:
-          coma o punto y coma.
+          coma, punto y coma o tabulación. Acepta CSV y .exp/TSV (export de
+          BBVA Net).
         </p>
 
         <div className="space-y-1">
           <Label htmlFor="csv_file" className="text-[11.5px]">
-            Archivo CSV
+            Archivo CSV o .exp
           </Label>
           <Input
             id="csv_file"
             name="archivo"
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.exp,.tsv,.txt,text/csv,text/tab-separated-values,text/plain"
             onChange={onFile}
             required
             className="h-9 file:mr-2 file:rounded file:border-0 file:bg-bg-2 file:px-2 file:py-1 file:text-[11px]"

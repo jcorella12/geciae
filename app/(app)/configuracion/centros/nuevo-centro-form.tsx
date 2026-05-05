@@ -179,10 +179,15 @@ export function NuevoCentroForm({
         </div>
         <div className="space-y-2">
           <Label htmlFor="tipo">Tipo</Label>
+          {/* Cuando está disabled, <select> NO envía valor al FormData;
+              usamos un hidden input para que el server action reciba el tipo. */}
+          {tipoSugerido !== null && (
+            <input type="hidden" name="tipo" value={tipo} />
+          )}
           <select
             id="tipo"
-            name="tipo"
-            required
+            name={tipoSugerido !== null ? undefined : "tipo"}
+            required={tipoSugerido === null}
             value={tipo}
             disabled={tipoSugerido !== null}
             onChange={(e) => setTipoOverride(e.target.value as TipoCentro)}

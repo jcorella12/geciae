@@ -301,7 +301,7 @@ function detectarColumnas(headers: string[]): {
     return undefined;
   };
   return {
-    fecha: find(["fecha", "date"]),
+    fecha: find(["fecha", "date", "dia"]),
     concepto: find(["concepto", "descripcion", "descrip", "operacion", "detalle"]),
     referencia: find(["referencia", "ref", "folio"]),
     cargo: find(["cargo", "debe", "salida", "egreso", "withdrawal", "retiro"]),
