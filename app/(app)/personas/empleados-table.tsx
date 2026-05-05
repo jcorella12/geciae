@@ -53,17 +53,23 @@ type Empleado = {
 export function EmpleadosTable({
   empleados,
   empresas,
+  puestos = [],
   currentQ,
   currentCategoria,
   currentEmpresa,
   currentActivo,
+  currentPuesto = "",
+  currentOrden = "nombre",
 }: {
   empleados: Empleado[];
   empresas: Empresa[];
+  puestos?: string[];
   currentQ: string;
   currentCategoria: string;
   currentEmpresa: string;
   currentActivo: string;
+  currentPuesto?: string;
+  currentOrden?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -140,7 +146,39 @@ export function EmpleadosTable({
           <option value="true">Solo activos</option>
           <option value="false">Solo bajas</option>
         </select>
-        {(currentQ || currentCategoria || currentEmpresa || currentActivo) && (
+        {puestos.length > 0 && (
+          <select
+            value={currentPuesto}
+            onChange={(e) => setParam("puesto", e.target.value)}
+            className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+            title="Filtrar por puesto exacto"
+          >
+            <option value="">Todos los puestos</option>
+            {puestos.map((p) => (
+              <option key={p} value={p}>
+                {p.length > 30 ? p.slice(0, 30) + "…" : p}
+              </option>
+            ))}
+          </select>
+        )}
+        <select
+          value={currentOrden}
+          onChange={(e) => setParam("orden", e.target.value)}
+          className="flex h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          title="Ordenar por…"
+        >
+          <option value="nombre">Ordenar: Nombre</option>
+          <option value="categoria">Ordenar: Categoría</option>
+          <option value="puesto">Ordenar: Puesto</option>
+          <option value="estado">Ordenar: Estado</option>
+          <option value="fecha_ingreso">Ordenar: Fecha ingreso</option>
+        </select>
+        {(currentQ ||
+          currentCategoria ||
+          currentEmpresa ||
+          currentActivo ||
+          currentPuesto ||
+          (currentOrden && currentOrden !== "nombre")) && (
           <button
             type="button"
             onClick={() => router.replace("/personas")}

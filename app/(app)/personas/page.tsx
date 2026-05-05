@@ -1,4 +1,5 @@
 import { AlertTriangle, Download, Plus, ShieldCheck } from "lucide-react";
+import { cookies } from "next/headers";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,11 @@ import {
   esCEO,
   obtenerVinculos,
 } from "@/lib/auth/permisos";
+import {
+  EMPRESA_COOKIE,
+  puedeVerConsolidado,
+  resolverEmpresasFiltro,
+} from "@/lib/empresa-activa";
 import { createClient } from "@/lib/supabase/server";
 
 import { EmpleadosTable } from "./empleados-table";
@@ -27,6 +33,8 @@ export default async function PersonasPage({
     categoria?: string;
     empresa?: string;
     activo?: string;
+    puesto?: string;
+    orden?: string;
   };
 }) {
   const supabase = createClient();
@@ -36,14 +44,40 @@ export default async function PersonasPage({
 
   const q = (searchParams.q ?? "").trim();
 
+  // Filtro por empresa activa del switcher (cookie). Si el usuario eligió
+  // PSE en el sidebar, solo muestra empleados de PSE — a menos que pase
+  // ?empresa= explícito en URL para override.
+  const filtroSwitcher = resolverEmpresasFiltro({
+    cookieValue: cookies().get(EMPRESA_COOKIE)?.value ?? null,
+    empresasUsuario: vinculos.map((v) => v.empresa_id),
+    puedeConsolidado: puedeVerConsolidado(vinculos),
+  });
+
+  // Validar orden
+  type OrdenKey = "nombre" | "categoria" | "puesto" | "estado" | "fecha_ingreso";
+  const ORDEN_COL: Record<OrdenKey, { col: string; asc: boolean }> = {
+    nombre: { col: "nombre_completo", asc: true },
+    categoria: { col: "categoria", asc: true },
+    puesto: { col: "puesto", asc: true },
+    estado: { col: "activo", asc: false }, // activos primero
+    fecha_ingreso: { col: "fecha_ingreso", asc: false }, // recientes primero
+  };
+  const ordenKey: OrdenKey = ((): OrdenKey => {
+    const v = searchParams.orden;
+    if (v && (v === "nombre" || v === "categoria" || v === "puesto" || v === "estado" || v === "fecha_ingreso"))
+      return v;
+    return "nombre";
+  })();
+  const ordenSpec = ORDEN_COL[ordenKey];
+
   let query = supabase
     .from("empleados")
     .select(
       "id, nombre_completo, curp, numero_empleado, categoria, puesto, area, fecha_ingreso, activo, vigencia_repse_hasta, empresa_id, empresas(codigo, nombre_comercial, razon_social)",
       { count: "exact" },
     )
-    .order("nombre_completo", { ascending: true })
-    .limit(200);
+    .order(ordenSpec.col, { ascending: ordenSpec.asc })
+    .limit(500);
 
   if (searchParams.activo === "true") query = query.eq("activo", true);
   if (searchParams.activo === "false") query = query.eq("activo", false);
@@ -55,7 +89,18 @@ export default async function PersonasPage({
   ) {
     query = query.eq("categoria", searchParams.categoria as Cat);
   }
-  if (searchParams.empresa) query = query.eq("empresa_id", searchParams.empresa);
+
+  // Empresa: prioridad searchParams (override) → switcher cookie → todas
+  if (searchParams.empresa) {
+    query = query.eq("empresa_id", searchParams.empresa);
+  } else if (filtroSwitcher.empresasIds.length > 0) {
+    query = query.in("empresa_id", filtroSwitcher.empresasIds);
+  }
+
+  if (searchParams.puesto) {
+    query = query.eq("puesto", searchParams.puesto);
+  }
+
   if (q) {
     query = query.or(
       `nombre_completo.ilike.%${q}%,curp.ilike.%${q}%,numero_empleado.ilike.%${q}%,puesto.ilike.%${q}%`,
@@ -63,6 +108,15 @@ export default async function PersonasPage({
   }
 
   const { data: empleados, count, error } = await query;
+
+  // Lista de puestos únicos (para el filtro dropdown) — del set actual
+  const puestosUnicos = Array.from(
+    new Set(
+      (empleados ?? [])
+        .map((e) => e.puesto)
+        .filter((p): p is string => Boolean(p) && p !== "Por definir"),
+    ),
+  ).sort((a, b) => a.localeCompare(b, "es"));
 
   const { data: empresas } = await supabase
     .from("empresas")
@@ -212,10 +266,13 @@ export default async function PersonasPage({
       <EmpleadosTable
         empleados={empleados ?? []}
         empresas={empresas ?? []}
+        puestos={puestosUnicos}
         currentQ={q}
         currentCategoria={searchParams.categoria ?? ""}
         currentEmpresa={searchParams.empresa ?? ""}
         currentActivo={searchParams.activo ?? ""}
+        currentPuesto={searchParams.puesto ?? ""}
+        currentOrden={ordenKey}
       />
     </div>
   );
