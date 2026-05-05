@@ -10,6 +10,7 @@ import {
   esRolEn,
   obtenerVinculos,
   puedeGestionarEmpleadosEn,
+  puedeVerNominaEmpleado,
 } from "@/lib/auth/permisos";
 import {
   CATEGORIAS_PERSONAL,
@@ -86,6 +87,25 @@ export default async function EmpleadoDetailPage({
   const puedeAprobar =
     esCEO(vinculos) || esRolEn(vinculos, emp.empresa_id, "director");
   const puedeSolicitar = puedeGestionar || true; // el propio empleado o un gestor
+
+  // ¿Quien ve esta página puede acceder a la nómina del empleado?
+  const {
+    data: { user: usuarioActual },
+  } = await supabase.auth.getUser();
+  let esJefeDirectoEmp = false;
+  if (emp.jefe_directo_id) {
+    const { data: jefe } = await supabase
+      .from("empleados")
+      .select("usuario_id")
+      .eq("id", emp.jefe_directo_id)
+      .maybeSingle();
+    esJefeDirectoEmp = jefe?.usuario_id === usuarioActual?.id;
+  }
+  const puedeVerNomina = puedeVerNominaEmpleado(vinculos, {
+    empleadoEmpresaId: emp.empresa_id,
+    esDuenio: emp.usuario_id === usuarioActual?.id,
+    esJefeDirecto: esJefeDirectoEmp,
+  });
 
   type Domicilio = {
     calle?: string;
@@ -302,20 +322,29 @@ export default async function EmpleadoDetailPage({
             </div>
           </div>
 
-          {puedeGestionar && (
-            <div className="flex items-center gap-2">
-              <ToggleActivoEmpleadoButton
-                empleadoId={emp.id}
-                empresaId={emp.empresa_id}
-                activo={emp.activo === true}
-              />
+          <div className="flex items-center gap-2">
+            {puedeVerNomina && (
               <Button variant="outline" size="sm" asChild>
-                <Link href={`/personas/${emp.id}/edit`}>
-                  <Pencil className="h-3.5 w-3.5" /> Editar
+                <Link href={`/portal-empleado?empleado=${emp.id}`}>
+                  Ver portal de compensación
                 </Link>
               </Button>
-            </div>
-          )}
+            )}
+            {puedeGestionar && (
+              <>
+                <ToggleActivoEmpleadoButton
+                  empleadoId={emp.id}
+                  empresaId={emp.empresa_id}
+                  activo={emp.activo === true}
+                />
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/personas/${emp.id}/edit`}>
+                    <Pencil className="h-3.5 w-3.5" /> Editar
+                  </Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
 

@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 
-import { obtenerVinculos } from "@/lib/auth/permisos";
+import {
+  obtenerVinculos,
+  puedeVerNominaEmpleado,
+} from "@/lib/auth/permisos";
 
 import { DescargaReciboButtons } from "./descarga-recibo";
 import {
@@ -46,21 +49,34 @@ export default async function PortalEmpleadoPage({
   let esVistaAdmin = false;
 
   if (empleadoQueryId) {
-    // Verificar permiso (CEO o director de la empresa del empleado)
+    // Verificar permiso usando helper unificado (CEO, RH, contralor,
+    // tesorero, auditor, director de empresa, o jefe directo).
     const { data: emp } = await supabase
       .from("empleados")
-      .select("id, empresa_id")
+      .select("id, empresa_id, jefe_directo_id, usuario_id")
       .eq("id", empleadoQueryId)
       .maybeSingle();
     if (!emp) redirect("/personas");
-    const puede =
-      v.some((vi) => vi.rol === "ceo") ||
-      v.some(
-        (vi) => vi.rol === "director" && vi.empresa_id === emp.empresa_id,
-      );
+
+    // ¿Es jefe directo del empleado?
+    let esJefeDirecto = false;
+    if (emp.jefe_directo_id) {
+      const { data: jefe } = await supabase
+        .from("empleados")
+        .select("usuario_id")
+        .eq("id", emp.jefe_directo_id)
+        .maybeSingle();
+      esJefeDirecto = jefe?.usuario_id === user.id;
+    }
+
+    const puede = puedeVerNominaEmpleado(v, {
+      empleadoEmpresaId: emp.empresa_id,
+      esDuenio: emp.usuario_id === user.id,
+      esJefeDirecto,
+    });
     if (!puede) redirect("/portal-empleado");
     empleadoId = emp.id;
-    esVistaAdmin = true;
+    esVistaAdmin = emp.usuario_id !== user.id;
   } else {
     // Buscar empleado del usuario
     const { data: miEmp } = await supabase

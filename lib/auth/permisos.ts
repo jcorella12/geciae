@@ -20,7 +20,9 @@ export type AtributoUsuario =
   | "tesorero_corporativo"
   | "auditor_interno"
   | "vendedor"
-  | "supervisor_cuadrilla";
+  | "supervisor_cuadrilla"
+  | "rh"
+  | "contralor";
 
 export type ConfigAprobadorFinanciero = {
   umbral_max_mxn_oc?: number | null;
@@ -368,4 +370,53 @@ export function empresasDondeGestionaCentros(vinculos: Vinculo[]): string[] {
  */
 export function puedeGestionarReglasReparto(vinculos: Vinculo[]): boolean {
   return esCEO(vinculos) || tieneAtributo(vinculos, "tesorero_corporativo");
+}
+
+/**
+ * ¿Puede el usuario actual ver datos de nómina/compensación de un empleado
+ * dado? Incluye:
+ *   - CEO siempre
+ *   - Director, operativo o RH de la empresa del empleado
+ *   - Atributos transversales: rh, contralor, tesorero_corporativo,
+ *     auditor_interno
+ *   - El propio empleado (si su usuario_id coincide)
+ *   - Su jefe directo (resuelto por el caller)
+ */
+export function puedeVerNominaEmpleado(
+  vinculos: Vinculo[],
+  opts: {
+    empleadoEmpresaId: string;
+    /** TRUE si el usuario actual es el dueño del registro empleado. */
+    esDuenio?: boolean;
+    /** TRUE si el usuario actual es jefe directo (resuelto por el caller). */
+    esJefeDirecto?: boolean;
+  },
+): boolean {
+  if (opts.esDuenio) return true;
+  if (opts.esJefeDirecto) return true;
+  if (esCEO(vinculos)) return true;
+  if (tieneAtributo(vinculos, "rh")) return true;
+  if (tieneAtributo(vinculos, "contralor")) return true;
+  if (tieneAtributo(vinculos, "tesorero_corporativo")) return true;
+  if (tieneAtributo(vinculos, "auditor_interno")) return true;
+  if (esRolEn(vinculos, opts.empleadoEmpresaId, ["director"])) return true;
+  return false;
+}
+
+/**
+ * Empresas donde el usuario puede ver nómina (sin condición empleado-específico).
+ * Útil para filtros de UI consolidada.
+ */
+export function empresasConVisibilidadNomina(vinculos: Vinculo[]): string[] {
+  if (
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "rh") ||
+    tieneAtributo(vinculos, "contralor") ||
+    tieneAtributo(vinculos, "tesorero_corporativo") ||
+    tieneAtributo(vinculos, "auditor_interno")
+  ) {
+    return Array.from(new Set(vinculos.map((v) => v.empresa_id)));
+  }
+  // Director: solo de su empresa
+  return vinculos.filter((v) => v.rol === "director").map((v) => v.empresa_id);
 }
