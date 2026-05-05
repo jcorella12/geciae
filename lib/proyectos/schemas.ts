@@ -102,6 +102,9 @@ export const ProyectoFormSchema = z.object({
       "solar_industrial",
       "mantenimiento_solar",
       "limpieza_solar",
+      "limson_mantenimiento_contractual",
+      "limson_servicio_puntual",
+      "limson_instalacion_externa",
       "otro",
     ])
     .optional()

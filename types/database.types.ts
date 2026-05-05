@@ -1,4 +1,3 @@
-// @ts-nocheck
 export type Json =
   | string
   | number
@@ -737,6 +736,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bitacoras_obra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bolsa_talento: {
@@ -1429,6 +1435,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "centros_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "centros_movimientos_regla_reparto_id_fkey"
             columns: ["regla_reparto_id"]
             isOneToOne: false
@@ -1791,6 +1804,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cfdi_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -2347,6 +2367,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "contratos_cliente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       contratos_laborales: {
@@ -2428,6 +2455,9 @@ export type Database = {
           fecha_vista_cliente: string | null
           id: string
           iva: number | null
+          modalidad_pago_propuesta:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           notas: string | null
           numero: string
           oportunidad_id: string | null
@@ -2457,6 +2487,9 @@ export type Database = {
           fecha_vista_cliente?: string | null
           id?: string
           iva?: number | null
+          modalidad_pago_propuesta?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           notas?: string | null
           numero: string
           oportunidad_id?: string | null
@@ -2486,6 +2519,9 @@ export type Database = {
           fecha_vista_cliente?: string | null
           id?: string
           iva?: number | null
+          modalidad_pago_propuesta?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           notas?: string | null
           numero?: string
           oportunidad_id?: string | null
@@ -2655,6 +2691,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dossier_documentos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -2938,6 +2981,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ema_dictamenes_uvie_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -3382,6 +3432,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "encuestas_satisfaccion_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "encuestas_satisfaccion_ticket_id_fkey"
             columns: ["ticket_id"]
             isOneToOne: false
@@ -3807,6 +3864,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fotos_obra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -4385,6 +4449,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventario_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventario_movimientos_serie_id_fkey"
             columns: ["serie_id"]
             isOneToOne: false
@@ -4590,6 +4661,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "levantamientos_proyecto_destino_id_fkey"
+            columns: ["proyecto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       lineas_credito_inter_co: {
@@ -4731,6 +4809,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mediciones_ejecuciones_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -5059,6 +5144,9 @@ export type Database = {
           fecha_proxima_accion: string | null
           fuente: string | null
           id: string
+          modalidad_pago_propuesta:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_estimado: number | null
           motivo_perdida: string | null
           nombre: string
@@ -5079,6 +5167,9 @@ export type Database = {
           fecha_proxima_accion?: string | null
           fuente?: string | null
           id?: string
+          modalidad_pago_propuesta?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_estimado?: number | null
           motivo_perdida?: string | null
           nombre: string
@@ -5099,6 +5190,9 @@ export type Database = {
           fecha_proxima_accion?: string | null
           fuente?: string | null
           id?: string
+          modalidad_pago_propuesta?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_estimado?: number | null
           motivo_perdida?: string | null
           nombre?: string
@@ -5282,6 +5376,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ordenes_compra_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -5535,6 +5636,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "ordenes_trabajo_inter_co_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "ordenes_trabajo_inter_co_servicio_id_fkey"
             columns: ["servicio_id"]
             isOneToOne: false
@@ -5620,6 +5728,56 @@ export type Database = {
           {
             foreignKeyName: "plantillas_documentos_empresa_id_fkey"
             columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      plantillas_proyecto: {
+        Row: {
+          activa: boolean
+          codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          created_at: string | null
+          descripcion: string | null
+          duracion_estimada_dias: number | null
+          empresa_recomendada_id: string | null
+          id: string
+          nombre: string
+          notas: string | null
+          requiere_levantamiento_tecnico: boolean | null
+          requiere_tramites_cfe: boolean | null
+        }
+        Insert: {
+          activa?: boolean
+          codigo: Database["public"]["Enums"]["plantilla_proyecto"]
+          created_at?: string | null
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          empresa_recomendada_id?: string | null
+          id?: string
+          nombre: string
+          notas?: string | null
+          requiere_levantamiento_tecnico?: boolean | null
+          requiere_tramites_cfe?: boolean | null
+        }
+        Update: {
+          activa?: boolean
+          codigo?: Database["public"]["Enums"]["plantilla_proyecto"]
+          created_at?: string | null
+          descripcion?: string | null
+          duracion_estimada_dias?: number | null
+          empresa_recomendada_id?: string | null
+          id?: string
+          nombre?: string
+          notas?: string | null
+          requiere_levantamiento_tecnico?: boolean | null
+          requiere_tramites_cfe?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plantillas_proyecto_empresa_recomendada_id_fkey"
+            columns: ["empresa_recomendada_id"]
             isOneToOne: false
             referencedRelation: "empresas"
             referencedColumns: ["id"]
@@ -5929,6 +6087,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "presupuestos_proyecto_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       procedimientos: {
@@ -6151,6 +6316,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "productos_serie_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -6551,6 +6723,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
             columns: ["tarea_id"]
             isOneToOne: false
@@ -6641,6 +6820,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "proyecto_documentos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proyecto_documentos_solicitud_id_fkey"
             columns: ["solicitud_id"]
             isOneToOne: false
@@ -6727,6 +6913,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_equipo_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -6842,6 +7035,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proyecto_reportes_tarea_id_fkey"
             columns: ["tarea_id"]
             isOneToOne: false
@@ -6945,6 +7145,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -7087,6 +7294,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       proyectos: {
@@ -7109,12 +7323,18 @@ export type Database = {
           fecha_inicio_real: string | null
           id: string
           marca_visible_id: string
+          modalidad_pago:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_cobrado: number | null
           monto_contratado: number | null
           monto_facturado: number | null
           nombre: string
           observaciones: string | null
           oportunidad_id: string | null
+          plantilla_tipo:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
           pm_id: string | null
           presupuesto_costo: number | null
           saldo_pendiente: number | null
@@ -7126,6 +7346,7 @@ export type Database = {
           uniforme_marca: string | null
           updated_at: string | null
           vendedor_id: string | null
+          verificador_id: string | null
         }
         Insert: {
           activo?: boolean | null
@@ -7146,12 +7367,18 @@ export type Database = {
           fecha_inicio_real?: string | null
           id?: string
           marca_visible_id: string
+          modalidad_pago?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_cobrado?: number | null
           monto_contratado?: number | null
           monto_facturado?: number | null
           nombre: string
           observaciones?: string | null
           oportunidad_id?: string | null
+          plantilla_tipo?:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
           pm_id?: string | null
           presupuesto_costo?: number | null
           saldo_pendiente?: number | null
@@ -7163,6 +7390,7 @@ export type Database = {
           uniforme_marca?: string | null
           updated_at?: string | null
           vendedor_id?: string | null
+          verificador_id?: string | null
         }
         Update: {
           activo?: boolean | null
@@ -7183,12 +7411,18 @@ export type Database = {
           fecha_inicio_real?: string | null
           id?: string
           marca_visible_id?: string
+          modalidad_pago?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
           monto_cobrado?: number | null
           monto_contratado?: number | null
           monto_facturado?: number | null
           nombre?: string
           observaciones?: string | null
           oportunidad_id?: string | null
+          plantilla_tipo?:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
           pm_id?: string | null
           presupuesto_costo?: number | null
           saldo_pendiente?: number | null
@@ -7200,6 +7434,7 @@ export type Database = {
           uniforme_marca?: string | null
           updated_at?: string | null
           vendedor_id?: string | null
+          verificador_id?: string | null
         }
         Relationships: [
           {
@@ -7310,6 +7545,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "proyectos_etapas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       reportes_cliente: {
@@ -7378,6 +7620,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reportes_cliente_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -7955,6 +8204,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       tarifas_internas: {
@@ -8144,6 +8400,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tickets_soporte_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -8534,6 +8797,13 @@ export type Database = {
             referencedRelation: "v_proyectos_marca_diferente"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
         ]
       }
       vehiculos_bitacora: {
@@ -8914,6 +9184,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "viaticos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -9528,6 +9805,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "inventario_movimientos_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "inventario_movimientos_serie_id_fkey"
             columns: ["serie_id"]
             isOneToOne: false
@@ -9835,6 +10119,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "proyecto_bitacora_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proyecto_bitacora_tarea_id_fkey"
             columns: ["tarea_id"]
             isOneToOne: false
@@ -9904,6 +10195,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_reportes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
           {
@@ -9985,6 +10283,13 @@ export type Database = {
             columns: ["proyecto_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyecto_solicitudes_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -10073,6 +10378,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "proyecto_tareas_proyecto_id_fkey"
+            columns: ["proyecto_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "proyectos_empresa_id_fkey"
             columns: ["proyecto_empresa_id"]
             isOneToOne: false
@@ -10111,6 +10423,132 @@ export type Database = {
           {
             foreignKeyName: "proyectos_empresa_id_fkey"
             columns: ["empresa_operativa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyectos_marca_visible_id_fkey"
+            columns: ["marca_visible_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyectos_por_marca: {
+        Row: {
+          activos: number | null
+          cross_marca: number | null
+          entregados: number | null
+          marca_codigo: string | null
+          marca_nombre: string | null
+          marca_visible_id: string | null
+          total_contratado: number | null
+          total_facturado: number | null
+          total_proyectos: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyectos_marca_visible_id_fkey"
+            columns: ["marca_visible_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_proyectos_pse_solar: {
+        Row: {
+          capacidad_kwp: number | null
+          cliente_id: string | null
+          codigo: string | null
+          empresa_id: string | null
+          estado: Database["public"]["Enums"]["estado_proyecto"] | null
+          fecha_contrato: string | null
+          fecha_fin_planeado: string | null
+          fecha_inicio_planeado: string | null
+          id: string | null
+          marca_visible_id: string | null
+          modalidad_pago:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
+          monto_contratado: number | null
+          nombre: string | null
+          plantilla_tipo:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
+          pm_id: string | null
+          semaforo: string | null
+          vendedor_id: string | null
+          verificador_id: string | null
+        }
+        Insert: {
+          capacidad_kwp?: number | null
+          cliente_id?: string | null
+          codigo?: string | null
+          empresa_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_proyecto"] | null
+          fecha_contrato?: string | null
+          fecha_fin_planeado?: string | null
+          fecha_inicio_planeado?: string | null
+          id?: string | null
+          marca_visible_id?: string | null
+          modalidad_pago?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
+          monto_contratado?: number | null
+          nombre?: string | null
+          plantilla_tipo?:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
+          pm_id?: string | null
+          semaforo?: string | null
+          vendedor_id?: string | null
+          verificador_id?: string | null
+        }
+        Update: {
+          capacidad_kwp?: number | null
+          cliente_id?: string | null
+          codigo?: string | null
+          empresa_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_proyecto"] | null
+          fecha_contrato?: string | null
+          fecha_fin_planeado?: string | null
+          fecha_inicio_planeado?: string | null
+          id?: string | null
+          marca_visible_id?: string | null
+          modalidad_pago?:
+            | Database["public"]["Enums"]["modalidad_pago_proyecto"]
+            | null
+          monto_contratado?: number | null
+          nombre?: string | null
+          plantilla_tipo?:
+            | Database["public"]["Enums"]["plantilla_proyecto"]
+            | null
+          pm_id?: string | null
+          semaforo?: string | null
+          vendedor_id?: string | null
+          verificador_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proyectos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyectos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proyectos_empresa_id_fkey"
+            columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
             referencedColumns: ["id"]
@@ -10360,6 +10798,13 @@ export type Database = {
             columns: ["proyecto_asignado_id"]
             isOneToOne: false
             referencedRelation: "v_proyectos_marca_diferente"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vehiculos_proyecto_asignado_id_fkey"
+            columns: ["proyecto_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyectos_pse_solar"
             referencedColumns: ["id"]
           },
         ]
@@ -10682,7 +11127,25 @@ export type Database = {
         | "por_empleados"
         | "por_proyectos"
         | "por_horas"
+      modalidad_pago_proyecto:
+        | "contado"
+        | "credito_directo"
+        | "leasing"
+        | "arrendamiento_puro"
+        | "fideicomiso"
+        | "mixto"
+        | "por_definir"
       nivel_autonomia_ia: "verde" | "amarillo" | "rojo"
+      plantilla_proyecto:
+        | "solar_residencial"
+        | "solar_comercial"
+        | "solar_industrial"
+        | "mantenimiento_solar"
+        | "limpieza_solar"
+        | "otro"
+        | "limson_mantenimiento_contractual"
+        | "limson_servicio_puntual"
+        | "limson_instalacion_externa"
       prioridad_tarea: "baja" | "media" | "alta" | "urgente"
       prioridad_ticket: "baja" | "media" | "alta" | "critica"
       rol_proyecto:
@@ -11133,7 +11596,27 @@ export const Constants = {
         "por_proyectos",
         "por_horas",
       ],
+      modalidad_pago_proyecto: [
+        "contado",
+        "credito_directo",
+        "leasing",
+        "arrendamiento_puro",
+        "fideicomiso",
+        "mixto",
+        "por_definir",
+      ],
       nivel_autonomia_ia: ["verde", "amarillo", "rojo"],
+      plantilla_proyecto: [
+        "solar_residencial",
+        "solar_comercial",
+        "solar_industrial",
+        "mantenimiento_solar",
+        "limpieza_solar",
+        "otro",
+        "limson_mantenimiento_contractual",
+        "limson_servicio_puntual",
+        "limson_instalacion_externa",
+      ],
       prioridad_tarea: ["baja", "media", "alta", "urgente"],
       prioridad_ticket: ["baja", "media", "alta", "critica"],
       rol_proyecto: [

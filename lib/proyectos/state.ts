@@ -43,34 +43,64 @@ export const TIPOS_PROYECTO = [
 export const PLANTILLAS_PROYECTO = [
   {
     value: "solar_residencial",
-    label: "Solar residencial",
+    label: "PSE Solar Residencial",
     descripcion:
       "Casa-habitación, sistemas chicos. Trámites CFE NetMet, cliente final típicamente persona física.",
+    empresa: "PSE",
   },
   {
     value: "solar_comercial",
-    label: "Solar comercial",
+    label: "PSE Solar Comercial",
     descripcion:
       "Negocios PyME, oficinas, locales. Trámites CFE, evaluación de demanda en tarifas comerciales.",
+    empresa: "PSE",
   },
   {
     value: "solar_industrial",
-    label: "Solar industrial",
+    label: "PSE Solar Industrial",
     descripcion:
       "Industria mediana/grande, plantas con tarifas HM/HS. Estudios CFE más profundos, posible interconexión MT.",
+    empresa: "PSE",
   },
   {
     value: "mantenimiento_solar",
     label: "Mantenimiento solar",
-    descripcion:
-      "Contractual o puntual. No requiere trámites CFE.",
+    descripcion: "Contractual o puntual. No requiere trámites CFE.",
+    empresa: null,
   },
   {
     value: "limpieza_solar",
     label: "Limpieza solar",
     descripcion: "Servicio puntual o programado.",
+    empresa: null,
   },
-  { value: "otro", label: "Otro", descripcion: "Cualquier otro tipo." },
+  {
+    value: "limson_mantenimiento_contractual",
+    label: "Limson Mantenimiento Contractual",
+    descripcion:
+      "Visitas calendarizadas mensuales/trimestrales por 12 meses. Anticipo 25% + mensualidades.",
+    empresa: "LIMSON",
+  },
+  {
+    value: "limson_servicio_puntual",
+    label: "Limson Servicio Puntual",
+    descripcion:
+      "Diagnóstico + reparación + entrega. 1-3 días. Facturación 100% al completar.",
+    empresa: "LIMSON",
+  },
+  {
+    value: "limson_instalacion_externa",
+    label: "Limson Instalación Externa",
+    descripcion:
+      "Instalación solar para clientes que NO son de PSE. Sin trámites CFE (cliente ya los tiene).",
+    empresa: "LIMSON",
+  },
+  {
+    value: "otro",
+    label: "Otro",
+    descripcion: "Plantilla libre.",
+    empresa: null,
+  },
 ] as const;
 
 export type PlantillaProyecto = (typeof PLANTILLAS_PROYECTO)[number]["value"];
