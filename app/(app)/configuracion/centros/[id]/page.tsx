@@ -53,7 +53,7 @@ export default async function CentroDetallePage({
   const { data: centro } = await supabase
     .from("centros")
     .select(
-      "id, empresa_id, codigo, nombre, descripcion, tipo, subtipo, activo, centro_padre_id, presupuesto_anual, observaciones, responsable_id, empresas(codigo, nombre_comercial, razon_social)",
+      "id, empresa_id, codigo, nombre, descripcion, tipo, subtipo, activo, centro_padre_id, presupuesto_anual, observaciones, responsable_id, empresas!centros_empresa_id_fkey(codigo, nombre_comercial, razon_social)",
     )
     .eq("id", params.id)
     .maybeSingle();

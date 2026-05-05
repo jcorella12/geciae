@@ -46,7 +46,7 @@ export default async function CentrosPage() {
   const { data: centros, error } = await supabase
     .from("centros")
     .select(
-      "id, empresa_id, codigo, nombre, tipo, subtipo, activo, centro_padre_id, presupuesto_anual, empresas(codigo, nombre_comercial, razon_social)",
+      "id, empresa_id, codigo, nombre, tipo, subtipo, activo, centro_padre_id, presupuesto_anual, empresas!centros_empresa_id_fkey(codigo, nombre_comercial, razon_social)",
     )
     .order("activo", { ascending: false })
     .order("codigo");
