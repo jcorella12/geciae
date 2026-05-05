@@ -198,50 +198,23 @@ export async function previewCierreMes(
     );
 
     // Calcular reparto según método
+    // Estrategia: porcentaje_fijo se calcula por regla individual. Los métodos
+    // proporcionales (por_empleados/proyectos/ingresos/horas) se agrupan: se
+    // calcula un factor por empresa destino, se suman los factores del grupo,
+    // y cada empresa recibe (factor / suma_factores) * (total - asignado_pct).
     let repartido = 0;
-    for (const r of reglasVigentes) {
-      let monto = 0;
-      let notas = "";
-      const metodo = r.metodo as string;
 
-      if (metodo === "porcentaje_fijo") {
-        const pct = Number(r.valor ?? 0);
-        monto = (total * pct) / 100;
-        notas = `${pct.toFixed(2)}% de ${total.toFixed(2)}`;
-      } else if (metodo === "por_empleados") {
-        // base proporcional al # empleados de las empresas destino
-        // RPC custom — el cast `as never` es porque la function se creó en
-        // la migración 5.5.4 y los types se regenerarán después.
-        const empResult = await supabase.rpc(
-          "empleados_activos_empresa_mes" as never,
-          {
-            p_empresa_id: r.empresa_destino_id,
-            p_anio: anio,
-            p_mes: mes,
-          } as never,
-        );
-        const empCount = (empResult.data as number | null) ?? 0;
-        notas = `Por empleados activos (${empCount}). Pendiente: definir total grupo. Repartiendo proporcional simple.`;
-        warnings.push(
-          `Regla por_empleados aún no calcula proporciones grupo. Edita la regla a porcentaje_fijo para este cierre.`,
-        );
-      } else if (metodo === "por_proyectos") {
-        notas = "Por proyectos activos. No implementado en preview.";
-        warnings.push(
-          `Método por_proyectos no implementado en este preview. Convertir a porcentaje_fijo.`,
-        );
-      } else if (metodo === "por_ingresos") {
-        notas = "Por ingresos del periodo. No implementado en preview.";
-        warnings.push(
-          `Método por_ingresos no implementado en este preview. Convertir a porcentaje_fijo.`,
-        );
-      } else if (metodo === "por_horas") {
-        notas = "Por horas registradas. Requiere integración de time-tracking.";
-        warnings.push(
-          `Método por_horas requiere time-tracking. Convertir a porcentaje_fijo.`,
-        );
-      }
+    const reglasPctFijo = reglasVigentes.filter(
+      (r) => r.metodo === "porcentaje_fijo",
+    );
+    const reglasProporcionales = reglasVigentes.filter(
+      (r) => r.metodo !== "porcentaje_fijo",
+    );
 
+    // 1. Porcentaje fijo (preserva comportamiento previo)
+    for (const r of reglasPctFijo) {
+      const pct = Number(r.valor ?? 0);
+      const monto = (total * pct) / 100;
       if (monto <= 0) continue;
       repartido += monto;
       movimientos.push({
@@ -253,14 +226,125 @@ export async function previewCierreMes(
           empresaPorId.get(r.empresa_destino_id as string) ?? "?",
         centro_destino_id: (r.centro_destino_id as string | null) ?? null,
         centro_destino_codigo: r.centro_destino_id
-          ? centroPorId.get(r.centro_destino_id as string) ?? null
+          ? (centroPorId.get(r.centro_destino_id as string) ?? null)
           : null,
-        metodo,
-        valor: r.valor != null ? Number(r.valor) : null,
+        metodo: "porcentaje_fijo",
+        valor: pct,
         emision: r.emision as string,
         monto_calculado: Math.round(monto * 100) / 100,
-        notas,
+        notas: `${pct.toFixed(2)}% de ${total.toFixed(2)}`,
       });
+    }
+
+    // 2. Métodos proporcionales — agrupar por método
+    if (reglasProporcionales.length > 0) {
+      // Lo que queda por repartir luego de los % fijos
+      const totalPorRepartir = total - repartido;
+      const grupos = new Map<string, typeof reglasProporcionales>();
+      for (const r of reglasProporcionales) {
+        const k = r.metodo as string;
+        if (!grupos.has(k)) grupos.set(k, []);
+        grupos.get(k)!.push(r);
+      }
+
+      // Asumimos que el total se reparte 100% entre las reglas del grupo
+      // (todas las empresas destino activas con ese método).
+      for (const [metodo, reglas] of Array.from(grupos.entries())) {
+        // Calcular factor por regla
+        const factores: Array<{ regla: (typeof reglas)[number]; factor: number }> = [];
+        for (const r of reglas) {
+          let factor = 0;
+          try {
+            if (metodo === "por_empleados") {
+              const res = await supabase.rpc(
+                "empleados_activos_empresa_mes" as never,
+                {
+                  p_empresa_id: r.empresa_destino_id,
+                  p_anio: anio,
+                  p_mes: mes,
+                } as never,
+              );
+              factor = Number(res.data ?? 0);
+            } else if (metodo === "por_proyectos") {
+              const res = await supabase.rpc(
+                "proyectos_activos_empresa_mes" as never,
+                {
+                  p_empresa_id: r.empresa_destino_id,
+                  p_anio: anio,
+                  p_mes: mes,
+                } as never,
+              );
+              factor = Number(res.data ?? 0);
+            } else if (metodo === "por_ingresos") {
+              const res = await supabase.rpc(
+                "ingresos_empresa_mes" as never,
+                {
+                  p_empresa_id: r.empresa_destino_id,
+                  p_anio: anio,
+                  p_mes: mes,
+                } as never,
+              );
+              factor = Number(res.data ?? 0);
+            } else if (metodo === "por_horas") {
+              // Suma horas_ingeniero de levantamientos completados en el mes
+              // de la empresa destino.
+              const inicioMesL = `${anio}-${String(mes).padStart(2, "0")}-01`;
+              const inicioSigL =
+                mes === 12
+                  ? `${anio + 1}-01-01`
+                  : `${anio}-${String(mes + 1).padStart(2, "0")}-01`;
+              const { data: lev } = await supabase
+                .from("levantamientos")
+                .select("horas_ingeniero")
+                .eq("empresa_id", r.empresa_destino_id)
+                .gte("fecha_realizada", inicioMesL)
+                .lt("fecha_realizada", inicioSigL);
+              factor = (lev ?? []).reduce(
+                (acc, l) => acc + Number(l.horas_ingeniero ?? 0),
+                0,
+              );
+            }
+          } catch (e) {
+            warnings.push(
+              `CC '${cc.codigo}' método ${metodo}: error calculando factor para empresa destino ${r.empresa_destino_id}: ${e instanceof Error ? e.message : "?"}`,
+            );
+          }
+          factores.push({ regla: r, factor });
+        }
+
+        const sumaFactores = factores.reduce((a, f) => a + f.factor, 0);
+        if (sumaFactores <= 0) {
+          warnings.push(
+            `CC '${cc.codigo}' método ${metodo}: suma de factores = 0 (sin datos). Configura datos o cambia a porcentaje_fijo.`,
+          );
+          continue;
+        }
+
+        for (const { regla: r, factor } of factores) {
+          if (factor <= 0) continue;
+          const proporcion = factor / sumaFactores;
+          const monto = totalPorRepartir * proporcion;
+          if (monto <= 0) continue;
+          repartido += monto;
+          movimientos.push({
+            centro_origen_id: cc.id,
+            centro_origen_codigo: cc.codigo,
+            centro_origen_nombre: cc.nombre,
+            empresa_destino_id: r.empresa_destino_id as string,
+            empresa_destino_codigo:
+              empresaPorId.get(r.empresa_destino_id as string) ?? "?",
+            centro_destino_id: (r.centro_destino_id as string | null) ?? null,
+            centro_destino_codigo: r.centro_destino_id
+              ? (centroPorId.get(r.centro_destino_id as string) ?? null)
+              : null,
+            metodo,
+            valor: factor,
+            emision: r.emision as string,
+            monto_calculado: Math.round(monto * 100) / 100,
+            notas: `${metodo}: factor ${factor.toFixed(2)} / ${sumaFactores.toFixed(2)} (${(proporcion * 100).toFixed(2)}%) de ${totalPorRepartir.toFixed(2)} restante`,
+          });
+        }
+      }
     }
 
     totales.push({
@@ -344,6 +428,18 @@ export async function ejecutarCierreMes(
   const fechaCierre = `${anio}-${String(mes).padStart(2, "0")}-01`;
   let totalRepartosEmitidos = 0;
   let totalRepartosRecibidos = 0;
+  const cfdiBorradoresGenerados: Array<{
+    empresa_origen: string;
+    empresa_destino: string;
+    monto: number;
+  }> = [];
+
+  // Cargar empresa origen para RFC en CFDI borrador
+  const { data: empOrigen } = await supabase
+    .from("empresas")
+    .select("rfc, razon_social, codigo")
+    .eq("id", empresa_id)
+    .maybeSingle();
 
   for (const mv of preview.movimientos) {
     // 1) Movimiento origen (reparto_emitido)
@@ -387,6 +483,54 @@ export async function ejecutarCierreMes(
         error: `Error registrando reparto recibido: ${errD.message}`,
       };
     totalRepartosRecibidos += mv.monto_calculado;
+
+    // 3) CFDI borrador inter-co si la regla emite CFDI
+    if (mv.emision === "cfdi_inter_co" && empOrigen?.rfc) {
+      // Buscar empresa destino para RFC receptor
+      const { data: empDest } = await supabase
+        .from("empresas")
+        .select("rfc, razon_social")
+        .eq("id", mv.empresa_destino_id)
+        .maybeSingle();
+
+      // UUID temporal único — no es UUID SAT real, se reemplaza al timbrar
+      const uuidTmp = `BORRADOR-${empresa_id.slice(0, 8)}-${anio}${String(mes).padStart(2, "0")}-${mv.centro_origen_codigo}-${mv.empresa_destino_codigo}`;
+      const subtotal = mv.monto_calculado;
+      const ivaTrasladado = Math.round(subtotal * 0.16 * 100) / 100;
+      const total = Math.round((subtotal + ivaTrasladado) * 100) / 100;
+
+      // Insert CFDI borrador con dedupe por uuid_sat
+      await supabase
+        .from("cfdi")
+        .insert({
+          empresa_id,
+          tipo: "ingreso" as never,
+          es_emitido: true,
+          uuid_sat: uuidTmp,
+          fecha_emision: fechaCierre,
+          rfc_emisor: empOrigen.rfc,
+          nombre_emisor: empOrigen.razon_social,
+          rfc_receptor: empDest?.rfc ?? "XAXX010101000",
+          nombre_receptor: empDest?.razon_social ?? "Empresa destino",
+          uso_cfdi: "G03",
+          metodo_pago: "PPD",
+          forma_pago: "99",
+          moneda: "MXN",
+          subtotal,
+          iva_trasladado: ivaTrasladado,
+          total,
+          centro_id: mv.centro_origen_id,
+          estado: "borrador" as never,
+          pac_proveedor: "cierre_inter_co",
+          capturado_por: user.id,
+        } as never);
+
+      cfdiBorradoresGenerados.push({
+        empresa_origen: empOrigen.codigo,
+        empresa_destino: mv.empresa_destino_codigo,
+        monto: total,
+      });
+    }
   }
 
   // Marcar cierre

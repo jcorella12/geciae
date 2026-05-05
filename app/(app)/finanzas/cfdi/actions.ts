@@ -124,6 +124,7 @@ export async function subirCfdi(
   const oc_id = (formData.get("oc_id") as string) || null;
   const ot_id = (formData.get("ot_id") as string) || null;
   const proyecto_id = (formData.get("proyecto_id") as string) || null;
+  const centro_id = (formData.get("centro_id") as string) || null;
 
   // Sprint 2.2: bloquear timbrado de CFDI emitido a cliente potencial
   // (sin RFC formal). El cliente debe convertirse a formal primero.
@@ -207,6 +208,7 @@ export async function subirCfdi(
       oc_id,
       ot_id,
       proyecto_id,
+      centro_id,
       url_xml: xmlPath,
       url_pdf: pdfUrl,
       estado: "timbrado",

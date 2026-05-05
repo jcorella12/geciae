@@ -31,6 +31,8 @@ function parseFormData(formData: FormData) {
     iva_tasa: formData.get("iva_tasa") || 0.16,
     retenciones: formData.get("retenciones") || 0,
     observaciones: formData.get("observaciones") || undefined,
+    centro_origen_id: formData.get("centro_origen_id") || undefined,
+    centro_destino_id: formData.get("centro_destino_id") || undefined,
   };
 }
 
@@ -107,6 +109,8 @@ export async function createOT(
       estado: "solicitada",
       observaciones: d.observaciones,
       capturado_por: callerId,
+      centro_origen_id: d.centro_origen_id ?? null,
+      centro_destino_id: d.centro_destino_id ?? null,
     })
     .select("id")
     .single();

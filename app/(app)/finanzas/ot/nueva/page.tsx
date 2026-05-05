@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { empresasDondeCreaOC, obtenerVinculos } from "@/lib/auth/permisos";
+import { listarCentrosActivos } from "@/lib/centros/listar";
 import { createClient } from "@/lib/supabase/server";
 
 import { OTForm } from "../ot-form";
@@ -16,6 +17,7 @@ export default async function NuevaOTPage({
   if (empresasOrigenIds.length === 0) redirect("/finanzas/ot");
 
   const supabase = createClient();
+  const centros = await listarCentrosActivos();
   const [
     { data: empresas },
     { data: servicios },
@@ -76,6 +78,7 @@ export default async function NuevaOTPage({
         proyectos={proyectos ?? []}
         empresasOrigenIds={empresasOrigenIds}
         solicitudOrigenId={searchParams?.solicitud_origen ?? null}
+        centros={centros}
       />
     </div>
   );

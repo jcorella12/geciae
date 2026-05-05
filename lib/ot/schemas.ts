@@ -48,6 +48,18 @@ export const OTFormSchema = z
       .optional()
       .or(z.literal(""))
       .transform((v) => (v ? v : null)),
+    centro_origen_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    centro_destino_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
   })
   .refine((d) => d.empresa_origen_id !== d.empresa_destino_id, {
     message: "Empresa origen y destino deben ser distintas.",

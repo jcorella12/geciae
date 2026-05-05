@@ -5,37 +5,14 @@ import {
   obtenerVinculos,
   puedeAccederCentros,
 } from "@/lib/auth/permisos";
+import { listarCentrosActivos } from "@/lib/centros/listar";
 import { createClient } from "@/lib/supabase/server";
+
+import { ListaConBulk } from "./bulk-form";
 
 export const dynamic = "force-dynamic";
 
-const codigoColor: Record<string, string> = {
-  PSE: "bg-pse",
-  CIAE: "bg-ciae",
-  IED: "bg-ied",
-  LIMSON: "bg-limson",
-};
-
-const ETIQUETA_TIPO: Record<string, string> = {
-  oc: "Orden de compra",
-  ot: "Orden de trabajo inter-co",
-  cfdi: "CFDI",
-  gasto_recurrente: "Gasto recurrente",
-};
-
-const COLOR_TIPO: Record<string, string> = {
-  oc: "bg-blue-100 text-blue-700",
-  ot: "bg-violet-100 text-violet-700",
-  cfdi: "bg-emerald-100 text-emerald-700",
-  gasto_recurrente: "bg-amber-100 text-amber-700",
-};
-
-const URL_TIPO: Record<string, (id: string) => string> = {
-  oc: (id) => `/finanzas/oc/${id}`,
-  ot: (id) => `/finanzas/ot/${id}`,
-  cfdi: (id) => `/finanzas/cfdi/${id}`,
-  gasto_recurrente: (id) => `/finanzas/gastos-recurrentes/${id}`,
-};
+// Etiquetas y colores se usan en bulk-form.tsx (cliente).
 
 function fmt(n: number) {
   return `$${Number(n).toLocaleString("es-MX", {
@@ -64,6 +41,7 @@ export default async function LimpiezaCentrosPage({
   if (!puedeAccederCentros(vinculos)) redirect("/mi-dia");
 
   const supabase = createClient();
+  const centros = await listarCentrosActivos();
 
   const { data: rows } = await (
     supabase.from("v_transacciones_sin_centro" as never) as unknown as {
@@ -189,89 +167,29 @@ export default async function LimpiezaCentrosPage({
         </button>
       </form>
 
-      {/* Tabla */}
+      {/* Tabla con bulk selection */}
       <section>
         <h2 className="mb-3 text-base font-semibold">
           Transacciones ({lista.length})
         </h2>
-        <div className="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
-          <table className="w-full text-sm">
-            <thead className="border-b border-border bg-secondary/50">
-              <tr className="text-left">
-                <th className="px-4 py-2 font-medium">Tipo</th>
-                <th className="px-4 py-2 font-medium">Empresa</th>
-                <th className="px-4 py-2 font-medium">Número</th>
-                <th className="px-4 py-2 font-medium">Fecha</th>
-                <th className="px-4 py-2 text-right font-medium">Monto</th>
-                <th className="px-4 py-2 font-medium">Estado</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {lista.map((r) => {
-                const emp = empresaPorId.get(r.empresa_id);
-                const url = URL_TIPO[r.tipo]
-                  ? URL_TIPO[r.tipo](r.id)
-                  : null;
-                return (
-                  <tr key={r.tipo + r.id} className="hover:bg-secondary/30">
-                    <td className="px-4 py-2">
-                      <span
-                        className={`inline-flex rounded-full px-2 py-0.5 text-xs ${COLOR_TIPO[r.tipo] ?? "bg-secondary"}`}
-                      >
-                        {ETIQUETA_TIPO[r.tipo] ?? r.tipo}
-                      </span>
-                    </td>
-                    <td className="px-4 py-2">
-                      <div className="flex items-center gap-2 text-xs">
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${
-                            codigoColor[emp?.codigo ?? ""] ??
-                            "bg-muted-foreground"
-                          }`}
-                        />
-                        <span className="font-medium">{emp?.codigo ?? "?"}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2 font-mono text-xs">
-                      {url ? (
-                        <Link
-                          href={url}
-                          className="hover:text-primary hover:underline"
-                        >
-                          {r.numero ?? r.id.slice(0, 8)}
-                        </Link>
-                      ) : (
-                        (r.numero ?? r.id.slice(0, 8))
-                      )}
-                    </td>
-                    <td className="px-4 py-2 font-mono text-xs">{r.fecha ?? "—"}</td>
-                    <td className="px-4 py-2 text-right font-mono text-xs tabular-nums">
-                      {r.monto != null ? fmt(Number(r.monto)) : "—"}
-                    </td>
-                    <td className="px-4 py-2 text-xs text-muted-foreground">
-                      {r.estado}
-                    </td>
-                  </tr>
-                );
-              })}
-              {lista.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="px-4 py-8 text-center text-sm text-muted-foreground"
-                  >
-                    Sin transacciones pendientes. ✓ Buen trabajo.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        <ListaConBulk
+          rows={lista.map((r) => ({
+            tipo: r.tipo,
+            id: r.id,
+            empresa_id: r.empresa_id,
+            numero: r.numero,
+            monto: r.monto != null ? Number(r.monto) : null,
+            alias:
+              empresaPorId.get(r.empresa_id)?.codigo ??
+              undefined,
+          }))}
+          centros={centros}
+        />
       </section>
 
       <p className="text-xs text-muted-foreground">
-        Tip: ordena los más altos primero para alto impacto. La asignación
-        bulk con checkboxes está pendiente para iteración futura.
+        Tip: filtra primero por empresa para que la barra bulk pueda asignar a
+        un centro. Los más altos primero para mayor impacto.
       </p>
     </div>
   );

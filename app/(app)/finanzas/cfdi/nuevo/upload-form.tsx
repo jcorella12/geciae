@@ -4,8 +4,10 @@ import { Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
+import { CentroSelector } from "@/components/centros/centro-selector";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import type { CentroOpcion } from "@/lib/centros/listar";
 import { parseCfdiXml, type CfdiParsed } from "@/lib/cfdi/parser";
 
 import { subirCfdi } from "../actions";
@@ -53,12 +55,14 @@ export function UploadCfdiForm({
   clientes,
   ocs,
   ots,
+  centros = [],
 }: {
   empresas: Empresa[];
   proveedores: ProveedorOpcion[];
   clientes: ClienteOpcion[];
   ocs: OcOpcion[];
   ots: OtOpcion[];
+  centros?: CentroOpcion[];
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
@@ -354,6 +358,32 @@ export function UploadCfdiForm({
                 name="es_emitido"
                 value={String(esEmitido)}
               />
+            </div>
+          )}
+
+          {/* Centro de costo/utilidad (Sprint 5.5.3) */}
+          {empresaId && centros.length > 0 && (
+            <div className="rounded-md border border-border bg-card p-4">
+              <p className="text-base font-semibold">Centro</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Si es CFDI emitido (ingreso) elige un CU. Si es recibido (gasto)
+                elige un CC.
+              </p>
+              <div className="mt-3">
+                <CentroSelector
+                  id="centro_id"
+                  label="Centro asignado"
+                  empresaId={empresaId}
+                  filtroTipo={
+                    esEmitido === true
+                      ? "utilidad"
+                      : esEmitido === false
+                        ? "costo"
+                        : undefined
+                  }
+                  centros={centros}
+                />
+              </div>
             </div>
           )}
 

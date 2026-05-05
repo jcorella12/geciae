@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { CentroSelector } from "@/components/centros/centro-selector";
 import { QuickCreatePicker } from "@/components/shared/quick-create-picker";
 import {
   QuickCreateServicioForm,
@@ -11,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { CentroOpcion } from "@/lib/centros/listar";
 import { calcularTotalesOT } from "@/lib/ot/schemas";
 import { initialOTState, MARGEN_DEFAULT } from "@/lib/ot/state";
 
@@ -59,6 +61,7 @@ export function OTForm({
   proyectos,
   empresasOrigenIds,
   solicitudOrigenId = null,
+  centros = [],
 }: {
   empresas: Empresa[];
   servicios: Servicio[];
@@ -66,6 +69,8 @@ export function OTForm({
   empresasOrigenIds: string[];
   /** Si la OT se crea desde una solicitud, ID — se vincula post-creación. */
   solicitudOrigenId?: string | null;
+  /** Centros activos del usuario para selector origen+destino. */
+  centros?: CentroOpcion[];
 }) {
   const [state, formAction] = useFormState(createOT, initialOTState);
   const [origenId, setOrigenId] = useState("");
@@ -232,6 +237,40 @@ export function OTForm({
           </div>
         </div>
       </section>
+
+      {/* Centros origen + destino (Sprint 5.5.3) */}
+      {(origenId || destinoId) && centros.length > 0 && (
+        <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <h2 className="text-base font-semibold">Centros (opcional)</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Origen = CC en empresa que paga. Destino = CU en empresa que cobra.
+            Permite que el reporte por centro refleje correctamente este
+            inter-co.
+          </p>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+            {origenId && (
+              <CentroSelector
+                id="centro_origen_id"
+                label="Centro origen"
+                empresaId={origenId}
+                filtroTipo="costo"
+                centros={centros}
+                hint="CC operativo o servicio_compartido de la empresa que paga."
+              />
+            )}
+            {destinoId && (
+              <CentroSelector
+                id="centro_destino_id"
+                label="Centro destino"
+                empresaId={destinoId}
+                filtroTipo="utilidad"
+                centros={centros}
+                hint="CU de la empresa que cobra."
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Servicio + proyecto */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">

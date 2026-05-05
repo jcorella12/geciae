@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { obtenerVinculos } from "@/lib/auth/permisos";
+import { listarCentrosActivos } from "@/lib/centros/listar";
 import { createClient } from "@/lib/supabase/server";
 
 import { UploadCfdiForm } from "./upload-form";
@@ -9,6 +10,7 @@ export default async function NuevoCfdiPage() {
   const supabase = createClient();
   const v = await obtenerVinculos();
   const empresasUser = v.map((vi) => vi.empresa_id);
+  const centros = await listarCentrosActivos();
 
   const [
     { data: empresas },
@@ -77,6 +79,7 @@ export default async function NuevoCfdiPage() {
         clientes={(clientes ?? []) as never}
         ocs={(ocs ?? []) as never}
         ots={(ots ?? []) as never}
+        centros={centros}
       />
     </div>
   );
