@@ -67,7 +67,7 @@ export default async function ProyectosPage({
   let query = supabase
     .from("proyectos")
     .select(
-      "id, codigo, nombre, tipo, estado, fecha_inicio_planeado, fecha_fin_planeado, monto_contratado, monto_facturado, presupuesto_costo, costo_real, semaforo, empresa_id, empresas(codigo, nombre_comercial), clientes(razon_social, nombre_comercial)",
+      "id, codigo, nombre, tipo, estado, fecha_inicio_planeado, fecha_fin_planeado, monto_contratado, monto_facturado, presupuesto_costo, costo_real, semaforo, empresa_id, empresas!proyectos_empresa_id_fkey(codigo, nombre_comercial), clientes(razon_social, nombre_comercial)",
       { count: "exact" },
     )
     .in("empresa_id", filtro.empresasIds)
