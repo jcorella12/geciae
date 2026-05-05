@@ -578,6 +578,47 @@ export async function subirArchivoEdocta(
     return { ok: false, error: `Error al subir al bucket: ${upErr.message}` };
   }
 
+  const observaciones =
+    formato === "pdf"
+      ? "Subido manualmente · pendiente extracción IA"
+      : "Subido manualmente · pendiente procesar movimientos";
+
+  // Idempotencia: si ya existe un estado para (cuenta, periodo), reemplazamos
+  // url_archivo y reset de extracción para que el usuario pueda re-leer.
+  const { data: existente } = await supabase
+    .from("estados_cuenta_bancarios")
+    .select("id")
+    .eq("cuenta_id", cuentaId)
+    .eq("periodo_inicio", periodoInicio)
+    .eq("periodo_fin", periodoFin)
+    .maybeSingle();
+
+  if (existente?.id) {
+    const { error: updErr } = await supabase
+      .from("estados_cuenta_bancarios")
+      .update({
+        formato,
+        url_archivo: bucketPath,
+        saldo_final: 0,
+        observaciones: `${observaciones} · re-subido ${ahora.toISOString()}`,
+      })
+      .eq("id", existente.id);
+    if (updErr) {
+      return {
+        ok: false,
+        error: `Error al reemplazar archivo del periodo: ${updErr.message}`,
+      };
+    }
+    revalidatePath(`/finanzas/tesoreria/cuentas/${cuentaId}`);
+    return {
+      ok: true,
+      error: null,
+      estadoId: existente.id,
+      formato,
+      filename: file.name,
+    };
+  }
+
   const { data: nuevo, error: insErr } = await supabase
     .from("estados_cuenta_bancarios")
     .insert({
@@ -588,10 +629,7 @@ export async function subirArchivoEdocta(
       saldo_final: 0,
       formato,
       url_archivo: bucketPath,
-      observaciones:
-        formato === "pdf"
-          ? "Subido manualmente · pendiente extracción IA"
-          : "Subido manualmente · pendiente procesar movimientos",
+      observaciones,
     })
     .select("id")
     .single();
