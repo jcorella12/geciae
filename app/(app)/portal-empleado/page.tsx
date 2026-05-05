@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { obtenerVinculos } from "@/lib/auth/permisos";
+
+import { DescargaReciboButtons } from "./descarga-recibo";
 import {
   COLOR_TIPO_BONO,
   ETIQUETA_TIPO_BONO,
@@ -124,11 +126,11 @@ export default async function PortalEmpleadoPage({
   // Recibos del año
   const { data: recibos } = await supabase
     .from("nomina_recibos")
-    .select("id, fecha_pago, total_neto, total_percepciones, total_deducciones, periodicidad, tipo, url_xml")
+    .select("id, fecha_pago, total_neto, total_percepciones, total_deducciones, periodicidad, tipo, url_xml, url_pdf")
     .eq("empleado_id", empleadoId)
     .gte("fecha_pago", `${anio}-01-01`)
     .lt("fecha_pago", `${anio + 1}-01-01`)
-    .order("fecha_pago", { ascending: true });
+    .order("fecha_pago", { ascending: false });
 
   // Bonos del año
   const { data: bonosAnio } = await supabase
@@ -344,6 +346,7 @@ export default async function PortalEmpleadoPage({
                   <th className="px-4 py-2 text-right font-medium">Percepciones</th>
                   <th className="px-4 py-2 text-right font-medium">Deducciones</th>
                   <th className="px-4 py-2 text-right font-medium">Neto</th>
+                  <th className="px-4 py-2 text-right font-medium">Descarga</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -362,6 +365,12 @@ export default async function PortalEmpleadoPage({
                     </td>
                     <td className="px-4 py-2 text-right font-mono text-xs tabular-nums text-emerald-700 font-semibold">
                       {fmt(Number(r.total_neto))}
+                    </td>
+                    <td className="px-4 py-2 text-right">
+                      <DescargaReciboButtons
+                        reciboId={r.id}
+                        tienePdf={Boolean(r.url_pdf)}
+                      />
                     </td>
                   </tr>
                 ))}

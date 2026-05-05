@@ -321,3 +321,30 @@ export async function obtenerUrlXml(
   await registrarAccesoRecibo(recibo.empleado_id, reciboId, "descargar_xml");
   return { ok: true, url: signed.signedUrl };
 }
+
+/** Devuelve URL signed de descarga del PDF (si existe). */
+export async function obtenerUrlPdf(
+  reciboId: string,
+): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+  const supabase = createClient();
+  const { data: recibo } = await supabase
+    .from("nomina_recibos")
+    .select("url_pdf, empleado_id")
+    .eq("id", reciboId)
+    .maybeSingle();
+  if (!recibo) return { ok: false, error: "Recibo no encontrado." };
+  if (!recibo.url_pdf)
+    return { ok: false, error: "Este recibo no tiene PDF cargado." };
+
+  const { data: signed, error } = await supabase.storage
+    .from("nomina-xmls")
+    .createSignedUrl(recibo.url_pdf, 60 * 5);
+  if (error || !signed)
+    return {
+      ok: false,
+      error: error?.message ?? "No se pudo generar URL.",
+    };
+
+  await registrarAccesoRecibo(recibo.empleado_id, reciboId, "descargar_pdf");
+  return { ok: true, url: signed.signedUrl };
+}
