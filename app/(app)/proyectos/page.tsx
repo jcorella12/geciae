@@ -27,7 +27,12 @@ const fmtMxn = new Intl.NumberFormat("es-MX", {
 export default async function ProyectosPage({
   searchParams,
 }: {
-  searchParams: { q?: string; estado?: string; empresa?: string };
+  searchParams: {
+    q?: string;
+    estado?: string;
+    empresa?: string;
+    marca?: string;
+  };
 }) {
   const supabase = createClient();
   const vinculos = await obtenerVinculos();
@@ -81,6 +86,8 @@ export default async function ProyectosPage({
     query = query.eq("estado", searchParams.estado as EstadoP);
   }
   if (searchParams.empresa) query = query.eq("empresa_id", searchParams.empresa);
+  if (searchParams.marca)
+    query = query.eq("marca_visible_id", searchParams.marca);
   if (q) {
     query = query.or(`codigo.ilike.%${q}%,nombre.ilike.%${q}%`);
   }
@@ -186,6 +193,7 @@ export default async function ProyectosPage({
         currentQ={q}
         currentEstado={searchParams.estado ?? ""}
         currentEmpresa={searchParams.empresa ?? ""}
+        currentMarca={searchParams.marca ?? ""}
       />
     </div>
   );

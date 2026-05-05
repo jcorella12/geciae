@@ -107,12 +107,14 @@ export function ProyectosTable({
   currentQ,
   currentEstado,
   currentEmpresa,
+  currentMarca = "",
 }: {
   proyectos: Proyecto[];
   empresas: Empresa[];
   currentQ: string;
   currentEstado: string;
   currentEmpresa: string;
+  currentMarca?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -139,7 +141,7 @@ export function ProyectosTable({
     startTransition(() => router.replace(`/proyectos?${params.toString()}`));
   };
 
-  const haFiltros = currentQ || currentEstado || currentEmpresa;
+  const haFiltros = currentQ || currentEstado || currentEmpresa || currentMarca;
 
   return (
     <div className="space-y-4">
@@ -176,6 +178,19 @@ export function ProyectosTable({
           {empresas.map((e) => (
             <option key={e.id} value={e.id}>
               {e.codigo} — {e.nombre_comercial ?? e.razon_social}
+            </option>
+          ))}
+        </select>
+        <select
+          value={currentMarca}
+          onChange={(e) => setParam("marca", e.target.value)}
+          className="flex h-9 rounded-md border border-input bg-background px-3 text-[13px]"
+          title="Filtrar por marca visible al cliente"
+        >
+          <option value="">Todas las marcas</option>
+          {empresas.map((e) => (
+            <option key={e.id} value={e.id}>
+              Marca {e.codigo}
             </option>
           ))}
         </select>
