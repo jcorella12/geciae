@@ -110,7 +110,7 @@ export default async function ProyectoDetailPage({
   const { data: p } = await supabase
     .from("proyectos")
     .select(
-      "*, empresas(codigo, razon_social, nombre_comercial), clientes(id, razon_social, rfc)",
+      "*, empresas!proyectos_empresa_id_fkey(codigo, razon_social, nombre_comercial), marca:empresas!proyectos_marca_visible_id_fkey(codigo, razon_social, nombre_comercial), clientes(id, razon_social, rfc)",
     )
     .eq("id", params.id)
     .maybeSingle();
@@ -427,10 +427,15 @@ export default async function ProyectoDetailPage({
     },
   ];
 
-  const empresa = p.empresas as
+  const empresa = p.empresas as unknown as
     | { codigo: string; razon_social: string; nombre_comercial: string | null }
     | null;
-  const cliente = p.clientes as
+  const marca = (p as { marca?: unknown }).marca as
+    | { codigo: string; razon_social: string; nombre_comercial: string | null }
+    | null;
+  const marcaDifiere =
+    marca && empresa && marca.codigo !== empresa.codigo;
+  const cliente = p.clientes as unknown as
     | { id: string; razon_social: string; rfc: string }
     | null;
 
@@ -452,7 +457,7 @@ export default async function ProyectoDetailPage({
                 {p.nombre}
               </h1>
             </div>
-            <p className="mt-1 flex items-center gap-2 text-[13px] text-ink-3">
+            <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-ink-3">
               <code className="font-mono">{p.codigo}</code>
               <span>·</span>
               <span className="inline-flex items-center gap-1.5">
@@ -464,6 +469,23 @@ export default async function ProyectoDetailPage({
                 />
                 {empresa?.nombre_comercial ?? empresa?.razon_social}
               </span>
+              {marcaDifiere && marca && (
+                <>
+                  <span>·</span>
+                  <span
+                    className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] text-amber-800"
+                    title={`Operado por ${empresa?.codigo} bajo marca ${marca.codigo}`}
+                  >
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${
+                        empresaCodigoColor[marca.codigo] ??
+                        "bg-muted-foreground"
+                      }`}
+                    />
+                    Marca: {marca.codigo}
+                  </span>
+                </>
+              )}
               {cliente?.razon_social && (
                 <>
                   <span>·</span>

@@ -55,6 +55,8 @@ export type ProyectoFormDefaults = {
   presupuesto_costo?: number | null;
   capacidad_kwp?: number | null;
   observaciones?: string | null;
+  marca_visible_id?: string | null;
+  uniforme_marca?: string | null;
 };
 
 type Props = {
@@ -83,6 +85,21 @@ export function ProyectoForm({
   const [clienteId, setClienteId] = useState(defaults?.cliente_id ?? "");
   const [codigo, setCodigo] = useState(defaults?.codigo ?? "");
   const [tipo, setTipo] = useState(defaults?.tipo ?? "");
+  const [marcaVisibleId, setMarcaVisibleId] = useState(
+    defaults?.marca_visible_id ?? defaults?.empresa_id ?? "",
+  );
+
+  // Si la empresa cambia y la marca no se ha tocado manualmente,
+  // sincronizar marca con empresa.
+  useEffect(() => {
+    if (!empresaId) return;
+    if (!marcaVisibleId || marcaVisibleId === defaults?.empresa_id) {
+      setMarcaVisibleId(empresaId);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empresaId]);
+
+  const marcaDifiere = marcaVisibleId && marcaVisibleId !== empresaId;
 
   // Auto-sugerir código al cambiar empresa (solo si no estamos editando y código vacío).
   useEffect(() => {
@@ -150,6 +167,65 @@ export function ProyectoForm({
             {fieldErr("empresa_id")}
           </p>
         )}
+      </section>
+
+      {/* Marca visible al cliente */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Marca visible al cliente</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Logo, nombre comercial y datos de contacto que aparecerán en
+          cotizaciones, contratos y reportes. Por default es la empresa
+          ejecutora.
+        </p>
+        <fieldset className="mt-4 grid grid-cols-2 gap-2">
+          {empresas.map((e) => (
+            <label
+              key={e.id}
+              className="flex cursor-pointer items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm hover:bg-secondary"
+            >
+              <input
+                type="radio"
+                name="marca_visible_id"
+                value={e.id}
+                checked={marcaVisibleId === e.id}
+                onChange={() => setMarcaVisibleId(e.id)}
+                className="h-4 w-4"
+              />
+              <span
+                className={`inline-block h-2 w-2 rounded-full ${
+                  empresaCodigoColor[e.codigo] ?? "bg-muted-foreground"
+                }`}
+              />
+              <span className="truncate">
+                {e.nombre_comercial ?? e.razon_social}
+              </span>
+            </label>
+          ))}
+        </fieldset>
+        {marcaDifiere && (
+          <p className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+            ⚠ Este proyecto será ejecutado por{" "}
+            <strong>
+              {empresas.find((e) => e.id === empresaId)?.codigo ?? "?"}
+            </strong>{" "}
+            pero el cliente verá marca{" "}
+            <strong>
+              {empresas.find((e) => e.id === marcaVisibleId)?.codigo ?? "?"}
+            </strong>
+            . Asegúrate de que el cliente esté alineado.
+          </p>
+        )}
+        <div className="mt-4 space-y-1">
+          <Label htmlFor="uniforme_marca">Uniforme cuadrilla (opcional)</Label>
+          <Input
+            id="uniforme_marca"
+            name="uniforme_marca"
+            type="text"
+            maxLength={60}
+            defaultValue={defaults?.uniforme_marca ?? ""}
+            placeholder="PSE / Limson / Sin uniforme"
+          />
+        </div>
       </section>
 
       {/* Cliente */}

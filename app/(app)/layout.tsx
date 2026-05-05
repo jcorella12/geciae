@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { PageviewTracker } from "@/components/shared/pageview-tracker";
 import { PeekProvider } from "@/components/shared/peek-provider";
+import { VersionBadge } from "@/components/shared/version-badge";
 
 // Todo el grupo (app) requiere sesión y consulta Supabase en cada request,
 // por lo que no se puede prerenderizar estáticamente.
@@ -90,6 +91,7 @@ export default async function AppLayout({
           <main className="flex-1 overflow-y-auto bg-bg-2">{children}</main>
         </div>
       </div>
+      <VersionBadge />
     </PeekProvider>
   );
 }

@@ -27,6 +27,8 @@ function parseFormData(formData: FormData) {
     presupuesto_costo: formData.get("presupuesto_costo") || undefined,
     capacidad_kwp: formData.get("capacidad_kwp") || undefined,
     observaciones: formData.get("observaciones") || undefined,
+    marca_visible_id: formData.get("marca_visible_id") || undefined,
+    uniforme_marca: formData.get("uniforme_marca") || undefined,
   };
 }
 
@@ -78,6 +80,10 @@ export async function createProyecto(
       presupuesto_costo: d.presupuesto_costo,
       capacidad_kwp: d.capacidad_kwp,
       observaciones: d.observaciones,
+      // Marca visible: si no se eligió, default = empresa que opera.
+      // Cast porque types se regenerarán tras migración 20260530000000.
+      marca_visible_id: (d.marca_visible_id ?? d.empresa_id) as never,
+      uniforme_marca: d.uniforme_marca as never,
       activo: true,
     })
     .select("id")
@@ -131,6 +137,8 @@ export async function updateProyecto(
       presupuesto_costo: d.presupuesto_costo,
       capacidad_kwp: d.capacidad_kwp,
       observaciones: d.observaciones,
+      marca_visible_id: (d.marca_visible_id ?? d.empresa_id) as never,
+      uniforme_marca: d.uniforme_marca as never,
       updated_at: new Date().toISOString(),
     })
     .eq("id", proyectoId);

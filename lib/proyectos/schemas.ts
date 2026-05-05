@@ -81,6 +81,19 @@ export const ProyectoFormSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
+  marca_visible_id: z
+    .string()
+    .uuid("Marca inválida")
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
+  uniforme_marca: z
+    .string()
+    .trim()
+    .max(60)
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
 });
 
 export type ProyectoFormData = z.output<typeof ProyectoFormSchema>;
