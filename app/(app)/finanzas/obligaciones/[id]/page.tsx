@@ -282,6 +282,14 @@ export default async function ObligacionDetallePage({
         <h2 className="text-[13.5px] font-semibold">Información</h2>
         <dl className="mt-3 grid grid-cols-1 gap-3 text-[12.5px] sm:grid-cols-2">
           <Field
+            label="Línea de captura"
+            value={
+              ((o as unknown as { linea_captura: string | null })
+                .linea_captura as string | null) ?? "—"
+            }
+            mono
+          />
+          <Field
             label="Número de operación"
             value={(o.numero_operacion as string | null) ?? "—"}
             mono
@@ -303,6 +311,33 @@ export default async function ObligacionDetallePage({
             label="Fecha pago"
             value={fmtFecha(o.fecha_pago as string | null)}
           />
+          <div>
+            <dt className="text-[10.5px] uppercase tracking-wider text-ink-3">
+              Cumplimiento
+            </dt>
+            <dd className="mt-0.5">
+              {(() => {
+                const fp = o.fecha_pago as string | null;
+                if (!fp) {
+                  return (
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-700">
+                      Sin pago
+                    </span>
+                  );
+                }
+                const enTiempo = fp <= (o.fecha_vencimiento as string);
+                return enTiempo ? (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800">
+                    <CheckCircle2 className="h-2.5 w-2.5" /> En tiempo
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-medium text-amber-800">
+                    <AlertTriangle className="h-2.5 w-2.5" /> Extemporánea
+                  </span>
+                );
+              })()}
+            </dd>
+          </div>
           <div className="sm:col-span-2">
             <dt className="text-[10.5px] uppercase tracking-wider text-ink-3">
               Observaciones

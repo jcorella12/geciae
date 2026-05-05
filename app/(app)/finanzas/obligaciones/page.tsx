@@ -97,6 +97,8 @@ export default async function ObligacionesSatPage({
   const estado = sp.estado ?? "";
   const tipo = sp.tipo ?? "";
 
+  // v_obligaciones_lista no tiene linea_captura ni monto_pagado;
+  // hacemos lookup paralelo a la tabla base por los ids visibles.
   let query = supabase
     .from("v_obligaciones_lista")
     .select("*")
@@ -110,6 +112,47 @@ export default async function ObligacionesSatPage({
 
   const { data, error } = await query;
   const lista = (data ?? []) as Array<Record<string, unknown>>;
+
+  // Lookup de linea_captura, monto_pagado, fecha_pago, url_acuse, url_comprobante
+  // (campos que no están en la vista) por los ids visibles.
+  const ids = lista.map((l) => l.id as string);
+  const detalleMap = new Map<
+    string,
+    {
+      linea_captura: string | null;
+      monto_pagado: number | null;
+      fecha_pago: string | null;
+      url_acuse: string | null;
+      url_comprobante: string | null;
+    }
+  >();
+  if (ids.length > 0) {
+    // linea_captura es columna nueva (migración 20260608), aún no en types.
+    const { data: det } = (await supabase
+      .from("obligaciones_sat")
+      .select(
+        "id, linea_captura, monto_pagado, fecha_pago, url_acuse, url_comprobante" as never,
+      )
+      .in("id", ids)) as unknown as {
+      data: Array<{
+        id: string;
+        linea_captura: string | null;
+        monto_pagado: number | null;
+        fecha_pago: string | null;
+        url_acuse: string | null;
+        url_comprobante: string | null;
+      }> | null;
+    };
+    for (const d of det ?? []) {
+      detalleMap.set(d.id, {
+        linea_captura: d.linea_captura,
+        monto_pagado: d.monto_pagado,
+        fecha_pago: d.fecha_pago,
+        url_acuse: d.url_acuse,
+        url_comprobante: d.url_comprobante,
+      });
+    }
+  }
 
   const { data: empresas } = await supabase
     .from("empresas")
@@ -295,14 +338,20 @@ export default async function ObligacionesSatPage({
               <TableHead>Tipo</TableHead>
               <TableHead>Periodo</TableHead>
               <TableHead>Vencimiento</TableHead>
+              <TableHead>Línea captura</TableHead>
               <TableHead>Estado</TableHead>
               <TableHead align="right">Monto</TableHead>
+              <TableHead>Docs</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {lista.length === 0 ? (
               <TableRow interactive={false}>
-                <TableCell className="text-center text-sm text-ink-3" align="center">
+                <TableCell
+                  colSpan={8}
+                  className="text-center text-sm text-ink-3"
+                  align="center"
+                >
                   Sin obligaciones para los filtros seleccionados.
                 </TableCell>
               </TableRow>
@@ -312,6 +361,14 @@ export default async function ObligacionesSatPage({
                 const dias = r.dias_al_vencer as number;
                 const estadoEf = r.estado_efectivo as string;
                 const venc = r.fecha_vencimiento as string;
+                const det = detalleMap.get(r.id as string);
+                const fechaPago = det?.fecha_pago ?? null;
+                const enTiempo =
+                  fechaPago != null && fechaPago <= venc;
+                const monto =
+                  det?.monto_pagado != null
+                    ? det.monto_pagado
+                    : (r.monto_calculado as number | null);
                 return (
                   <TableRow
                     key={r.id as string}
@@ -367,6 +424,23 @@ export default async function ObligacionesSatPage({
                                 : `En ${dias} días`}
                           </p>
                         )}
+                      {fechaPago && (
+                        <p
+                          className={`mt-0.5 inline-flex items-center gap-0.5 text-[10px] ${
+                            enTiempo ? "text-emerald-700" : "text-amber-700"
+                          }`}
+                        >
+                          {enTiempo ? (
+                            <CheckCircle2 className="h-2.5 w-2.5" />
+                          ) : (
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                          )}
+                          {enTiempo ? "En tiempo" : "Extemporánea"}
+                        </p>
+                      )}
+                    </TableCell>
+                    <TableCell className="font-mono text-[10.5px] text-ink-3">
+                      {det?.linea_captura ?? "—"}
                     </TableCell>
                     <TableCell>
                       <span
@@ -381,9 +455,28 @@ export default async function ObligacionesSatPage({
                       </span>
                     </TableCell>
                     <TableCell align="right" mono className="text-xs">
-                      {r.monto_calculado != null
-                        ? fmtMxn.format(Number(r.monto_calculado))
-                        : "—"}
+                      {monto != null ? fmtMxn.format(Number(monto)) : "—"}
+                    </TableCell>
+                    <TableCell className="text-[10.5px] text-ink-3">
+                      <span className="inline-flex items-center gap-1">
+                        {det?.url_acuse && (
+                          <span
+                            className="inline-flex h-4 w-4 items-center justify-center rounded bg-emerald-100 text-[9px] font-bold text-emerald-700"
+                            title="Acuse SAT disponible"
+                          >
+                            A
+                          </span>
+                        )}
+                        {det?.url_comprobante && (
+                          <span
+                            className="inline-flex h-4 w-4 items-center justify-center rounded bg-blue-100 text-[9px] font-bold text-blue-700"
+                            title="Comprobante de pago disponible"
+                          >
+                            P
+                          </span>
+                        )}
+                        {!det?.url_acuse && !det?.url_comprobante && "—"}
+                      </span>
                     </TableCell>
                   </TableRow>
                 );
