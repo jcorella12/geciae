@@ -1211,6 +1211,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "centros_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -1352,6 +1359,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "centros_movimientos_cfdi_id_fkey"
             columns: ["cfdi_id"]
             isOneToOne: false
@@ -1482,6 +1496,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "centros_reglas_reparto_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "centros_reglas_reparto_centro_origen_id_fkey"
             columns: ["centro_origen_id"]
             isOneToOne: false
@@ -1493,6 +1514,13 @@ export type Database = {
             columns: ["centro_origen_id"]
             isOneToOne: false
             referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_reglas_reparto_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
             referencedColumns: ["centro_id"]
           },
           {
@@ -1665,6 +1693,13 @@ export type Database = {
             columns: ["centro_id"]
             isOneToOne: false
             referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "cfdi_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
             referencedColumns: ["centro_id"]
           },
           {
@@ -3216,6 +3251,13 @@ export type Database = {
             referencedRelation: "v_centros_balance"
             referencedColumns: ["centro_id"]
           },
+          {
+            foreignKeyName: "empresas_centro_default_gastos_id_fkey"
+            columns: ["centro_default_gastos_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
         ]
       }
       encuestas_satisfaccion: {
@@ -3802,6 +3844,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "gastos_recurrentes_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "gastos_recurrentes_cfdi_relacionado_id_fkey"
             columns: ["cfdi_relacionado_id"]
             isOneToOne: false
@@ -4278,6 +4327,198 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "productos_serie"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      levantamiento_pasos: {
+        Row: {
+          estado: Database["public"]["Enums"]["estado_paso_levantamiento"]
+          fecha_completado: string | null
+          id: string
+          levantamiento_id: string
+          nombre: string
+          numero: number
+          observaciones: string | null
+          responsable_id: string | null
+        }
+        Insert: {
+          estado?: Database["public"]["Enums"]["estado_paso_levantamiento"]
+          fecha_completado?: string | null
+          id?: string
+          levantamiento_id: string
+          nombre: string
+          numero: number
+          observaciones?: string | null
+          responsable_id?: string | null
+        }
+        Update: {
+          estado?: Database["public"]["Enums"]["estado_paso_levantamiento"]
+          fecha_completado?: string | null
+          id?: string
+          levantamiento_id?: string
+          nombre?: string
+          numero?: number
+          observaciones?: string | null
+          responsable_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "levantamiento_pasos_levantamiento_id_fkey"
+            columns: ["levantamiento_id"]
+            isOneToOne: false
+            referencedRelation: "levantamientos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      levantamientos: {
+        Row: {
+          centro_id: string | null
+          cliente_id: string | null
+          confirmado_cliente_at: string | null
+          confirmado_ingenieria_at: string | null
+          confirmado_ventas_at: string | null
+          costo_calculado: number | null
+          created_at: string | null
+          empresa_id: string
+          estado: Database["public"]["Enums"]["estado_levantamiento"]
+          fecha_propuesta: string | null
+          fecha_realizada: string | null
+          fecha_solicitud: string
+          horas_ingeniero: number | null
+          id: string
+          ingeniero_id: string | null
+          kilometraje: number | null
+          observaciones: string | null
+          oportunidad_id: string | null
+          proyecto_destino_id: string | null
+          reasignado_at: string | null
+          reasignado_por: string | null
+          resultado_descripcion: string | null
+          updated_at: string | null
+          url_informe: string | null
+          vendedor_id: string
+          viaticos: number | null
+        }
+        Insert: {
+          centro_id?: string | null
+          cliente_id?: string | null
+          confirmado_cliente_at?: string | null
+          confirmado_ingenieria_at?: string | null
+          confirmado_ventas_at?: string | null
+          costo_calculado?: number | null
+          created_at?: string | null
+          empresa_id: string
+          estado?: Database["public"]["Enums"]["estado_levantamiento"]
+          fecha_propuesta?: string | null
+          fecha_realizada?: string | null
+          fecha_solicitud?: string
+          horas_ingeniero?: number | null
+          id?: string
+          ingeniero_id?: string | null
+          kilometraje?: number | null
+          observaciones?: string | null
+          oportunidad_id?: string | null
+          proyecto_destino_id?: string | null
+          reasignado_at?: string | null
+          reasignado_por?: string | null
+          resultado_descripcion?: string | null
+          updated_at?: string | null
+          url_informe?: string | null
+          vendedor_id: string
+          viaticos?: number | null
+        }
+        Update: {
+          centro_id?: string | null
+          cliente_id?: string | null
+          confirmado_cliente_at?: string | null
+          confirmado_ingenieria_at?: string | null
+          confirmado_ventas_at?: string | null
+          costo_calculado?: number | null
+          created_at?: string | null
+          empresa_id?: string
+          estado?: Database["public"]["Enums"]["estado_levantamiento"]
+          fecha_propuesta?: string | null
+          fecha_realizada?: string | null
+          fecha_solicitud?: string
+          horas_ingeniero?: number | null
+          id?: string
+          ingeniero_id?: string | null
+          kilometraje?: number | null
+          observaciones?: string | null
+          oportunidad_id?: string | null
+          proyecto_destino_id?: string | null
+          reasignado_at?: string | null
+          reasignado_por?: string | null
+          resultado_descripcion?: string | null
+          updated_at?: string | null
+          url_informe?: string | null
+          vendedor_id?: string
+          viaticos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "levantamientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "levantamientos_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "levantamientos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "v_clientes_inactividad"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_oportunidad_id_fkey"
+            columns: ["oportunidad_id"]
+            isOneToOne: false
+            referencedRelation: "oportunidades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_proyecto_destino_id_fkey"
+            columns: ["proyecto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "proyectos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "levantamientos_proyecto_destino_id_fkey"
+            columns: ["proyecto_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_proyecto_avance"
+            referencedColumns: ["proyecto_id"]
           },
         ]
       }
@@ -4918,6 +5159,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "ordenes_compra_centro_id_fkey"
+            columns: ["centro_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "ordenes_compra_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
@@ -5140,6 +5388,13 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_destino_id_fkey"
+            columns: ["centro_destino_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "ordenes_trabajo_inter_co_centro_origen_id_fkey"
             columns: ["centro_origen_id"]
             isOneToOne: false
@@ -5151,6 +5406,13 @@ export type Database = {
             columns: ["centro_origen_id"]
             isOneToOne: false
             referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "ordenes_trabajo_inter_co_centro_origen_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
             referencedColumns: ["centro_id"]
           },
           {
@@ -7514,6 +7776,53 @@ export type Database = {
           },
         ]
       }
+      tarifas_internas: {
+        Row: {
+          activa: boolean
+          concepto: string
+          costo_unitario: number
+          created_at: string | null
+          empresa_id: string
+          id: string
+          observaciones: string | null
+          unidad: string
+          vigente_desde: string
+          vigente_hasta: string | null
+        }
+        Insert: {
+          activa?: boolean
+          concepto: string
+          costo_unitario: number
+          created_at?: string | null
+          empresa_id: string
+          id?: string
+          observaciones?: string | null
+          unidad: string
+          vigente_desde: string
+          vigente_hasta?: string | null
+        }
+        Update: {
+          activa?: boolean
+          concepto?: string
+          costo_unitario?: number
+          created_at?: string | null
+          empresa_id?: string
+          id?: string
+          observaciones?: string | null
+          unidad?: string
+          vigente_desde?: string
+          vigente_hasta?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tarifas_internas_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tickets_comentarios: {
         Row: {
           archivos_adjuntos: Json | null
@@ -8508,10 +8817,100 @@ export type Database = {
             referencedColumns: ["centro_id"]
           },
           {
+            foreignKeyName: "centros_centro_padre_id_fkey"
+            columns: ["centro_padre_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
             foreignKeyName: "centros_empresa_id_fkey"
             columns: ["empresa_id"]
             isOneToOne: false
             referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_centros_pnl: {
+        Row: {
+          anio: number | null
+          centro_id: string | null
+          codigo: string | null
+          costos_compartidos: number | null
+          costos_directos: number | null
+          empresa_id: string | null
+          ingresos: number | null
+          mes: number | null
+          nombre: string | null
+          repartos_emitidos: number | null
+          resultado_neto: number | null
+          subtipo: Database["public"]["Enums"]["subtipo_centro"] | null
+          tipo: Database["public"]["Enums"]["tipo_centro"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_centros_reparto_mensual: {
+        Row: {
+          anio: number | null
+          centro_origen_codigo: string | null
+          centro_origen_id: string | null
+          centro_origen_nombre: string | null
+          empresa_destino_id: string | null
+          empresa_origen_id: string | null
+          mes: number | null
+          monto_recibido: number | null
+          regla_reparto_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "centros_empresa_id_fkey"
+            columns: ["empresa_origen_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "centros"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_balance"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_centro_id_fkey"
+            columns: ["centro_origen_id"]
+            isOneToOne: false
+            referencedRelation: "v_centros_pnl"
+            referencedColumns: ["centro_id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_empresa_id_fkey"
+            columns: ["empresa_destino_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "centros_movimientos_regla_reparto_id_fkey"
+            columns: ["regla_reparto_id"]
+            isOneToOne: false
+            referencedRelation: "centros_reglas_reparto"
             referencedColumns: ["id"]
           },
         ]
@@ -9678,11 +10077,40 @@ export type Database = {
           },
         ]
       }
+      v_vendedores_conversion: {
+        Row: {
+          anio: number | null
+          convertidos: number | null
+          costo_convertido: number | null
+          costo_no_convertido: number | null
+          costo_total: number | null
+          empresa_id: string | null
+          mes: number | null
+          no_convertidos: number | null
+          pendientes_definicion: number | null
+          tasa_conversion_pct: number | null
+          total_levantamientos: number | null
+          vendedor_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "levantamientos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       calcular_semaforo_proveedor: {
         Args: { p_proveedor_id: string }
         Returns: string
+      }
+      centro_total_mes: {
+        Args: { p_anio: number; p_centro_id: string; p_mes: number }
+        Returns: number
       }
       cfdi_kpis_filtrados: {
         Args: {
@@ -9711,6 +10139,10 @@ export type Database = {
         Args: { p_fecha_corte?: string; p_fecha_ingreso: string }
         Returns: number
       }
+      empleados_activos_empresa_mes: {
+        Args: { p_anio: number; p_empresa_id: string; p_mes: number }
+        Returns: number
+      }
       empresa_actual: { Args: never; Returns: string }
       empresas_del_usuario: { Args: never; Returns: string[] }
       generar_numero_cotizacion: {
@@ -9722,8 +10154,16 @@ export type Database = {
         Args: { p_anio: number; p_empresa_id: string }
         Returns: number
       }
+      ingresos_empresa_mes: {
+        Args: { p_anio: number; p_empresa_id: string; p_mes: number }
+        Returns: number
+      }
       limpiar_eventos_uso_antiguos: {
         Args: { p_dias?: number }
+        Returns: number
+      }
+      proyectos_activos_empresa_mes: {
+        Args: { p_anio: number; p_empresa_id: string; p_mes: number }
         Returns: number
       }
       show_limit: { Args: never; Returns: number }
@@ -9833,6 +10273,13 @@ export type Database = {
         | "pagado"
         | "cancelado"
       estado_entidad: "activo" | "inactivo" | "archivado"
+      estado_levantamiento:
+        | "programado"
+        | "en_curso"
+        | "completado"
+        | "convertido_a_venta"
+        | "no_convertido"
+        | "cancelado"
       estado_no_conformidad:
         | "abierta"
         | "en_analisis"
@@ -9876,6 +10323,11 @@ export type Database = {
         | "facturada"
         | "cobrada"
         | "cancelada"
+      estado_paso_levantamiento:
+        | "pendiente"
+        | "en_curso"
+        | "completado"
+        | "no_aplica"
       estado_prestamo:
         | "solicitado"
         | "aprobado"
@@ -10255,6 +10707,14 @@ export const Constants = {
         "cancelado",
       ],
       estado_entidad: ["activo", "inactivo", "archivado"],
+      estado_levantamiento: [
+        "programado",
+        "en_curso",
+        "completado",
+        "convertido_a_venta",
+        "no_convertido",
+        "cancelado",
+      ],
       estado_no_conformidad: [
         "abierta",
         "en_analisis",
@@ -10302,6 +10762,12 @@ export const Constants = {
         "facturada",
         "cobrada",
         "cancelada",
+      ],
+      estado_paso_levantamiento: [
+        "pendiente",
+        "en_curso",
+        "completado",
+        "no_aplica",
       ],
       estado_prestamo: [
         "solicitado",
