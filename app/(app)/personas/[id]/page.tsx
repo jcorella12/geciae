@@ -367,6 +367,7 @@ export default async function EmpleadoDetailPage({
                   empleadoId={emp.id}
                   empresaId={emp.empresa_id}
                   activo={emp.activo === true}
+                  tieneCuenta={Boolean(emp.usuario_id)}
                 />
                 <Button variant="outline" size="sm" asChild>
                   <Link href={`/personas/${emp.id}/edit`}>

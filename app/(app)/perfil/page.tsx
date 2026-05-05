@@ -65,10 +65,12 @@ export default async function PerfilPage() {
   const { data: empleado } = await supabase
     .from("empleados")
     .select(
-      "id, empresa_id, nombre_completo, numero_empleado, puesto, area, fecha_ingreso, salario_base, curp, rfc, nss, telefono, email_personal, categoria, empresas(codigo, nombre_comercial, razon_social)",
+      "id, empresa_id, nombre_completo, numero_empleado, puesto, area, fecha_ingreso, fecha_baja, motivo_baja, activo, salario_base, curp, rfc, nss, telefono, email_personal, categoria, empresas(codigo, nombre_comercial, razon_social)",
     )
     .eq("usuario_id", user.id)
     .maybeSingle();
+
+  const empleadoInactivo = empleado && empleado.activo === false;
 
   const tieneEmpleado = Boolean(empleado);
   const empresaCodigo =
@@ -277,6 +279,21 @@ export default async function PerfilPage() {
             Pídele a tu director, RH o al CEO que ejecute el botón
             <strong> &quot;Generar usuario&quot;</strong> en tu ficha de empleado en
             <code className="mx-1 font-mono">/personas</code>.
+          </p>
+        </div>
+      )}
+
+      {empleadoInactivo && (
+        <div className="rounded-md border border-rose-300 bg-rose-50 p-4 text-sm text-rose-900">
+          <p className="font-medium">Tu acceso al ERP está suspendido.</p>
+          <p className="mt-1 text-xs">
+            Tu registro de empleado está marcado como{" "}
+            <strong>baja</strong>
+            {empleado?.fecha_baja && ` desde ${empleado.fecha_baja}`}
+            {empleado?.motivo_baja && ` (${empleado.motivo_baja})`}.
+            Puedes ver y descargar tus recibos de nómina históricos pero no
+            tendrás acceso a las áreas operativas. Si crees que esto es un
+            error, contacta a tu director o RH.
           </p>
         </div>
       )}
