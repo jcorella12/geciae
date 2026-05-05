@@ -94,6 +94,38 @@ export const ProyectoFormSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
+  // Sprint 6 fundamentos
+  plantilla_tipo: z
+    .enum([
+      "solar_residencial",
+      "solar_comercial",
+      "solar_industrial",
+      "mantenimiento_solar",
+      "limpieza_solar",
+      "otro",
+    ])
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
+  modalidad_pago: z
+    .enum([
+      "contado",
+      "credito_directo",
+      "leasing",
+      "arrendamiento_puro",
+      "fideicomiso",
+      "mixto",
+      "por_definir",
+    ])
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
+  verificador_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
 });
 
 export type ProyectoFormData = z.output<typeof ProyectoFormSchema>;

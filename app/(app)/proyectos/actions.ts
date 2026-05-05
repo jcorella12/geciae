@@ -29,6 +29,9 @@ function parseFormData(formData: FormData) {
     observaciones: formData.get("observaciones") || undefined,
     marca_visible_id: formData.get("marca_visible_id") || undefined,
     uniforme_marca: formData.get("uniforme_marca") || undefined,
+    plantilla_tipo: formData.get("plantilla_tipo") || undefined,
+    modalidad_pago: formData.get("modalidad_pago") || undefined,
+    verificador_id: formData.get("verificador_id") || undefined,
   };
 }
 
@@ -80,10 +83,13 @@ export async function createProyecto(
       presupuesto_costo: d.presupuesto_costo,
       capacidad_kwp: d.capacidad_kwp,
       observaciones: d.observaciones,
-      // Marca visible: si no se eligió, default = empresa que opera.
-      // Cast porque types se regenerarán tras migración 20260530000000.
+      // Marca visible: si no se eligió, default = empresa que opera
       marca_visible_id: (d.marca_visible_id ?? d.empresa_id) as never,
       uniforme_marca: d.uniforme_marca as never,
+      // Sprint 6 fundamentos
+      plantilla_tipo: d.plantilla_tipo as never,
+      modalidad_pago: d.modalidad_pago as never,
+      verificador_id: d.verificador_id as never,
       activo: true,
     })
     .select("id")
@@ -139,6 +145,9 @@ export async function updateProyecto(
       observaciones: d.observaciones,
       marca_visible_id: (d.marca_visible_id ?? d.empresa_id) as never,
       uniforme_marca: d.uniforme_marca as never,
+      plantilla_tipo: d.plantilla_tipo as never,
+      modalidad_pago: d.modalidad_pago as never,
+      verificador_id: d.verificador_id as never,
       updated_at: new Date().toISOString(),
     })
     .eq("id", proyectoId);
