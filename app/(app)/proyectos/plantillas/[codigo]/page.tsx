@@ -81,7 +81,7 @@ export default async function PlantillaDetallePage({
     <div className="space-y-6">
       <div>
         <Link
-          href="/configuracion/plantillas"
+          href="/proyectos/plantillas"
           className="text-sm text-muted-foreground hover:text-foreground"
         >
           ← Volver a plantillas

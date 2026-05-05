@@ -86,7 +86,7 @@ export default async function PlantillasListaPage() {
                 >
                   <td className="px-4 py-3 font-mono text-xs">
                     <Link
-                      href={`/configuracion/plantillas/${p.codigo}`}
+                      href={`/proyectos/plantillas/${p.codigo}`}
                       className="hover:text-primary hover:underline"
                     >
                       {p.codigo}
@@ -94,7 +94,7 @@ export default async function PlantillasListaPage() {
                   </td>
                   <td className="px-4 py-3">
                     <Link
-                      href={`/configuracion/plantillas/${p.codigo}`}
+                      href={`/proyectos/plantillas/${p.codigo}`}
                       className="font-medium hover:text-primary hover:underline"
                     >
                       {p.nombre}

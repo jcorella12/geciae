@@ -11,7 +11,6 @@ import { cn } from "@/lib/utils";
 const tabs = [
   { href: "/configuracion/usuarios", label: "Usuarios" },
   { href: "/configuracion/centros", label: "Centros" },
-  { href: "/configuracion/plantillas", label: "Plantillas" },
   { href: "/configuracion/sgc", label: "SGC" },
   { href: "/configuracion/ia", label: "IA" },
   { href: "/configuracion/validacion", label: "Validación" },

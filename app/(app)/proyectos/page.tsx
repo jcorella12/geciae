@@ -143,6 +143,9 @@ export default async function ProyectosPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button asChild variant="outline">
+            <Link href="/proyectos/plantillas">Plantillas</Link>
+          </Button>
           <ExportCsvButton tipo="proyectos" />
           {puedeCrear && (
             <Button asChild>

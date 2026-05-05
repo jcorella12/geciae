@@ -75,8 +75,8 @@ export async function actualizarPlantilla(
     .eq("codigo", parsed.data.codigo as never);
 
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${parsed.data.codigo}`);
-  revalidatePath("/configuracion/plantillas");
+  revalidatePath(`/proyectos/plantillas/${parsed.data.codigo}`);
+  revalidatePath("/proyectos/plantillas");
   return { ok: true, error: null };
 }
 
@@ -129,7 +129,7 @@ export async function crearEtapa(
     porcentaje_facturacion: parsed.data.porcentaje_facturacion,
   } as never);
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${parsed.data.plantilla_codigo}`);
+  revalidatePath(`/proyectos/plantillas/${parsed.data.plantilla_codigo}`);
   return { ok: true, error: null };
 }
 
@@ -145,7 +145,7 @@ export async function eliminarEtapa(
     .delete()
     .eq("id", etapaId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${plantillaCodigo}`);
+  revalidatePath(`/proyectos/plantillas/${plantillaCodigo}`);
   return { ok: true, error: null };
 }
 
@@ -213,7 +213,7 @@ export async function crearTarea(
     .eq("id", parsed.data.etapa_id)
     .maybeSingle();
   if (etapa?.plantilla_codigo)
-    revalidatePath(`/configuracion/plantillas/${etapa.plantilla_codigo}`);
+    revalidatePath(`/proyectos/plantillas/${etapa.plantilla_codigo}`);
   return { ok: true, error: null };
 }
 
@@ -229,7 +229,7 @@ export async function eliminarTarea(
     .delete()
     .eq("id", tareaId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${plantillaCodigo}`);
+  revalidatePath(`/proyectos/plantillas/${plantillaCodigo}`);
   return { ok: true, error: null };
 }
 
@@ -295,7 +295,7 @@ export async function crearDocumento(
     rol_responsable: parsed.data.rol_responsable,
   } as never);
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${parsed.data.plantilla_codigo}`);
+  revalidatePath(`/proyectos/plantillas/${parsed.data.plantilla_codigo}`);
   return { ok: true, error: null };
 }
 
@@ -311,6 +311,6 @@ export async function eliminarDocumento(
     .delete()
     .eq("id", documentoId);
   if (error) return { ok: false, error: error.message };
-  revalidatePath(`/configuracion/plantillas/${plantillaCodigo}`);
+  revalidatePath(`/proyectos/plantillas/${plantillaCodigo}`);
   return { ok: true, error: null };
 }
