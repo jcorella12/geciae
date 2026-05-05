@@ -4997,6 +4997,306 @@ export type Database = {
           },
         ]
       }
+      nomina_accesos_log: {
+        Row: {
+          accion: string
+          created_at: string | null
+          empleado_consultado_id: string
+          id: string
+          ip: string | null
+          recibo_id: string | null
+          usuario_id: string
+        }
+        Insert: {
+          accion: string
+          created_at?: string | null
+          empleado_consultado_id: string
+          id?: string
+          ip?: string | null
+          recibo_id?: string | null
+          usuario_id: string
+        }
+        Update: {
+          accion?: string
+          created_at?: string | null
+          empleado_consultado_id?: string
+          id?: string
+          ip?: string | null
+          recibo_id?: string | null
+          usuario_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
+            columns: ["empleado_consultado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
+            columns: ["empleado_consultado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_accesos_log_empleado_consultado_id_fkey"
+            columns: ["empleado_consultado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_accesos_log_recibo_id_fkey"
+            columns: ["recibo_id"]
+            isOneToOne: false
+            referencedRelation: "nomina_recibos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nomina_conceptos: {
+        Row: {
+          clave_sat: string
+          concepto: string
+          created_at: string | null
+          id: string
+          importe_exento: number | null
+          importe_gravado: number | null
+          importe_total: number
+          recibo_id: string
+          tipo: Database["public"]["Enums"]["tipo_concepto_nomina"]
+          tipo_clave: string | null
+        }
+        Insert: {
+          clave_sat: string
+          concepto: string
+          created_at?: string | null
+          id?: string
+          importe_exento?: number | null
+          importe_gravado?: number | null
+          importe_total: number
+          recibo_id: string
+          tipo: Database["public"]["Enums"]["tipo_concepto_nomina"]
+          tipo_clave?: string | null
+        }
+        Update: {
+          clave_sat?: string
+          concepto?: string
+          created_at?: string | null
+          id?: string
+          importe_exento?: number | null
+          importe_gravado?: number | null
+          importe_total?: number
+          recibo_id?: string
+          tipo?: Database["public"]["Enums"]["tipo_concepto_nomina"]
+          tipo_clave?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nomina_conceptos_recibo_id_fkey"
+            columns: ["recibo_id"]
+            isOneToOne: false
+            referencedRelation: "nomina_recibos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nomina_recibos: {
+        Row: {
+          created_at: string | null
+          empleado_id: string
+          empresa_id: string
+          fecha_emision: string
+          fecha_final_pago: string
+          fecha_inicial_pago: string
+          fecha_pago: string
+          folio: string | null
+          id: string
+          num_dias_pagados: number | null
+          observaciones: string | null
+          periodicidad:
+            | Database["public"]["Enums"]["periodicidad_nomina"]
+            | null
+          procesado_at: string | null
+          salario_diario_integrado: number | null
+          serie: string | null
+          sueldo_base_cotizacion: number | null
+          tipo: Database["public"]["Enums"]["tipo_recibo_nomina"]
+          total_deducciones: number
+          total_neto: number
+          total_otros_pagos: number | null
+          total_percepciones: number
+          updated_at: string | null
+          upload_id: string | null
+          url_pdf: string | null
+          url_xml: string
+          uuid_cfdi: string
+        }
+        Insert: {
+          created_at?: string | null
+          empleado_id: string
+          empresa_id: string
+          fecha_emision: string
+          fecha_final_pago: string
+          fecha_inicial_pago: string
+          fecha_pago: string
+          folio?: string | null
+          id?: string
+          num_dias_pagados?: number | null
+          observaciones?: string | null
+          periodicidad?:
+            | Database["public"]["Enums"]["periodicidad_nomina"]
+            | null
+          procesado_at?: string | null
+          salario_diario_integrado?: number | null
+          serie?: string | null
+          sueldo_base_cotizacion?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_recibo_nomina"]
+          total_deducciones: number
+          total_neto: number
+          total_otros_pagos?: number | null
+          total_percepciones: number
+          updated_at?: string | null
+          upload_id?: string | null
+          url_pdf?: string | null
+          url_xml: string
+          uuid_cfdi: string
+        }
+        Update: {
+          created_at?: string | null
+          empleado_id?: string
+          empresa_id?: string
+          fecha_emision?: string
+          fecha_final_pago?: string
+          fecha_inicial_pago?: string
+          fecha_pago?: string
+          folio?: string | null
+          id?: string
+          num_dias_pagados?: number | null
+          observaciones?: string | null
+          periodicidad?:
+            | Database["public"]["Enums"]["periodicidad_nomina"]
+            | null
+          procesado_at?: string | null
+          salario_diario_integrado?: number | null
+          serie?: string | null
+          sueldo_base_cotizacion?: number | null
+          tipo?: Database["public"]["Enums"]["tipo_recibo_nomina"]
+          total_deducciones?: number
+          total_neto?: number
+          total_otros_pagos?: number | null
+          total_percepciones?: number
+          updated_at?: string | null
+          upload_id?: string | null
+          url_pdf?: string | null
+          url_xml?: string
+          uuid_cfdi?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_recibo_upload"
+            columns: ["upload_id"]
+            isOneToOne: false
+            referencedRelation: "nomina_uploads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nomina_uploads: {
+        Row: {
+          archivo_original_nombre: string | null
+          archivos_fallidos: number | null
+          archivos_procesados: number | null
+          cargado_por: string
+          created_at: string | null
+          curps_nuevas: Json | null
+          empleados_nuevos_creados: number | null
+          empleados_nuevos_detectados: number | null
+          empresa_id: string
+          errores: Json | null
+          estado: Database["public"]["Enums"]["estado_upload_nomina"]
+          id: string
+          observaciones: string | null
+          procesado_at: string | null
+          total_archivos: number
+          total_neto_pagado: number | null
+        }
+        Insert: {
+          archivo_original_nombre?: string | null
+          archivos_fallidos?: number | null
+          archivos_procesados?: number | null
+          cargado_por: string
+          created_at?: string | null
+          curps_nuevas?: Json | null
+          empleados_nuevos_creados?: number | null
+          empleados_nuevos_detectados?: number | null
+          empresa_id: string
+          errores?: Json | null
+          estado?: Database["public"]["Enums"]["estado_upload_nomina"]
+          id?: string
+          observaciones?: string | null
+          procesado_at?: string | null
+          total_archivos: number
+          total_neto_pagado?: number | null
+        }
+        Update: {
+          archivo_original_nombre?: string | null
+          archivos_fallidos?: number | null
+          archivos_procesados?: number | null
+          cargado_por?: string
+          created_at?: string | null
+          curps_nuevas?: Json | null
+          empleados_nuevos_creados?: number | null
+          empleados_nuevos_detectados?: number | null
+          empresa_id?: string
+          errores?: Json | null
+          estado?: Database["public"]["Enums"]["estado_upload_nomina"]
+          id?: string
+          observaciones?: string | null
+          procesado_at?: string | null
+          total_archivos?: number
+          total_neto_pagado?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nomina_uploads_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificaciones: {
         Row: {
           created_at: string
@@ -10244,6 +10544,90 @@ export type Database = {
           },
         ]
       }
+      v_nomina_deducciones_por_tipo: {
+        Row: {
+          anio: number | null
+          clave_sat: string | null
+          concepto: string | null
+          empleado_id: string | null
+          empresa_id: string | null
+          mes: number | null
+          total_periodo: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_nomina_empleado_resumen_mensual: {
+        Row: {
+          anio: number | null
+          empleado_id: string | null
+          empresa_id: string | null
+          mes: number | null
+          num_recibos: number | null
+          total_deducciones_mes: number | null
+          total_neto_mes: number | null
+          total_otros_pagos_mes: number | null
+          total_percepciones_mes: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "empleados"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_repse_alertas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empleado_id_fkey"
+            columns: ["empleado_id"]
+            isOneToOne: false
+            referencedRelation: "v_saldo_vacaciones"
+            referencedColumns: ["empleado_id"]
+          },
+          {
+            foreignKeyName: "nomina_recibos_empresa_id_fkey"
+            columns: ["empresa_id"]
+            isOneToOne: false
+            referencedRelation: "empresas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_obligaciones_lista: {
         Row: {
           created_at: string | null
@@ -11433,6 +11817,11 @@ export type Database = {
         | "esperando_cliente"
         | "resuelto"
         | "cerrado"
+      estado_upload_nomina:
+        | "procesando"
+        | "completado"
+        | "completado_con_errores"
+        | "fallido"
       estatus_vehiculo:
         | "activo"
         | "mantenimiento"
@@ -11460,6 +11849,13 @@ export type Database = {
         | "mixto"
         | "por_definir"
       nivel_autonomia_ia: "verde" | "amarillo" | "rojo"
+      periodicidad_nomina:
+        | "diaria"
+        | "semanal"
+        | "catorcenal"
+        | "quincenal"
+        | "mensual"
+        | "unica"
       plantilla_proyecto:
         | "solar_residencial"
         | "solar_comercial"
@@ -11496,6 +11892,7 @@ export type Database = {
         | "otro"
       tipo_centro: "costo" | "utilidad"
       tipo_cfdi: "ingreso" | "egreso" | "traslado" | "pago" | "nomina"
+      tipo_concepto_nomina: "percepcion" | "deduccion" | "otro_pago"
       tipo_doc_sgc: "FP" | "FO" | "MA" | "PO"
       tipo_emision_reparto: "cfdi_inter_co" | "asiento_interno"
       tipo_evento_bitacora:
@@ -11549,6 +11946,12 @@ export type Database = {
         | "arrendamiento_puro"
         | "rentado_corto_plazo"
         | "comodato"
+      tipo_recibo_nomina:
+        | "ordinario"
+        | "extraordinario"
+        | "finiquito"
+        | "liquidacion"
+        | "otro"
       tipo_reporte_proyecto:
         | "incidente"
         | "avance_semanal"
@@ -11906,6 +12309,12 @@ export const Constants = {
         "resuelto",
         "cerrado",
       ],
+      estado_upload_nomina: [
+        "procesando",
+        "completado",
+        "completado_con_errores",
+        "fallido",
+      ],
       estatus_vehiculo: [
         "activo",
         "mantenimiento",
@@ -11937,6 +12346,14 @@ export const Constants = {
         "por_definir",
       ],
       nivel_autonomia_ia: ["verde", "amarillo", "rojo"],
+      periodicidad_nomina: [
+        "diaria",
+        "semanal",
+        "catorcenal",
+        "quincenal",
+        "mensual",
+        "unica",
+      ],
       plantilla_proyecto: [
         "solar_residencial",
         "solar_comercial",
@@ -11976,6 +12393,7 @@ export const Constants = {
       ],
       tipo_centro: ["costo", "utilidad"],
       tipo_cfdi: ["ingreso", "egreso", "traslado", "pago", "nomina"],
+      tipo_concepto_nomina: ["percepcion", "deduccion", "otro_pago"],
       tipo_doc_sgc: ["FP", "FO", "MA", "PO"],
       tipo_emision_reparto: ["cfdi_inter_co", "asiento_interno"],
       tipo_evento_bitacora: [
@@ -12033,6 +12451,13 @@ export const Constants = {
         "arrendamiento_puro",
         "rentado_corto_plazo",
         "comodato",
+      ],
+      tipo_recibo_nomina: [
+        "ordinario",
+        "extraordinario",
+        "finiquito",
+        "liquidacion",
+        "otro",
       ],
       tipo_reporte_proyecto: [
         "incidente",
