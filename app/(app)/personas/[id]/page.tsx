@@ -324,11 +324,18 @@ export default async function EmpleadoDetailPage({
 
           <div className="flex items-center gap-2">
             {puedeVerNomina && (
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/portal-empleado?empleado=${emp.id}`}>
-                  Ver portal de compensación
-                </Link>
-              </Button>
+              <>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/portal-empleado?empleado=${emp.id}`}>
+                    Ver portal de compensación
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
+                  <Link href={`/personas/${emp.id}/bonos`}>
+                    Bonos
+                  </Link>
+                </Button>
+              </>
             )}
             {puedeGestionar && (
               <>
