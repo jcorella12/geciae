@@ -13,7 +13,6 @@ import {
   LifeBuoy,
   Lightbulb,
   Package,
-  FileBarChart,
   FileSignature,
   FileText,
   HelpCircle,
@@ -86,47 +85,31 @@ export function AppSidebar({
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(`${href}/`);
 
+  // Sidebar reorganizado en 5 grupos lógicos:
+  //  PRINCIPAL — accesos diarios y vista global
+  //  COMERCIAL — front-end del negocio (lo que entra)
+  //  PROYECTOS — ejecución y entrega
+  //  RECURSOS — quién y con qué (gente, terceros, activos)
+  //  FINANZAS — el back-office del dinero (incluye cumplimiento fiscal)
+  // Cumplimiento fiscal absorbe obligaciones SAT y estados financieros vía
+  // tabs internos; Reportes se sube a PRINCIPAL por ser transversal.
   const principal: NavGroup = {
     label: "PRINCIPAL",
     items: [
       { href: "/mi-dia", label: "Mi día", icon: Sun },
       { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { href: "/calendario", label: "Calendario", icon: CalendarDays },
-      { href: "/campo", label: "Captura campo", icon: Smartphone },
+      { href: "/reportes", label: "Reportes", icon: BarChart3 },
     ],
   };
 
-  const operacion: NavGroup = {
-    label: "OPERACIÓN",
+  const comercial: NavGroup = {
+    label: "COMERCIAL",
     items: [
-      { href: "/proyectos", label: "Proyectos", icon: Briefcase },
-      { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
-      { href: "/inventario", label: "Inventario", icon: Package },
-      { href: "/finanzas/oc", label: "Compras (OC)", icon: ShoppingCart },
-      { href: "/finanzas/ot", label: "OT inter-co", icon: ClipboardList },
-      { href: "/finanzas/cfdi", label: "CFDI", icon: Receipt },
-    ],
-  };
-
-  const equipo: NavGroup = {
-    label: "EQUIPO",
-    items: [
-      { href: "/personas", label: "Personas", icon: Users2 },
-      { href: "/finanzas/proveedores", label: "Proveedores", icon: Truck },
-      { href: "/activos/vehiculos", label: "Vehículos", icon: Car },
-      { href: "/soporte/tickets", label: "Tickets soporte", icon: LifeBuoy },
-      { href: "/calidad", label: "Calidad", icon: CheckSquare },
-    ],
-  };
-
-  const control: NavGroup = {
-    label: "CONTROL",
-    items: [
-      { href: "/finanzas/tesoreria", label: "Tesorería", icon: Wallet },
       { href: "/clientes", label: "Clientes", icon: Users },
       {
         href: "/comercial/oportunidades",
-        label: "Pipeline ventas",
+        label: "Pipeline",
         icon: TrendingUp,
       },
       {
@@ -134,43 +117,49 @@ export function AppSidebar({
         label: "Cotizaciones",
         icon: FileSignature,
       },
+      { href: "/finanzas/servicios", label: "Servicios", icon: FileText },
+    ],
+  };
+
+  const proyectos: NavGroup = {
+    label: "PROYECTOS",
+    items: [
+      { href: "/proyectos", label: "Proyectos", icon: Briefcase },
+      { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
+      { href: "/campo", label: "Captura campo", icon: Smartphone },
+      { href: "/calidad", label: "Calidad", icon: CheckSquare },
+    ],
+  };
+
+  const recursos: NavGroup = {
+    label: "RECURSOS",
+    items: [
+      { href: "/personas", label: "Personas", icon: Users2 },
+      { href: "/finanzas/proveedores", label: "Proveedores", icon: Truck },
+      { href: "/activos/vehiculos", label: "Vehículos", icon: Car },
+      { href: "/inventario", label: "Inventario", icon: Package },
+      { href: "/soporte/tickets", label: "Tickets soporte", icon: LifeBuoy },
+    ],
+  };
+
+  const finanzas: NavGroup = {
+    label: "FINANZAS",
+    items: [
+      { href: "/finanzas/oc", label: "Compras (OC)", icon: ShoppingCart },
+      { href: "/finanzas/ot", label: "OT inter-co", icon: ClipboardList },
+      { href: "/finanzas/cfdi", label: "CFDI", icon: Receipt },
+      { href: "/finanzas/tesoreria", label: "Tesorería", icon: Wallet },
       {
-        href: "/finanzas/estados-financieros",
-        label: "Estados financieros",
-        icon: FileBarChart,
+        href: "/finanzas/gastos-recurrentes",
+        label: "Gastos recurrentes",
+        icon: RefreshCw,
       },
       {
         href: "/finanzas/cumplimiento",
         label: "Cumplimiento fiscal",
         icon: ShieldCheck,
       },
-      {
-        href: "/finanzas/obligaciones",
-        label: "Obligaciones SAT",
-        icon: CalendarDays,
-      },
-      {
-        href: "/finanzas/gastos-recurrentes",
-        label: "Gastos recurrentes",
-        icon: RefreshCw,
-      },
-      { href: "/reportes", label: "Reportes", icon: BarChart3 },
-      { href: "/finanzas/servicios", label: "Servicios", icon: FileText },
-      { href: "/finanzas/proveedores", label: "Proveedores", icon: ShieldCheck },
     ],
-  };
-  // Eliminar duplicados (proveedores aparece dos veces, etc.) — armamos cada
-  // grupo final con items únicos
-  const dedup = (g: NavGroup): NavGroup => {
-    const seen = new Set<string>();
-    return {
-      ...g,
-      items: g.items.filter((i) => {
-        if (seen.has(i.href)) return false;
-        seen.add(i.href);
-        return true;
-      }),
-    };
   };
 
   // Configuración + ayuda viven aparte, abajo
@@ -198,17 +187,7 @@ export function AppSidebar({
     { href: "/ayuda", label: "Ayuda", icon: HelpCircle },
   ];
 
-  const grupos = [
-    principal,
-    dedup(operacion),
-    dedup(equipo),
-    {
-      ...dedup(control),
-      items: dedup(control).items.filter(
-        (i) => !operacion.items.some((o) => o.href === i.href),
-      ),
-    },
-  ];
+  const grupos = [principal, comercial, proyectos, recursos, finanzas];
 
   return (
     <aside
