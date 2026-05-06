@@ -73,6 +73,13 @@ const reportes = [
         ready: true,
       },
       {
+        href: "/reportes/proyectos-pnl",
+        label: "Rentabilidad por proyecto (P&L)",
+        desc: "Job costing: presupuesto vs real, margen neto, salud por proyecto y agregado del portafolio.",
+        icon: TrendingUp,
+        ready: true,
+      },
+      {
         href: "/finanzas/ot",
         label: "OT inter-co",
         desc: "Órdenes de trabajo entre empresas con estado del ciclo.",

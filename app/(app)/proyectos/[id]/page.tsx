@@ -508,6 +508,11 @@ export default async function ProyectoDetailPage({
             >
               {estado.label}
             </span>
+            <Button size="sm" asChild>
+              <Link href={`/proyectos/${p.id}/pnl`}>
+                📊 Rentabilidad / P&amp;L
+              </Link>
+            </Button>
             {puedeGestionar && (
               <Button variant="outline" size="sm" asChild>
                 <Link href={`/proyectos/${p.id}/edit`}>
@@ -515,9 +520,6 @@ export default async function ProyectoDetailPage({
                 </Link>
               </Button>
             )}
-            <Button variant="outline" size="sm" asChild>
-              <Link href={`/proyectos/${p.id}/pnl`}>📊 Rentabilidad</Link>
-            </Button>
           </div>
         </div>
       </div>
