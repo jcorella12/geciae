@@ -1,4 +1,4 @@
-import { AlertTriangle, Plus, TrendingUp } from "lucide-react";
+import { AlertTriangle, Plus, TrendingUp, Warehouse } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
@@ -125,6 +125,12 @@ export default async function InventarioPage({
         </div>
         <div className="flex items-center gap-2">
           <ExportCsvButton tipo="inventario" />
+          <Link href="/inventario/almacenes">
+            <Button variant="outline">
+              <Warehouse className="h-4 w-4" />
+              Almacenes
+            </Button>
+          </Link>
           <Link href="/inventario/movimientos/nuevo">
             <Button variant="outline">
               <TrendingUp className="h-4 w-4" />
