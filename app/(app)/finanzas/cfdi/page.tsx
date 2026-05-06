@@ -14,6 +14,7 @@ import {
   TableSurface,
 } from "@/components/ui/table";
 import { ExportCsvButton } from "@/components/shared/export-csv-button";
+import { ExportContpaqiButton } from "./export-contpaqi-button";
 import { obtenerVinculos } from "@/lib/auth/permisos";
 import {
   COLOR_ESTADO_CFDI,
@@ -324,6 +325,7 @@ export default async function CfdiListPage({
         </div>
         <div className="flex items-center gap-2">
           <ExportCsvButton tipo="cfdi" desde={desde} hasta={hasta} />
+          <ExportContpaqiButton empresas={empresas ?? []} />
           <Link href="/finanzas/cfdi/nuevo">
             <Button>
               <Plus className="h-4 w-4" />

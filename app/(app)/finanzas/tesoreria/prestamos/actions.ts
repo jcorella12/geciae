@@ -446,3 +446,32 @@ export async function devengarInteresesHoy(): Promise<{
   revalidatePath("/finanzas/tesoreria/prestamos");
   return { ok: true, count: (data as number) ?? 0, error: null };
 }
+
+/**
+ * Cierra el mes de intereses inter-co: snapshot por par de empresas.
+ * Idempotente — se puede recorrer (recalcula).
+ */
+export async function cerrarInteresesMes(
+  anio: number,
+  mes: number,
+): Promise<{ ok: boolean; count: number; error: string | null }> {
+  const v = await obtenerVinculos();
+  if (!esCEO(v) && !tieneAtributo(v, "tesorero_corporativo")) {
+    return { ok: false, count: 0, error: "Sin permiso." };
+  }
+  if (!Number.isInteger(anio) || anio < 2024 || anio > 2099) {
+    return { ok: false, count: 0, error: "Año inválido." };
+  }
+  if (!Number.isInteger(mes) || mes < 1 || mes > 12) {
+    return { ok: false, count: 0, error: "Mes inválido." };
+  }
+  const supabase = createClient();
+  const { data, error } = await supabase.rpc("cerrar_intereses_mes" as never, {
+    p_anio: anio,
+    p_mes: mes,
+  } as never);
+  if (error) return { ok: false, count: 0, error: error.message };
+  revalidatePath("/finanzas/tesoreria/matriz");
+  revalidatePath("/finanzas/tesoreria/prestamos");
+  return { ok: true, count: (data as number) ?? 0, error: null };
+}

@@ -8,6 +8,7 @@ import {
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import { CerrarMesBtn } from "./cerrar-mes-btn";
 import { DevengarBtn } from "./devengar-btn";
 
 const empresaCodigoColor: Record<string, string> = {
@@ -216,8 +217,10 @@ export default async function MatrizMensualPage({
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <DevengarBtn />
+        <CerrarMesBtn anio={year} mes={month} />
         <p className="text-xs text-muted-foreground">
-          Devenga intereses de hoy para todos los préstamos vivos.
+          Cron automático corre cada noche a las 23:55 (MX). Botones para
+          forzar manualmente o cerrar el mes con snapshot por par de empresas.
         </p>
       </div>
 
