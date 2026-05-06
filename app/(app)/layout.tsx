@@ -55,6 +55,13 @@ export default async function AppLayout({
     vinculos.map(({ empresa: _e, ...rest }) => rest),
   );
 
+  // ¿Puede ver el módulo de Ajustes Gerenciales? (CEO + contralor + tesorero)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: puedeAjustesData } = await (supabase as any).rpc(
+    "usuario_puede_ver_ajustes_gerenciales",
+  );
+  const puedeAjustesGerenciales = Boolean(puedeAjustesData);
+
   // Datos del user-card en sidebar
   const primerVinculo = vinculos[0];
   const nombreUsuario = user.email?.split("@")[0] ?? "Usuario";
@@ -78,6 +85,7 @@ export default async function AppLayout({
         <div className="hidden md:flex">
           <AppSidebar
             puedeVerConfiguracion={puedeConfiguracion}
+            puedeVerAjustesGerenciales={puedeAjustesGerenciales}
             empresas={empresas}
             activaId={activaId}
             puedeConsolidado={puedeConsolidado}

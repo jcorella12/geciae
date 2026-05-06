@@ -8,7 +8,9 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  EyeOff,
   Inbox,
+  LayoutGrid,
   LifeBuoy,
   Lightbulb,
   Package,
@@ -20,6 +22,7 @@ import {
   Receipt,
   RefreshCw,
   Settings,
+  Shield,
   ShieldCheck,
   ShoppingCart,
   Sun,
@@ -54,6 +57,8 @@ type NavGroup = {
 
 type Props = {
   puedeVerConfiguracion: boolean;
+  /** CEO + atributo contralor + atributo tesorero_corporativo. */
+  puedeVerAjustesGerenciales?: boolean;
   empresas: EmpresaResumen[];
   activaId: string | null;
   puedeConsolidado: boolean;
@@ -68,6 +73,7 @@ type Props = {
 
 export function AppSidebar({
   puedeVerConfiguracion,
+  puedeVerAjustesGerenciales = false,
   empresas,
   activaId,
   puedeConsolidado,
@@ -145,6 +151,7 @@ export function AppSidebar({
   const finanzas: NavGroup = {
     label: "FINANZAS",
     items: [
+      { href: "/finanzas", label: "Inicio finanzas", icon: LayoutGrid },
       { href: "/finanzas/oc", label: "Compras (OC)", icon: ShoppingCart },
       { href: "/finanzas/ot", label: "OT inter-co", icon: ClipboardList },
       { href: "/finanzas/cfdi", label: "CFDI", icon: Receipt },
@@ -159,6 +166,21 @@ export function AppSidebar({
         label: "Cumplimiento fiscal",
         icon: ShieldCheck,
       },
+      // Módulos restringidos (Sprint S) — solo CEO + contralor + tesorero
+      ...(puedeVerAjustesGerenciales
+        ? [
+            {
+              href: "/finanzas/ajustes-gerenciales",
+              label: "Ajustes gerenciales",
+              icon: Shield,
+            },
+            {
+              href: "/finanzas/vista-real",
+              label: "Vista real",
+              icon: EyeOff,
+            },
+          ]
+        : []),
     ],
   };
 
