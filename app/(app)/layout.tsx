@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/shared/app-sidebar";
+import { BottomNav } from "@/components/shared/bottom-nav";
 import { PageviewTracker } from "@/components/shared/pageview-tracker";
 import { PeekProvider } from "@/components/shared/peek-provider";
 import { VersionBadge } from "@/components/shared/version-badge";
@@ -74,23 +75,26 @@ export default async function AppLayout({
     <PeekProvider>
       <PageviewTracker />
       <div className="flex h-screen overflow-hidden bg-bg-2">
-        <AppSidebar
-          puedeVerConfiguracion={puedeConfiguracion}
-          empresas={empresas}
-          activaId={activaId}
-          puedeConsolidado={puedeConsolidado}
-          collapsed={sidebarCollapsed}
-          user={{
-            name: nombreUsuario,
-            initials,
-            role: rolLabel,
-          }}
-        />
+        <div className="hidden md:flex">
+          <AppSidebar
+            puedeVerConfiguracion={puedeConfiguracion}
+            empresas={empresas}
+            activaId={activaId}
+            puedeConsolidado={puedeConsolidado}
+            collapsed={sidebarCollapsed}
+            user={{
+              name: nombreUsuario,
+              initials,
+              role: rolLabel,
+            }}
+          />
+        </div>
         <div className="flex min-w-0 flex-1 flex-col">
           <AppTopbar email={user.email ?? ""} initials={initials} />
-          <main className="flex-1 overflow-y-auto bg-bg-2">{children}</main>
+          <main className="flex-1 overflow-y-auto bg-bg-2 pb-16 md:pb-0">{children}</main>
         </div>
       </div>
+      <BottomNav />
       <VersionBadge />
     </PeekProvider>
   );
