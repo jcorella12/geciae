@@ -334,21 +334,53 @@ def escribir_configuracion(wb: openpyxl.Workbook, colores_usados: set[str]) -> N
             ws.cell(row=fila, column=c).border = BORDER
         fila += 1
 
-    # Notas generales
+    # ⚠ Política contable
     fila += 2
-    ws.cell(row=fila, column=1, value="Notas").font = Font(name="Arial", bold=True, size=12)
+    ws.cell(row=fila, column=1, value="⚠ POLÍTICA CONTABLE — leer antes de cargar al sistema").font = Font(
+        name="Arial", bold=True, size=12, color="C00000"
+    )
+    fila += 1
+    politica = [
+        "Estos productos fueron pagados por las empresas (PSE/CIAE/IED/Limson) y registrados",
+        "contablemente como GASTO en cada una. Eso significa:",
+        "",
+        "  ✓ El gasto YA está reconocido en la contabilidad de cada empresa pagadora.",
+        "  ✗ Los productos NO están registrados como ACTIVO en ninguna contabilidad de inventario.",
+        "  ⚙ Existe stock físico real pero no hay correspondencia contable de inventario.",
+        "",
+        "Por eso, al cargar este archivo al ERP:",
+        "  1. Cargar como ENTRADA al inventario del grupo (visibilidad operativa del stock real).",
+        "  2. Tipo de movimiento: 'carga_inicial' (NO 'entrada_compra' — eso implicaría OC/CFDI).",
+        "  3. NO generar OC retroactivas, NO crear CFDIs, NO afectar balances contables.",
+        "  4. Etiquetar cada lote con la empresa que pagó (vía mapeo de color de arriba) en",
+        "     observaciones del movimiento, para trazabilidad.",
+        "  5. Dejar para CONTROL la decisión posterior de cómo conciliar (capitalizar el activo,",
+        "     reclasificar el gasto, dejarlo como está, etc.)",
+    ]
+    for n in politica:
+        c = ws.cell(row=fila, column=1, value=n)
+        c.font = Font(name="Arial", size=10)
+        if n.startswith("  ✗") or n.startswith("  ⚙"):
+            c.font = Font(name="Arial", size=10, color="C00000")
+        elif n.startswith("  ✓"):
+            c.font = Font(name="Arial", size=10, color="2E7D32")
+        ws.merge_cells(start_row=fila, start_column=1, end_row=fila, end_column=4)
+        fila += 1
+
+    # Notas generales
+    fila += 1
+    ws.cell(row=fila, column=1, value="Notas técnicas").font = Font(name="Arial", bold=True, size=12)
     fila += 1
     notas = [
         "• Los costos de este archivo NO son los de hoy — son históricos al momento de la compra.",
         "• El TC en B1 actualiza todos los valores MXN del archivo (fórmulas dinámicas).",
-        "• Hoja1 original tenía 38 filas con varias compras del mismo SKU. Cada compra venía de",
-        "  una empresa distinta (color), pero TODO se acumula al inventario del grupo porque ya",
-        "  se contabilizó como gasto en cada empresa.",
+        "• Hoja1 original tenía 38 filas con varias compras del mismo SKU. Se consolidan a un",
+        "  SKU único pero cada compra original queda preservada en hoja 'Lotes detalle'.",
         "• Sheet1 original usaba la marca como CODIGO. Se generaron códigos únicos combinando",
         '  marca + modelo (ej: "GROWAT-MAC15KTL3").',
         "• Inversores con stock=0 se mantienen en el catálogo para histórico de movimientos.",
-        "• Hoja 'Lotes detalle' preserva cada compra original con su color para auditoría.",
         "• Typo corregido: NXT-TBM8x25-5 → NXT-TB-M8X25-5.",
+        "• JA-M66D45-620/LB corregido: 15 → 1546 paneles (cliente confirmó error de captura).",
     ]
     for n in notas:
         ws.cell(row=fila, column=1, value=n).font = Font(name="Arial", size=10)
