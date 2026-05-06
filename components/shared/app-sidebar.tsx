@@ -9,6 +9,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  CircleDollarSign,
   Inbox,
   LifeBuoy,
   Lightbulb,
@@ -17,6 +18,7 @@ import {
   FileText,
   HelpCircle,
   LayoutDashboard,
+  Repeat,
   Smartphone,
   Receipt,
   RefreshCw,
@@ -29,6 +31,7 @@ import {
   Users,
   Users2,
   Wallet,
+  Wrench,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -137,6 +140,9 @@ export function AppSidebar({
       { href: "/personas", label: "Personas", icon: Users2 },
       { href: "/finanzas/proveedores", label: "Proveedores", icon: Truck },
       { href: "/activos/vehiculos", label: "Vehículos", icon: Car },
+      { href: "/activos/compartidos", label: "Activos compartidos", icon: Wrench },
+      { href: "/activos/prestamos", label: "Préstamos activos", icon: Repeat },
+      { href: "/activos/cobros", label: "Cobros activos", icon: CircleDollarSign },
       { href: "/inventario", label: "Inventario", icon: Package },
       { href: "/soporte/tickets", label: "Tickets soporte", icon: LifeBuoy },
     ],
