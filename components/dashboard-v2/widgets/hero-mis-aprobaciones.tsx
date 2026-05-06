@@ -34,19 +34,25 @@ export async function HeroMisAprobaciones() {
       .in("empresa_destino_id", empresasIds)
   );
 
-  // Solicitudes (puede o no existir el filtro por empresa, dejamos genérico)
-  const solicPromise = (
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (supabase as any)
-      .from("solicitudes")
-      .select("id", { count: "exact", head: true })
-      .eq("estado", "pendiente")
-  );
+  // Solicitudes — la tabla puede no existir todavía o tener RLS distinto;
+  // envolvemos con try/catch para tolerarlo sin tirar la página.
+  const solicPromise = (async () => {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const r = await (supabase as any)
+        .from("solicitudes")
+        .select("id", { count: "exact", head: true })
+        .eq("estado", "pendiente");
+      return r as { count: number | null };
+    } catch {
+      return { count: null };
+    }
+  })();
 
   const [ocs, ots, solic] = await Promise.all([
     ocsPromise,
     otsPromise,
-    solicPromise.catch(() => ({ count: null })),
+    solicPromise,
   ]);
 
   const ocCount = (ocs as { count: number | null }).count ?? 0;
