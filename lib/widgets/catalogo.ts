@@ -138,6 +138,14 @@ export const CATALOGO_WIDGETS: WidgetMetadata[] = [
     rolesSugeridos: ["ceo"],
     atributosSugeridos: ["tesorero_corporativo"],
   },
+  {
+    id: "mis_favoritos",
+    nombre: "Mis favoritos",
+    descripcion: "Entidades que marcaste con ⭐ para acceso rápido.",
+    pagina: "ambas",
+    tamañoDefault: "medium",
+    rolesSugeridos: ["operativo", "director", "ceo"],
+  },
 ];
 
 export type LayoutEntry = {

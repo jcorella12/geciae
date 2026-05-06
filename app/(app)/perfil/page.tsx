@@ -619,6 +619,24 @@ export default async function PerfilPage() {
         </section>
       )}
 
+      {/* Preferencias */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="mb-3 text-base font-semibold">Preferencias</h2>
+        <ul className="space-y-1 text-sm">
+          <li>
+            <a
+              href="/perfil/notificaciones"
+              className="text-brand hover:underline"
+            >
+              → Preferencias de notificaciones
+            </a>
+            <span className="ml-2 text-[11.5px] text-ink-3">
+              Decide qué tipos de notificaciones recibes
+            </span>
+          </li>
+        </ul>
+      </section>
+
       {/* Cuenta y seguridad */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="mb-3 flex items-center gap-2 text-base font-semibold">

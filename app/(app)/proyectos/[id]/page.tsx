@@ -2,6 +2,7 @@ import { Pencil, Plus } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BotonFavorito } from "@/components/ui/boton-favorito";
 import { Button } from "@/components/ui/button";
 import { DualBar } from "@/components/ui/dual-bar";
 import { KpiCard } from "@/components/ui/kpi-card";
@@ -456,6 +457,12 @@ export default async function ProyectoDetailPage({
               <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.02em]">
                 {p.nombre}
               </h1>
+              <BotonFavorito
+                entidadTipo="proyecto"
+                entidadId={p.id}
+                esFavoritoInicial={false}
+                etiqueta={p.codigo}
+              />
             </div>
             <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-ink-3">
               <code className="font-mono">{p.codigo}</code>

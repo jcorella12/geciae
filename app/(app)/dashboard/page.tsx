@@ -13,6 +13,7 @@ import {
   type CashflowPoint,
 } from "@/components/dashboard/cashflow-chart";
 import { DraggableKpiGrid } from "@/components/dashboard/draggable-kpi-grid";
+import { WidgetPageShell } from "@/components/widgets/widget-page-shell";
 import { AlertItem } from "@/components/ui/alert-item";
 import { Button } from "@/components/ui/button";
 import { DualBar } from "@/components/ui/dual-bar";
@@ -545,6 +546,14 @@ export default async function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Tablero personal (Sprint Z.1) */}
+      <section className="mb-8">
+        <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-ink-3">
+          Tu tablero personal
+        </h2>
+        <WidgetPageShell pagina="dashboard" />
+      </section>
 
       {/* Fila 1: KPIs principales (1 feature + 4 estándar) */}
       <div

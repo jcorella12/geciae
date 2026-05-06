@@ -17,6 +17,7 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/ui/kpi-card";
+import { WidgetPageShell } from "@/components/widgets/widget-page-shell";
 import { Stat } from "@/components/ui/stat";
 import { StatusDot } from "@/components/ui/status-dot";
 import {
@@ -481,6 +482,16 @@ export default async function MiDiaPage() {
           </p>
         </div>
       </div>
+
+      {/* Tablero personal de widgets (Sprint Z.1) */}
+      {!sinAcceso && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-[13px] font-semibold uppercase tracking-wide text-ink-3">
+            Tu tablero personal
+          </h2>
+          <WidgetPageShell pagina="mi-dia" />
+        </section>
+      )}
 
       {sinAcceso ? (
         <div className="rounded-md border border-warn/40 bg-warn-soft p-5 text-sm">

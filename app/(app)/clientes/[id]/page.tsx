@@ -2,6 +2,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { BotonFavorito } from "@/components/ui/boton-favorito";
 import { Button } from "@/components/ui/button";
 import { obtenerVinculos, puedeGestionarClientes } from "@/lib/auth/permisos";
 import { REGIMENES_FISCALES, USOS_CFDI } from "@/lib/sat/catalogos";
@@ -82,10 +83,16 @@ export default async function ClienteDetailPage({
           >
             ← Clientes
           </Link>
-          <h1 className="mt-2 text-2xl font-semibold leading-tight">
+          <h1 className="mt-2 flex items-center gap-2 text-2xl font-semibold leading-tight">
+            <BotonFavorito
+              entidadTipo="cliente"
+              entidadId={cliente.id}
+              esFavoritoInicial={false}
+              etiqueta={cliente.razon_social}
+            />
             {cliente.razon_social}
             {!cliente.activo && (
-              <span className="ml-3 rounded-full bg-secondary px-2 py-0.5 align-middle text-xs">
+              <span className="ml-1 rounded-full bg-secondary px-2 py-0.5 align-middle text-xs">
                 Inactivo
               </span>
             )}
