@@ -4,10 +4,12 @@ import {
   CalendarDays,
   ClipboardList,
   CreditCard,
+  EyeOff,
   FileBarChart,
   FileText,
   Receipt,
   RefreshCw,
+  Shield,
   ShoppingCart,
   TrendingUp,
   Truck,
@@ -82,6 +84,21 @@ const modulos = [
   },
 ] as const;
 
+const modulosRestringidos = [
+  {
+    href: "/finanzas/ajustes-gerenciales",
+    label: "Ajustes gerenciales",
+    desc: "Activos ocultos, pasivos no registrados y aportaciones no formalizadas. Capa interna paralela a la contabilidad fiscal.",
+    icon: Shield,
+  },
+  {
+    href: "/finanzas/vista-real",
+    label: "Vista real del grupo",
+    desc: "Patrimonio incluyendo ajustes gerenciales. Combina contabilidad fiscal con realidad económica.",
+    icon: EyeOff,
+  },
+] as const;
+
 export default async function FinanzasIndexPage() {
   const supabase = createClient();
 
@@ -96,6 +113,8 @@ export default async function FinanzasIndexPage() {
     { data: cfdisMes },
     { data: ocPendientes },
     { data: prestamosVivos },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { data: puedeVerAjustes },
   ] = await Promise.all([
     supabase.from("v_saldo_bancos_por_empresa").select("saldo_total"),
     supabase
@@ -111,6 +130,8 @@ export default async function FinanzasIndexPage() {
       .from("prestamos_inter_co")
       .select("saldo_pendiente")
       .in("estado", ["ejecutado", "confirmado", "pagado_parcial"]),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any).rpc("usuario_puede_ver_ajustes_gerenciales"),
   ]);
 
   const totalBancos = (bancosSaldo ?? []).reduce(
@@ -211,6 +232,39 @@ export default async function FinanzasIndexPage() {
           );
         })}
       </ul>
+
+      {puedeVerAjustes && (
+        <div className="mt-8">
+          <div className="mb-3 flex items-center gap-2">
+            <Shield className="h-3.5 w-3.5 text-amber-700" />
+            <h2 className="text-[13px] font-semibold uppercase tracking-wide text-amber-900">
+              Información gerencial · acceso restringido
+            </h2>
+          </div>
+          <ul className="grid gap-3 md:grid-cols-2">
+            {modulosRestringidos.map((m) => {
+              const Icon = m.icon;
+              return (
+                <li key={m.href}>
+                  <Link
+                    href={m.href}
+                    className="group flex h-full items-start gap-3 rounded-md border border-amber-300 bg-amber-50/50 p-5 shadow-xs transition hover:border-amber-500 hover:bg-amber-50"
+                  >
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-amber-100 text-amber-800">
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[14px] font-semibold">{m.label}</p>
+                      <p className="mt-1 text-[12px] text-ink-3">{m.desc}</p>
+                    </div>
+                    <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-amber-700 transition group-hover:translate-x-0.5" />
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
 
       <div className="mt-8">
         <Link
