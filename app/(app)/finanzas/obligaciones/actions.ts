@@ -417,6 +417,132 @@ export async function subirComprobante(
   return subirArchivo(obligacionId, file, "comprobante");
 }
 
+/**
+ * Sube comprobante de pago + parsea con pdf-parse y actualiza:
+ *   monto_pagado, fecha_pago, numero_operacion, linea_captura, estado.
+ */
+export async function subirComprobanteConParser(
+  _prev: SimpleState,
+  formData: FormData,
+): Promise<SimpleState> {
+  const obligacionId = formData.get("obligacion_id") as string;
+  const file = formData.get("archivo") as File | null;
+  if (!obligacionId || !file) {
+    return { ...initialSimpleState, error: "Faltan datos." };
+  }
+
+  // 1. Subir archivo
+  const r1 = await subirArchivo(obligacionId, file, "comprobante");
+  if (!r1.ok) return r1;
+
+  // 2. Parsear PDF
+  try {
+    const { parsearComprobantePago } = await import("@/lib/obligaciones/parser");
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const datos = await parsearComprobantePago(buffer);
+
+    if (datos.monto_pagado || datos.fecha_pago || datos.linea_captura) {
+      const supabase = createClient();
+      const { data: o } = await supabase
+        .from("obligaciones_sat")
+        .select("fecha_vencimiento")
+        .eq("id", obligacionId)
+        .maybeSingle();
+
+      const venc = (o as { fecha_vencimiento: string } | null)?.fecha_vencimiento;
+      let estado: "pagada" | "extemporanea" = "pagada";
+      if (datos.fecha_pago && venc && datos.fecha_pago > venc) {
+        estado = "extemporanea";
+      }
+
+      const update: Record<string, unknown> = {
+        estado,
+        updated_at: new Date().toISOString(),
+      };
+      if (datos.monto_pagado != null) update.monto_pagado = datos.monto_pagado;
+      if (datos.fecha_pago) {
+        update.fecha_pago = datos.fecha_pago;
+        update.fecha_presentacion = datos.fecha_pago;
+      }
+      if (datos.numero_operacion) update.numero_operacion = datos.numero_operacion;
+      if (datos.linea_captura) update.linea_captura = datos.linea_captura;
+
+      const { error } = await supabase
+        .from("obligaciones_sat")
+        .update(update as never)
+        .eq("id", obligacionId);
+      if (error) {
+        return {
+          ok: true,
+          error: `Archivo subido pero no se pudo actualizar: ${error.message}`,
+        };
+      }
+    }
+  } catch (e) {
+    return {
+      ok: true,
+      error: `Subido. Parser falló: ${(e as Error).message}`,
+    };
+  }
+
+  revalidatePath(`/finanzas/obligaciones/${obligacionId}`);
+  return { ok: true, error: null };
+}
+
+/**
+ * Sube acuse + parsea (monto_calculado, línea, conceptos).
+ */
+export async function subirAcuseConParser(
+  _prev: SimpleState,
+  formData: FormData,
+): Promise<SimpleState> {
+  const obligacionId = formData.get("obligacion_id") as string;
+  const file = formData.get("archivo") as File | null;
+  if (!obligacionId || !file) {
+    return { ...initialSimpleState, error: "Faltan datos." };
+  }
+
+  const r1 = await subirArchivo(obligacionId, file, "acuse");
+  if (!r1.ok) return r1;
+
+  try {
+    const { parsearAcuseDeclaracion } = await import("@/lib/obligaciones/parser");
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const datos = await parsearAcuseDeclaracion(buffer);
+
+    if (datos.monto_calculado || datos.linea_captura) {
+      const supabase = createClient();
+      const update: Record<string, unknown> = {
+        estado: "presentada",
+        fecha_presentacion: new Date().toISOString().slice(0, 10),
+        updated_at: new Date().toISOString(),
+      };
+      if (datos.monto_calculado != null)
+        update.monto_calculado = datos.monto_calculado;
+      if (datos.linea_captura) update.linea_captura = datos.linea_captura;
+
+      const { error } = await supabase
+        .from("obligaciones_sat")
+        .update(update as never)
+        .eq("id", obligacionId);
+      if (error) {
+        return {
+          ok: true,
+          error: `Subido pero no se pudo actualizar: ${error.message}`,
+        };
+      }
+    }
+  } catch (e) {
+    return {
+      ok: true,
+      error: `Subido. Parser falló: ${(e as Error).message}`,
+    };
+  }
+
+  revalidatePath(`/finanzas/obligaciones/${obligacionId}`);
+  return { ok: true, error: null };
+}
+
 // ============================================================================
 // 9. Eliminar acuse / comprobante (CEO/tesorero)
 // ============================================================================

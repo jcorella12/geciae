@@ -25,6 +25,7 @@ import { createClient } from "@/lib/supabase/server";
 
 import { AccionesPanel } from "./acciones-panel";
 import { DownloadDocumento } from "./download-documento";
+import { SubirPdfParser } from "./subir-pdf-parser";
 
 export const dynamic = "force-dynamic";
 
@@ -240,10 +241,23 @@ export default async function ObligacionDetallePage({
       </section>
 
       {/* Documentos */}
-      {(o.url_acuse || o.url_comprobante) && (
-        <section className="mb-5 rounded-lg border border-border bg-card p-5 shadow-sm">
-          <h2 className="text-[13.5px] font-semibold">Documentos</h2>
-          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+      <section className="mb-5 rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-[13.5px] font-semibold">Documentos</h2>
+        <p className="mt-1 text-[11.5px] text-ink-3">
+          Sube el acuse y/o comprobante de pago — el sistema lee el PDF y
+          extrae automáticamente la línea de captura, monto pagado, fecha y
+          número de operación.
+        </p>
+
+        {puedeEditar && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <SubirPdfParser obligacionId={params.id} tipo="acuse" />
+            <SubirPdfParser obligacionId={params.id} tipo="comprobante" />
+          </div>
+        )}
+
+        {(o.url_acuse || o.url_comprobante) && (
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
             {o.url_acuse && (
               <DownloadDocumento
                 label="Acuse SAT"
@@ -263,8 +277,8 @@ export default async function ObligacionDetallePage({
               />
             )}
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
       {/* Acciones */}
       {puedeEditar && (

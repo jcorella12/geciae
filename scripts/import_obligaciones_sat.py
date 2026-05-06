@@ -153,29 +153,85 @@ def extraer_linea_captura(pdfs):
 
 
 def extraer_monto_y_fecha_pago(pdf_path):
-    """Del comprobante de pago busca monto + fecha."""
+    """Del comprobante de pago busca: monto, fecha, número de operación, línea.
+
+    Formato típico de Pago Referenciado SAT:
+      Línea de Captura: 0425 6BR4 8500 4729 6422
+      Importe Pagado: $4,907
+      Fecha y Hora de Pago: 15/09/2025 14:32 Hrs.
+      Número de Operación: 122585724024
+    """
     txt = extraer_pdf_texto(pdf_path)
-    monto = None
-    fecha = None
-    # Monto: buscar el más grande encontrado (suele ser el total)
-    montos = [float(m.replace(",", "")) for m in MONTO_RE.findall(txt)]
-    if montos:
-        monto = max(montos)
-    # Fecha: dd/mm/yyyy o dd-MMM-yyyy
-    m = re.search(r"(\d{2})[/-](\d{2})[/-](\d{4})", txt)
+    out = {
+        "monto": None,
+        "fecha": None,
+        "numero_operacion": None,
+        "linea": None,
+    }
+
+    # Importe Pagado: $4,907.00 (con o sin decimales)
+    m = re.search(r"Importe\s*Pagado[:\s]*\$?\s*([\d,]+(?:\.\d{2})?)", txt, re.I)
     if m:
         try:
-            fecha = date(int(m.group(3)), int(m.group(2)), int(m.group(1))).isoformat()
+            out["monto"] = float(m.group(1).replace(",", ""))
         except ValueError:
             pass
-    if not fecha:
-        # Fallback: fecha de modificación del archivo
+
+    # Fecha y Hora de Pago: 15/09/2025
+    m = re.search(r"Fecha\s*y\s*Hora\s*de\s*Pago[:\s]*(\d{2})/(\d{2})/(\d{4})", txt, re.I)
+    if m:
+        try:
+            out["fecha"] = date(int(m.group(3)), int(m.group(2)), int(m.group(1))).isoformat()
+        except ValueError:
+            pass
+
+    # Número de Operación: 122585724024
+    m = re.search(r"N[úu]mero\s*de\s*Operaci[óo]n[:\s]*(\d{8,15})", txt, re.I)
+    if m:
+        out["numero_operacion"] = m.group(1)
+
+    # Línea de Captura del comprobante: 5 grupos de 4 alfanuméricos
+    m = re.search(
+        r"L[íi]nea\s*de\s*Captura[:\s]*([0-9A-Z]{4})\s+([0-9A-Z]{4})\s+([0-9A-Z]{4})\s+([0-9A-Z]{4})\s+([0-9A-Z]{4})",
+        txt, re.I,
+    )
+    if m:
+        out["linea"] = "".join(m.groups()).upper()
+
+    # Fallback: si no hay monto, usar el más grande del PDF
+    if out["monto"] is None:
+        montos = [float(x.replace(",", "")) for x in MONTO_RE.findall(txt)]
+        if montos:
+            out["monto"] = max(montos)
+
+    # Fallback fecha: mtime del archivo
+    if not out["fecha"]:
         try:
             ts = pdf_path.stat().st_mtime
-            fecha = date.fromtimestamp(ts).isoformat()
+            out["fecha"] = date.fromtimestamp(ts).isoformat()
         except Exception:
             pass
-    return monto, fecha
+
+    # Compatibilidad: legado regresaba (monto, fecha)
+    return out["monto"], out["fecha"], out["numero_operacion"], out["linea"]
+
+
+def extraer_monto_calculado_acuse(pdf_path):
+    """Del acuse de la declaración suma todas las 'Cantidad a pagar'."""
+    txt = extraer_pdf_texto(pdf_path)
+    # Manejar tanto 'Cantidad a pagar' como 'Cantidadapagar' (sin espacios)
+    matches = re.findall(
+        r"Cantidad\s*a\s*pagar[:\s]*([\d,]+(?:\.\d{2})?)",
+        txt,
+        re.I,
+    )
+    total = 0.0
+    for m in matches:
+        try:
+            total += float(m.replace(",", ""))
+        except ValueError:
+            pass
+    return total if matches else None
 
 
 def fecha_vencimiento(anio, mes):
@@ -325,11 +381,16 @@ def cmd_importar(filtro=None):
                 with open(acuse, "rb") as f:
                     storage_upload("obligaciones-sat", url_acuse, f.read())
 
+                # Monto calculado del acuse (suma "Cantidad a pagar")
+                monto_calculado = extraer_monto_calculado_acuse(acuse)
+
                 # Asociar comprobante (mismo índice si existe)
                 comp = comprobantes[i] if i < len(comprobantes) else None
                 url_comp = None
                 monto = None
                 fecha_pago = None
+                numero_op = None
+                linea_comprobante = None
                 if comp:
                     url_comp = (
                         f"{empresa_id}/{anio}/{mes_num:02d}/"
@@ -337,10 +398,13 @@ def cmd_importar(filtro=None):
                     )
                     with open(comp, "rb") as f:
                         storage_upload("obligaciones-sat", url_comp, f.read())
-                    monto, fecha_pago = extraer_monto_y_fecha_pago(comp)
+                    monto, fecha_pago, numero_op, linea_comprobante = extraer_monto_y_fecha_pago(comp)
                     pdfs_subidos += 1
 
                 pdfs_subidos += 1
+
+                # Línea: si la sacamos del comprobante, ganadora; si no, del acuse
+                linea_final = linea_comprobante or linea
 
                 # Estado
                 estado = "pagada" if comp else "presentada"
@@ -356,9 +420,11 @@ def cmd_importar(filtro=None):
                     "periodo_label": f"{mes_label} {anio}",
                     "fecha_vencimiento": venc,
                     "fecha_pago": fecha_pago,
-                    "fecha_presentacion": fecha_pago,  # asumimos misma
+                    "fecha_presentacion": fecha_pago,
+                    "monto_calculado": monto_calculado,
                     "monto_pagado": monto,
-                    "linea_captura": linea,
+                    "numero_operacion": numero_op,
+                    "linea_captura": linea_final,
                     "url_acuse": url_acuse,
                     "url_comprobante": url_comp,
                     "estado": estado,
