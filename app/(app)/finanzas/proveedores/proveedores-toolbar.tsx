@@ -149,16 +149,6 @@ export function ProveedoresToolbar({
         </span>
 
         <select
-          value={current.activo}
-          onChange={(e) => setParam("activo", e.target.value)}
-          className="h-8 rounded-md border border-input bg-card px-2 text-[12px]"
-        >
-          <option value="">Activos + inactivos</option>
-          <option value="true">Solo activos</option>
-          <option value="false">Solo inactivos</option>
-        </select>
-
-        <select
           value={current.tipo}
           onChange={(e) => setParam("tipo", e.target.value)}
           className="h-8 rounded-md border border-input bg-card px-2 text-[12px] capitalize"

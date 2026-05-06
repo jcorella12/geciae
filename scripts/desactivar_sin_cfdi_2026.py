@@ -119,7 +119,13 @@ def rfcs_actividad_2026(es_emitido: bool, rfc_grupo: set[str]) -> set[str]:
 
 
 def desactivar_lote(tabla: str, ids: list[str]) -> int:
-    """PATCH activo=false en lotes."""
+    """PATCH estado='inactivo' en lotes (el trigger sincroniza activo).
+
+    Nota: en el sistema hay dos columnas — `estado` enum (sprint 1.5) y
+    `activo` boolean legacy. El trigger sync_estado_activo mantiene
+    `activo` consistente con `estado`. Hay que tocar SIEMPRE `estado`,
+    nunca `activo` directamente, para que la UI (EstadoTabs) muestre bien.
+    """
     actualizados = 0
     for i in range(0, len(ids), 100):
         lote = ids[i : i + 100]
@@ -127,7 +133,7 @@ def desactivar_lote(tabla: str, ids: list[str]) -> int:
         s, info = http(
             "PATCH",
             f"/rest/v1/{tabla}",
-            body={"activo": False},
+            body={"estado": "inactivo"},
             params={"id": f"in.({ids_csv})"},
             prefer="return=minimal",
         )

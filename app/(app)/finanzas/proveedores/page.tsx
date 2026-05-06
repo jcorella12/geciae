@@ -84,9 +84,9 @@ export default async function ProveedoresPage({
     )
     .order("razon_social", { ascending: true });
 
-  if (activo === "true") query = query.eq("activo", true);
-  if (activo === "false") query = query.eq("activo", false);
-  // Filtro por estado de archivado (sprint 1.5)
+  // EstadoTabs (Activos/Inactivos/Archivados/Todos) es la fuente única
+  // de verdad para el filtro de estado. El campo legacy `activo` boolean
+  // se sincroniza con `estado` mediante trigger DB.
   if (estadoTab === "activo") query = query.eq("estado" as never, "activo");
   else if (estadoTab === "inactivo") query = query.eq("estado" as never, "inactivo");
   else if (estadoTab === "archivado") query = query.eq("estado" as never, "archivado");
