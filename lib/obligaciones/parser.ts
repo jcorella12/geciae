@@ -23,11 +23,52 @@ export type DatosComprobante = {
   numero_operacion: string | null;
 };
 
+export type TipoObligacion =
+  | "iva_mensual"
+  | "isr_provisional"
+  | "isr_retenciones"
+  | "iva_retenciones"
+  | "diot"
+  | "otra";
+
 export type DatosAcuse = {
   linea_captura: string | null;
   monto_calculado: number | null;
-  conceptos: Array<{ concepto: string; cantidad: number }>;
+  conceptos: Array<{
+    concepto: string;
+    cantidad: number;
+    tipo: TipoObligacion | null;
+  }>;
 };
+
+const CONCEPTO_TIPO_MAP: Array<{ rx: RegExp; tipo: TipoObligacion }> = [
+  { rx: /ISR\s*retenc(iones)?\s*por\s*salarios?/i, tipo: "isr_retenciones" },
+  {
+    rx: /ISR\s*retenc(iones)?\s+(RESICO|honorarios|arrendamiento)/i,
+    tipo: "isr_retenciones",
+  },
+  { rx: /ISR\s*personas?\s*morales?/i, tipo: "isr_provisional" },
+  { rx: /ISR\s*provisional/i, tipo: "isr_provisional" },
+  {
+    rx: /Impuesto\s*al\s*Valor\s*Agregado.*Personas?\s*morales?/i,
+    tipo: "iva_mensual",
+  },
+  { rx: /IVA\s*personas?\s*morales?/i, tipo: "iva_mensual" },
+  { rx: /IVA\s*retenc(iones)?/i, tipo: "iva_retenciones" },
+];
+
+function clasificarConcepto(textoConcepto: string): TipoObligacion | null {
+  if (!textoConcepto) return null;
+  // Normalizar — los PDFs vienen sin espacios a veces
+  const norm = textoConcepto
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\./g, " ")
+    .trim();
+  for (const { rx, tipo } of CONCEPTO_TIPO_MAP) {
+    if (rx.test(norm)) return tipo;
+  }
+  return null;
+}
 
 async function extraerTextoPdf(buffer: Buffer): Promise<string> {
   const result = await pdfParse(buffer);
@@ -95,15 +136,24 @@ export async function parsearAcuseDeclaracion(
     out.monto_calculado = total;
   }
 
-  // Conceptos: "Concepto de pago N: ISR personas morales ... Cantidad a pagar: X"
-  // (sin flag /s para compatibilidad ES; usamos [\s\S] en su lugar)
-  const concRegex =
-    /Concepto\s*de\s*pago\s*\d+[:\s]+([^\n]+?)\s*A\s*cargo[:\s]*([\d,]+)[\s\S]*?Cantidad\s*a\s*pagar[:\s]*([\d,]+(?:\.\d{2})?)/gi;
-  while ((m = concRegex.exec(txt)) !== null) {
-    const cantidad = parseFloat(m[3].replace(/,/g, ""));
-    if (cantidad > 0) {
-      out.conceptos.push({ concepto: m[1].trim(), cantidad });
-    }
+  // Conceptos: split por "Concepto de pago N:" y luego dentro de cada bloque
+  // extraer el nombre y la "Cantidad a pagar".
+  const bloques = txt.split(/Concepto\s*de\s*pago\s*\d+\s*[:.]?\s*/i);
+  for (const bloque of bloques.slice(1)) {
+    const nombreMatch = bloque.match(
+      /^\s*([^\n]+?)\s*(?=A\s*cargo|Acargo|A\s*favor|Afavor|Cantidad)/i,
+    );
+    const nombre = nombreMatch ? nombreMatch[1].trim() : "";
+    const cantMatch = bloque.match(
+      /Cantidad\s*a\s*pagar[:\s]*([\d,]+(?:\.\d{2})?)/i,
+    );
+    if (!cantMatch) continue;
+    const cantidad = parseFloat(cantMatch[1].replace(/,/g, ""));
+    out.conceptos.push({
+      concepto: nombre,
+      cantidad,
+      tipo: clasificarConcepto(nombre),
+    });
   }
 
   // Línea de captura (formato acuse: 5 grupos de 4)
