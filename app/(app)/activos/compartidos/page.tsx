@@ -15,7 +15,6 @@ import {
 import {
   esCEO,
   obtenerVinculos,
-  tieneAtributo,
 } from "@/lib/auth/permisos";
 import {
   COLOR_ALERTA,

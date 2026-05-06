@@ -6,7 +6,6 @@ import {
   esCEO,
   esRolEn,
   obtenerVinculos,
-  tieneAtributo,
 } from "@/lib/auth/permisos";
 import {
   AgregarCostoAnualSchema,

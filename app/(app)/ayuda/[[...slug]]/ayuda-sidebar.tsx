@@ -10,7 +10,6 @@ import {
   Shield,
   UserCircle,
   HeartHandshake,
-  Workflow,
   BookOpen,
   HelpCircle,
 } from "lucide-react";

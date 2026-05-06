@@ -7,16 +7,38 @@ upsert por (fecha, tipo). Ideal para inicializar el histórico al instalar
 el sistema.
 """
 
+import os
 import sys
 import json
 import urllib.request
 import urllib.error
 import urllib.parse
 from datetime import date, timedelta
+from pathlib import Path
 
 sys.stdout.reconfigure(encoding="utf-8")
 
-BANXICO_TOKEN = "e7f0c40040a33b56d88c136cd212434ac837a5e6c144b7a809ec9f2a2c7b54fb"
+
+def _read_env_local() -> dict[str, str]:
+    """Lee .env.local del proyecto (sin requerir dotenv)."""
+    out: dict[str, str] = {}
+    for candidate in (Path(".env.local"), Path(__file__).parent.parent / ".env.local"):
+        if candidate.exists():
+            for line in candidate.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, _, v = line.partition("=")
+                out[k.strip()] = v.strip().strip('"').strip("'")
+            break
+    return out
+
+
+_env = _read_env_local()
+BANXICO_TOKEN = os.environ.get("BANXICO_TOKEN") or _env.get("BANXICO_TOKEN", "")
+if not BANXICO_TOKEN:
+    print("Falta BANXICO_TOKEN — pon el token en .env.local o como env var.")
+    sys.exit(1)
 SERIE_TIIE_28 = "SF43783"
 BANXICO_BASE = "https://www.banxico.org.mx/SieAPIRest/service/v1"
 

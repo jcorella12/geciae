@@ -46,11 +46,6 @@ export default async function ReportesProyectosPnlPage() {
     (acc, p) => acc + Number(p.margen_neto ?? 0),
     0,
   );
-  const totalCostosT = lista.reduce(
-    (acc, p) => acc + Number(p.costos_totales ?? 0),
-    0,
-  );
-
   return (
     <div className="mx-auto w-full max-w-[1480px] px-8 py-7">
       <div className="mb-6">

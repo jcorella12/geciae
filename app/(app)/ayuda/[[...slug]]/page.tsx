@@ -150,7 +150,10 @@ export default async function AyudaPage({
               a: ({ href, children, ...props }) => {
                 if (href?.startsWith("/")) {
                   return (
-                    <Link href={href} {...(props as any)}>
+                    <Link
+                      href={href}
+                      {...(props as React.AnchorHTMLAttributes<HTMLAnchorElement>)}
+                    >
                       {children}
                     </Link>
                   );

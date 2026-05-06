@@ -43,9 +43,7 @@ const ESTADO_LABEL: Record<string, string> = {
   cancelado: "Cancelado",
 };
 
-export default async function PrestamosActivosPage({
-  searchParams,
-}: {
+export default async function PrestamosActivosPage(_props: {
   searchParams?: { tab?: string };
 }) {
   const supabase = createClient();

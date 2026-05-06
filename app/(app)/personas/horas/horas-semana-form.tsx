@@ -16,7 +16,6 @@ type Proyecto = {
 
 export function HorasSemanaForm({
   semana,
-  totalActual,
   proyectos,
 }: {
   semana: string;
@@ -34,7 +33,7 @@ export function HorasSemanaForm({
   function handleSubmit() {
     startTransition(async () => {
       let ok = 0;
-      let fail: string[] = [];
+      const fail: string[] = [];
       for (const p of proyectos) {
         const h = horas[p.id] ?? 0;
         if (h === p.horasYaRegistradas) continue; // sin cambio

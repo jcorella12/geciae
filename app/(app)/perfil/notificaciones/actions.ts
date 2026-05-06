@@ -40,18 +40,16 @@ export async function marcarTodasLeidas(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, count: 0, error: "Sin sesión." };
 
+  // El parámetro `categoria` se reserva para uso futuro: los tipos_notificacion
+  // definen la categoría en lib/notificaciones/catalogo.ts y por ahora se
+  // marcan TODAS las no leídas del usuario.
+  void categoria;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let q = (supabase as any)
+  const q = (supabase as any)
     .from("notificaciones")
     .update({ leida: true, leida_at: new Date().toISOString() })
     .eq("usuario_id", user.id)
     .eq("leida", false);
-
-  if (categoria) {
-    // El catálogo categoría no está en notificaciones; en este momento
-    // no filtramos por categoría desde acá (los tipos_notificacion definen
-    // la categoría en lib/notificaciones/catalogo.ts).
-  }
 
   const { error } = await q;
   if (error) return { ok: false, count: 0, error: error.message };
