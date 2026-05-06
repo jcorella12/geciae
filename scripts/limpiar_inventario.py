@@ -38,6 +38,19 @@ DST = PROJECT_ROOT / "data" / "inventario" / "inventario-consolidado.xlsx"
 
 TC_DEFAULT = 17.2530  # USD/MXN FIX más reciente (Banxico SF43718, 2026-05-06)
 
+# --- Correcciones del cliente ---
+# Cuando el cliente reporta errores en el archivo original, se documentan aquí.
+# Se aplican durante la consolidación pero NO modifican el archivo original
+# (auditoría preservada en hoja "Lotes detalle").
+#
+# Formato: codigo_canonico → { campo: valor_corregido, motivo: str }
+CORRECCIONES_LOTES: dict[str, dict] = {
+    "JA-M66D45-620/LB": {
+        "cantidad": 1546,
+        "motivo": "Cliente confirma 1546 paneles, no 15 (error de captura original)",
+    },
+}
+
 # --- Estilos ---
 HEADER_FILL = PatternFill("solid", start_color="1A1A2E")
 HEADER_FONT = Font(name="Arial", color="FFFFFF", bold=True, size=11)
@@ -100,17 +113,28 @@ def leer_lotes_estructura(wb_src: openpyxl.Workbook) -> list[dict]:
         salida = sheet.cell(row=row_idx, column=5).value or 0
         precio = sheet.cell(row=row_idx, column=7).value or 0
         cantidad = int(entrada) - int(salida) + int(exist_ini)
+        cod_canon = codigo_canonico(str(codigo))
+
+        # Aplicar correcciones del cliente (documentadas arriba en CORRECCIONES_LOTES)
+        correccion = CORRECCIONES_LOTES.get(cod_canon)
+        cantidad_original = cantidad
+        if correccion and "cantidad" in correccion:
+            cantidad = int(correccion["cantidad"])
+
         if cantidad <= 0:
             continue
         lotes.append(
             {
-                "codigo": codigo_canonico(str(codigo)),
+                "codigo": cod_canon,
                 "descripcion": str(descripcion).strip(),
                 "cantidad": cantidad,
+                "cantidad_original": cantidad_original,
                 "precio_unit_usd": float(precio),
                 "color": color,
                 "color_label": COLOR_LABELS.get(color, f"Otro ({color})"),
                 "row_origen": row_idx,
+                "corregido": correccion is not None,
+                "motivo_correccion": (correccion or {}).get("motivo"),
             }
         )
     return lotes
@@ -119,7 +143,14 @@ def leer_lotes_estructura(wb_src: openpyxl.Workbook) -> list[dict]:
 def consolidar_lotes(lotes: list[dict]) -> list[dict]:
     """Agrupa lotes por código y calcula precio promedio ponderado."""
     grupos: dict[str, dict] = defaultdict(
-        lambda: {"descripcion": "", "cantidad": 0, "valor_usd": 0.0, "lotes": 0, "colores": set()}
+        lambda: {
+            "descripcion": "",
+            "cantidad": 0,
+            "valor_usd": 0.0,
+            "lotes": 0,
+            "colores": set(),
+            "corregido": False,
+        }
     )
     for l in lotes:
         g = grupos[l["codigo"]]
@@ -129,6 +160,8 @@ def consolidar_lotes(lotes: list[dict]) -> list[dict]:
         g["valor_usd"] += l["cantidad"] * l["precio_unit_usd"]
         g["lotes"] += 1
         g["colores"].add(l["color"])
+        if l.get("corregido"):
+            g["corregido"] = True
 
     items = []
     for codigo, g in grupos.items():
@@ -142,6 +175,7 @@ def consolidar_lotes(lotes: list[dict]) -> list[dict]:
                 "valor_total_usd": round(g["valor_usd"], 2),
                 "n_lotes": g["lotes"],
                 "n_empresas": len(g["colores"]),
+                "corregido": g["corregido"],
             }
         )
     items.sort(key=lambda x: x["codigo"])
@@ -333,6 +367,8 @@ def escribir_lotes_detalle(wb: openpyxl.Workbook, lotes: list[dict]) -> None:
         "Código",
         "Descripción",
         "Cantidad",
+        "Cant. orig. (Excel)",
+        "Corrección",
         "Precio unit. USD",
         "Color (origen)",
         "Etiqueta color",
@@ -341,16 +377,27 @@ def escribir_lotes_detalle(wb: openpyxl.Workbook, lotes: list[dict]) -> None:
     ]
     header(ws, 1, headers)
 
+    correccion_fill = PatternFill("solid", start_color="FFF3CD")  # Amarillo suave
+
     fila = 2
     for l in lotes:
         ws.cell(row=fila, column=1, value=l["codigo"])
         ws.cell(row=fila, column=2, value=l["descripcion"])
         ws.cell(row=fila, column=3, value=l["cantidad"]).number_format = "#,##0"
-        ws.cell(row=fila, column=4, value=l["precio_unit_usd"]).number_format = "$#,##0.0000"
-        ws.cell(row=fila, column=5, value=l["color"])
-        ws.cell(row=fila, column=6, value=l["color_label"])
-        ws.cell(row=fila, column=7, value=f"=C{fila}*D{fila}").number_format = "$#,##0.00"
-        ws.cell(row=fila, column=8, value=f"=G{fila}*tc_actual").number_format = "$#,##0.00"
+        # Mostrar cantidad original solo si difiere
+        if l.get("corregido"):
+            ws.cell(row=fila, column=4, value=l["cantidad_original"]).number_format = "#,##0"
+            ws.cell(row=fila, column=5, value=l.get("motivo_correccion") or "Corregido")
+            for c in range(3, 6):
+                ws.cell(row=fila, column=c).fill = correccion_fill
+        else:
+            ws.cell(row=fila, column=4, value="—")
+            ws.cell(row=fila, column=5, value="")
+        ws.cell(row=fila, column=6, value=l["precio_unit_usd"]).number_format = "$#,##0.0000"
+        ws.cell(row=fila, column=7, value=l["color"])
+        ws.cell(row=fila, column=8, value=l["color_label"])
+        ws.cell(row=fila, column=9, value=f"=C{fila}*F{fila}").number_format = "$#,##0.00"
+        ws.cell(row=fila, column=10, value=f"=I{fila}*tc_actual").number_format = "$#,##0.00"
         for c in range(1, len(headers) + 1):
             ws.cell(row=fila, column=c).font = BODY_FONT
             ws.cell(row=fila, column=c).border = BORDER
@@ -358,8 +405,8 @@ def escribir_lotes_detalle(wb: openpyxl.Workbook, lotes: list[dict]) -> None:
 
     # Total
     ws.cell(row=fila, column=2, value="TOTAL").font = TOTAL_FONT
-    ws.cell(row=fila, column=7, value=f"=SUM(G2:G{fila - 1})").number_format = "$#,##0.00"
-    ws.cell(row=fila, column=8, value=f"=SUM(H2:H{fila - 1})").number_format = "$#,##0.00"
+    ws.cell(row=fila, column=9, value=f"=SUM(I2:I{fila - 1})").number_format = "$#,##0.00"
+    ws.cell(row=fila, column=10, value=f"=SUM(J2:J{fila - 1})").number_format = "$#,##0.00"
     for c in range(1, len(headers) + 1):
         ws.cell(row=fila, column=c).fill = TOTAL_FILL
         ws.cell(row=fila, column=c).font = TOTAL_FONT
@@ -383,11 +430,20 @@ def escribir_estructura(wb: openpyxl.Workbook, items: list[dict]) -> None:
     ]
     header(ws, 1, headers)
 
+    correccion_fill = PatternFill("solid", start_color="FFF3CD")
+
     fila = 2
     for it in items:
         ws.cell(row=fila, column=1, value=it["codigo"])
         ws.cell(row=fila, column=2, value=it["descripcion"])
-        ws.cell(row=fila, column=3, value=it["stock"]).number_format = "#,##0"
+        stock_cell = ws.cell(row=fila, column=3, value=it["stock"])
+        stock_cell.number_format = "#,##0"
+        if it.get("corregido"):
+            stock_cell.fill = correccion_fill
+            stock_cell.comment = openpyxl.comments.Comment(
+                "Stock corregido por instrucción del cliente. Ver hoja 'Lotes detalle'.",
+                "Sistema",
+            )
         ws.cell(row=fila, column=4, value=it["n_lotes"]).number_format = "#,##0"
         ws.cell(row=fila, column=5, value=it["n_empresas"]).number_format = "#,##0"
         ws.cell(row=fila, column=6, value=it["precio_unit_usd"]).number_format = "$#,##0.0000"
