@@ -312,6 +312,41 @@ def main():
     print(f"  Clientes flageados:    {n_cli}")
     print(f"  Proveedores flageados: {n_pro}")
 
+    # Actualizar tracking (lista_69b_meta) — el cron diario revisa este flag
+    # y crea notificación si pasaron >180 días desde la última actualización.
+    print()
+    print("Actualizando tracking lista_69b_meta...")
+    counts: dict[str, int] = {}
+    for r in lista.values():
+        k = normalizar_situacion(r["situacion"])
+        counts[k] = counts.get(k, 0) + 1
+    from datetime import date
+    meta_payload = {
+        "id": 1,
+        "ultima_actualizacion": date.today().isoformat(),
+        "total_rfcs": len(lista),
+        "total_definitivos": counts.get("definitivo", 0),
+        "total_presuntos": counts.get("presunto", 0),
+        "total_desvirtuados": counts.get("desvirtuado", 0),
+        "total_sentencia_favorable": counts.get("sentencia_favorable", 0),
+        "fuente_csv": str(csv_path.name),
+        "matches_clientes": n_cli,
+        "matches_proveedores": n_pro,
+        "ultima_alerta_enviada_at": None,
+        "observaciones": f"Importado por script. Próxima revisión recomendada: 6 meses.",
+    }
+    s, info = http(
+        "POST",
+        "/rest/v1/lista_69b_meta",
+        body=meta_payload,
+        params={"on_conflict": "id"},
+        prefer="resolution=merge-duplicates,return=minimal",
+    )
+    if s in (200, 201, 204):
+        print(f"  ✓ Tracking actualizado. La alerta se reseteará por 6 meses.")
+    else:
+        print(f"  ⚠ No se pudo actualizar tracking: {s} {str(info)[:200]}")
+
 
 if __name__ == "__main__":
     main()

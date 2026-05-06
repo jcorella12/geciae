@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { EstadoTabs } from "@/components/shared/estado-tabs";
+import { Lista69bBanner } from "@/components/shared/lista-69b-banner";
 
 import { ProveedoresToolbar } from "./proveedores-toolbar";
 
@@ -166,6 +167,7 @@ export default async function ProveedoresPage({
 
   return (
     <div className="mx-auto w-full max-w-[1480px] px-8 py-7">
+      <Lista69bBanner />
       <div className="mb-6 flex items-end justify-between gap-4">
         <div>
           <p className="lbl-mini">Administración y Finanzas</p>
