@@ -27,18 +27,25 @@ export default async function EditarVehiculoPage({
   if (!puede) redirect(`/activos/vehiculos/${params.id}`);
 
   const empresasIds = Array.from(new Set(v.map((x) => x.empresa_id)));
-  const [{ data: empresas }, { data: gastosRec }] = await Promise.all([
-    supabase
-      .from("empresas")
-      .select("id, codigo, razon_social, nombre_comercial")
-      .in("id", empresasIds)
-      .eq("activa", true),
-    supabase
-      .from("gastos_recurrentes")
-      .select("id, empresa_id, descripcion, monto")
-      .eq("categoria", "arrendamiento_vehiculo")
-      .eq("activo", true),
-  ]);
+  const [{ data: empresas }, { data: gastosRec }, { data: empleados }] =
+    await Promise.all([
+      supabase
+        .from("empresas")
+        .select("id, codigo, razon_social, nombre_comercial")
+        .in("id", empresasIds)
+        .eq("activa", true),
+      supabase
+        .from("gastos_recurrentes")
+        .select("id, empresa_id, descripcion, monto")
+        .eq("categoria", "arrendamiento_vehiculo")
+        .eq("activo", true),
+      supabase
+        .from("empleados")
+        .select("id, empresa_id, nombre_completo, puesto")
+        .in("empresa_id", empresasIds)
+        .eq("activo", true)
+        .order("nombre_completo"),
+    ]);
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 py-8">
@@ -57,6 +64,7 @@ export default async function EditarVehiculoPage({
       <VehiculoForm
         empresas={empresas ?? []}
         gastosRecurrentes={gastosRec ?? []}
+        empleados={empleados ?? []}
         vehiculoId={params.id}
         defaults={{
           empresa_id: vh.empresa_id,
@@ -81,6 +89,9 @@ export default async function EditarVehiculoPage({
           poliza_seguro: vh.poliza_seguro as string | null,
           fecha_vencimiento_seguro: vh.fecha_vencimiento_seguro as string | null,
           asignado_a: vh.asignado_a as string | null,
+          empleado_id:
+            ((vh as unknown as { empleado_id: string | null }).empleado_id) ??
+            null,
           observaciones: vh.observaciones as string | null,
         }}
       />

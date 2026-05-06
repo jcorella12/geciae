@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,13 @@ type GastoRec = {
   empresa_id: string;
   descripcion: string;
   monto: number | null;
+};
+
+type EmpleadoOpt = {
+  id: string;
+  empresa_id: string;
+  nombre_completo: string;
+  puesto: string | null;
 };
 
 type Defaults = {
@@ -48,17 +55,20 @@ type Defaults = {
   poliza_seguro?: string | null;
   fecha_vencimiento_seguro?: string | null;
   asignado_a?: string | null;
+  empleado_id?: string | null;
   observaciones?: string | null;
 };
 
 export function VehiculoForm({
   empresas,
   gastosRecurrentes,
+  empleados,
   vehiculoId,
   defaults,
 }: {
   empresas: Empresa[];
   gastosRecurrentes: GastoRec[];
+  empleados: EmpleadoOpt[];
   vehiculoId?: string;
   defaults?: Defaults;
 }) {
@@ -67,6 +77,15 @@ export function VehiculoForm({
     ? actualizarVehiculo.bind(null, vehiculoId)
     : crearVehiculo;
   const [state, formAction] = useFormState(action, initialVehiculoState);
+
+  // Empresa seleccionada — controla el filtrado del selector de empleado
+  // (un empleado solo se asigna a vehículos de su misma empresa).
+  const [empresaSel, setEmpresaSel] = useState<string>(
+    defaults?.empresa_id ?? "",
+  );
+  const empleadosFiltrados = empresaSel
+    ? empleados.filter((e) => e.empresa_id === empresaSel)
+    : empleados;
 
   useEffect(() => {
     if (state.ok && state.id) {
@@ -87,7 +106,8 @@ export function VehiculoForm({
               id="empresa_id"
               name="empresa_id"
               required
-              defaultValue={defaults?.empresa_id ?? ""}
+              value={empresaSel}
+              onChange={(ev) => setEmpresaSel(ev.target.value)}
               className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
             >
               <option value="">— Selecciona —</option>
@@ -377,6 +397,40 @@ export function VehiculoForm({
               className="mt-1"
             />
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Asignación</h2>
+        <p className="mt-1 text-[12.5px] text-ink-3">
+          Empleado responsable. Se usa para imputar el costo de gasolina y
+          mantenimiento en su perfil. Si el vehículo es de pool, déjalo vacío
+          y captura el empleado en cada carga.
+        </p>
+        <div className="mt-3">
+          <Label htmlFor="empleado_id" className="text-sm">
+            Empleado asignado
+          </Label>
+          <select
+            id="empleado_id"
+            name="empleado_id"
+            defaultValue={defaults?.empleado_id ?? ""}
+            disabled={!empresaSel}
+            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <option value="">— Sin asignar —</option>
+            {empleadosFiltrados.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nombre_completo}
+                {e.puesto ? ` · ${e.puesto}` : ""}
+              </option>
+            ))}
+          </select>
+          {!empresaSel && (
+            <p className="mt-1 text-[11.5px] text-amber-700">
+              Selecciona primero la empresa para ver sus empleados.
+            </p>
+          )}
         </div>
       </section>
 

@@ -140,6 +140,12 @@ const VehiculoSchema = z.object({
     .optional()
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
+  empleado_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
   observaciones: z
     .string()
     .max(2000)
@@ -164,6 +170,12 @@ const BitacoraSchema = z.object({
     .or(z.literal(""))
     .transform((v) => (v ? v : null)),
   km_lectura: z.coerce.number().int().nonnegative().optional(),
+  empleado_id: z
+    .string()
+    .uuid()
+    .optional()
+    .or(z.literal(""))
+    .transform((v) => (v ? v : null)),
   observaciones: z
     .string()
     .max(2000)
@@ -205,6 +217,7 @@ export async function crearVehiculo(
     fecha_vencimiento_seguro:
       formData.get("fecha_vencimiento_seguro") || undefined,
     asignado_a: formData.get("asignado_a") || undefined,
+    empleado_id: formData.get("empleado_id") || undefined,
     observaciones: formData.get("observaciones") || undefined,
   });
   if (!parsed.success) {
@@ -244,8 +257,9 @@ export async function crearVehiculo(
       poliza_seguro: d.poliza_seguro,
       fecha_vencimiento_seguro: d.fecha_vencimiento_seguro,
       asignado_a: d.asignado_a,
+      empleado_id: d.empleado_id,
       observaciones: d.observaciones,
-    })
+    } as never)
     .select("id")
     .single();
   if (error) return { ok: false, id: null, error: error.message };
@@ -282,6 +296,7 @@ export async function actualizarVehiculo(
     fecha_vencimiento_seguro:
       formData.get("fecha_vencimiento_seguro") || undefined,
     asignado_a: formData.get("asignado_a") || undefined,
+    empleado_id: formData.get("empleado_id") || undefined,
     observaciones: formData.get("observaciones") || undefined,
   });
   if (!parsed.success) {
@@ -301,7 +316,7 @@ export async function actualizarVehiculo(
     .update({
       ...d,
       updated_at: new Date().toISOString(),
-    })
+    } as never)
     .eq("id", vehiculoId);
   if (error) return { ok: false, id: vehiculoId, error: error.message };
   revalidatePath("/activos/vehiculos");
@@ -324,6 +339,7 @@ export async function registrarBitacora(
     iva: formData.get("iva") || undefined,
     proveedor_nombre: formData.get("proveedor_nombre") || undefined,
     km_lectura: formData.get("km_lectura") || undefined,
+    empleado_id: formData.get("empleado_id") || undefined,
     observaciones: formData.get("observaciones") || undefined,
   });
   if (!parsed.success) {
@@ -339,6 +355,21 @@ export async function registrarBitacora(
   } = await supabase.auth.getUser();
   if (!user) return { ok: false, error: "Sin sesión." };
 
+  // Si no se especificó empleado pero el vehículo tiene asignado uno,
+  // hereda automáticamente del vehículo (caso típico: el responsable es el
+  // que carga gasolina).
+  let empleadoFinal = d.empleado_id;
+  if (!empleadoFinal) {
+    const { data: vh } = (await supabase
+      .from("vehiculos")
+      .select("empleado_id" as never)
+      .eq("id", d.vehiculo_id)
+      .maybeSingle()) as unknown as {
+      data: { empleado_id: string | null } | null;
+    };
+    empleadoFinal = vh?.empleado_id ?? null;
+  }
+
   const { error } = await supabase.from("vehiculos_bitacora").insert({
     vehiculo_id: d.vehiculo_id,
     fecha: d.fecha,
@@ -350,9 +381,10 @@ export async function registrarBitacora(
     iva: d.iva,
     proveedor_nombre: d.proveedor_nombre,
     km_lectura: d.km_lectura,
+    empleado_id: empleadoFinal,
     observaciones: d.observaciones,
     capturado_por: user.id,
-  });
+  } as never);
   if (error) return { ok: false, error: error.message };
   revalidatePath(`/activos/vehiculos/${d.vehiculo_id}`);
   return { ok: true, error: null };

@@ -66,6 +66,26 @@ export default async function VehiculoDetallePage({
   const puedeEditar =
     esCEO(v) || esRolEn(v, vh.empresa_id, ["director", "operativo"]);
 
+  // Empleado asignado al vehículo (puede ser null). El campo es nuevo
+  // (migración 20260609) por lo que aún no está en los types regenerados.
+  const empleadoAsignadoId =
+    (vh as unknown as { empleado_id: string | null }).empleado_id ?? null;
+  const { data: empleadoAsignado } = empleadoAsignadoId
+    ? await supabase
+        .from("empleados")
+        .select("id, nombre_completo, puesto")
+        .eq("id", empleadoAsignadoId)
+        .maybeSingle()
+    : { data: null };
+
+  // Lista de empleados de la misma empresa, para el selector de la bitácora
+  const { data: empleadosEmpresa } = await supabase
+    .from("empleados")
+    .select("id, nombre_completo, puesto")
+    .eq("empresa_id", vh.empresa_id)
+    .eq("activo", true)
+    .order("nombre_completo");
+
   const { data: bitacora } = await supabase
     .from("vehiculos_bitacora")
     .select(
@@ -233,6 +253,28 @@ export default async function VehiculoDetallePage({
               <dd className="mt-0.5">{vh.uso as string}</dd>
             </div>
           )}
+          <div>
+            <dt className="text-[11px] uppercase tracking-wider text-ink-3">
+              Empleado asignado
+            </dt>
+            <dd className="mt-0.5">
+              {empleadoAsignado ? (
+                <Link
+                  href={`/personas/${empleadoAsignado.id}`}
+                  className="font-medium text-brand hover:underline"
+                >
+                  {empleadoAsignado.nombre_completo}
+                  {empleadoAsignado.puesto && (
+                    <span className="ml-1 text-[11px] font-normal text-ink-3">
+                      · {empleadoAsignado.puesto}
+                    </span>
+                  )}
+                </Link>
+              ) : (
+                <span className="text-ink-4">— Sin asignar —</span>
+              )}
+            </dd>
+          </div>
           {proveedor && (
             <div className="col-span-3">
               <dt className="text-[11px] uppercase tracking-wider text-ink-3">
@@ -311,6 +353,8 @@ export default async function VehiculoDetallePage({
             <BitacoraForm
               vehiculoId={params.id}
               kmActual={vh.km_actual as number}
+              empleados={empleadosEmpresa ?? []}
+              empleadoAsignadoId={empleadoAsignadoId}
             />
           </div>
         )}

@@ -19,9 +19,13 @@ const TIPOS = Object.keys(ETIQUETA_EVENTO_VEHICULO) as TipoEventoVehiculo[];
 export function BitacoraForm({
   vehiculoId,
   kmActual,
+  empleados,
+  empleadoAsignadoId,
 }: {
   vehiculoId: string;
   kmActual: number;
+  empleados: Array<{ id: string; nombre_completo: string; puesto: string | null }>;
+  empleadoAsignadoId: string | null;
 }) {
   const [state, formAction] = useFormState(
     registrarBitacora,
@@ -91,17 +95,41 @@ export function BitacoraForm({
         </div>
       </div>
 
-      <div>
-        <Label htmlFor="descripcion" className="text-[11px]">
-          Descripción *
-        </Label>
-        <Input
-          id="descripcion"
-          name="descripcion"
-          required
-          placeholder="Ej: Carga 30L Magna · Mantenimiento de 10,000km"
-          className="mt-0.5 text-sm"
-        />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="col-span-2">
+          <Label htmlFor="descripcion" className="text-[11px]">
+            Descripción *
+          </Label>
+          <Input
+            id="descripcion"
+            name="descripcion"
+            required
+            placeholder="Ej: Carga 30L Magna · Mantenimiento de 10,000km"
+            className="mt-0.5 text-sm"
+          />
+        </div>
+        <div className="col-span-2">
+          <Label htmlFor="empleado_id" className="text-[11px]">
+            Empleado{" "}
+            <span className="text-ink-4">
+              (default: {empleadoAsignadoId ? "asignado al vehículo" : "ninguno"})
+            </span>
+          </Label>
+          <select
+            id="empleado_id"
+            name="empleado_id"
+            defaultValue={empleadoAsignadoId ?? ""}
+            className="mt-0.5 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+          >
+            <option value="">— Sin asignar —</option>
+            {empleados.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.nombre_completo}
+                {e.puesto ? ` · ${e.puesto}` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {isCombustible && (
