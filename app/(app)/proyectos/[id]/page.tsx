@@ -515,6 +515,9 @@ export default async function ProyectoDetailPage({
                 </Link>
               </Button>
             )}
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/proyectos/${p.id}/pnl`}>📊 Rentabilidad</Link>
+            </Button>
           </div>
         </div>
       </div>
