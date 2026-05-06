@@ -57,12 +57,19 @@ export default async function InventarioPage({
     empresasUsuario: v.map((x) => x.empresa_id),
     puedeConsolidado: puedeVerConsolidado(v),
   });
+  // Productos del catálogo: los específicos de las empresas del filtro
+  // + los compartidos del grupo (empresa_id IS NULL) — estos están disponibles
+  // para todas las empresas (p.ej. cargas iniciales pagadas como gasto que
+  // pertenecen al inventario consolidado del grupo).
+  const empresasIn = filtro.empresasIds
+    .map((id) => `"${id}"`)
+    .join(",");
   let q = supabase
     .from("v_inventario_stock")
     .select(
       "producto_id, empresa_id, sku, nombre, categoria, marca, modelo, unidad_medida, stock_minimo, stock_actual, costo_promedio, costo_ultimo, valor_mercado, valor_costo, valor_mercado_total, ultimo_movimiento_fecha, estado_stock",
     )
-    .in("empresa_id", filtro.empresasIds)
+    .or(`empresa_id.is.null,empresa_id.in.(${empresasIn})`)
     .order("nombre");
 
   if (searchParams.categoria) q = q.eq("categoria", searchParams.categoria);
