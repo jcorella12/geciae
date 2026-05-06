@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -27,7 +27,8 @@ type Persona = {
 };
 
 type Defaults = {
-  empresa_id?: string;
+  empresa_id?: string | null;
+  compartido?: boolean;
   codigo?: string;
   nombre?: string;
   tipo?: string;
@@ -42,11 +43,13 @@ type Defaults = {
 export function AlmacenForm({
   empresas,
   responsables,
+  esCEO,
   almacenId,
   defaults,
 }: {
   empresas: Empresa[];
   responsables: Persona[];
+  esCEO: boolean;
   almacenId?: string;
   defaults?: Defaults;
 }) {
@@ -55,6 +58,9 @@ export function AlmacenForm({
     ? actualizarAlmacen.bind(null, almacenId)
     : crearAlmacen;
   const [state, formAction] = useFormState(action, initialAlmacenState);
+  const [compartido, setCompartido] = useState<boolean>(
+    defaults?.compartido ?? false,
+  );
 
   useEffect(() => {
     if (state.ok && state.id && !almacenId) {
@@ -68,24 +74,60 @@ export function AlmacenForm({
         <h2 className="text-base font-semibold">Identificación</h2>
         <div className="mt-4 grid grid-cols-3 gap-3">
           <div className="col-span-3">
-            <Label htmlFor="empresa_id" className="text-sm">
-              Empresa *
-            </Label>
-            <select
-              id="empresa_id"
-              name="empresa_id"
-              required
-              defaultValue={defaults?.empresa_id ?? ""}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+            <label
+              className={`flex items-start gap-3 rounded-md border p-3 ${
+                compartido
+                  ? "border-violet-300 bg-violet-50/40"
+                  : "border-border bg-bg-2/30"
+              } ${!esCEO ? "opacity-60" : ""}`}
             >
-              <option value="">— Selecciona —</option>
-              {empresas.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.codigo} · {e.nombre_comercial ?? e.razon_social}
-                </option>
-              ))}
-            </select>
+              <input
+                type="checkbox"
+                name="compartido"
+                checked={compartido}
+                disabled={!esCEO}
+                onChange={(ev) => setCompartido(ev.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-input"
+              />
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  Almacén compartido entre las empresas del grupo
+                </p>
+                <p className="text-[12px] text-ink-3">
+                  Marca esto si el almacén físico (ej. Contenedores, La Truqui,
+                  La Victoria) lo usan PSE/CIAE/IED/Limson en común. Al
+                  compartirse no pertenece a una empresa específica y solo el
+                  CEO lo puede crear/editar.
+                  {!esCEO && (
+                    <span className="ml-1 font-medium text-amber-700">
+                      Requiere rol CEO.
+                    </span>
+                  )}
+                </p>
+              </div>
+            </label>
           </div>
+          {!compartido && (
+            <div className="col-span-3">
+              <Label htmlFor="empresa_id" className="text-sm">
+                Empresa *
+              </Label>
+              <select
+                id="empresa_id"
+                name="empresa_id"
+                required={!compartido}
+                defaultValue={defaults?.empresa_id ?? ""}
+                className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
+              >
+                <option value="">— Selecciona —</option>
+                {empresas.map((e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.codigo} · {e.nombre_comercial ?? e.razon_social}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <Label htmlFor="codigo" className="text-sm">
               Código *

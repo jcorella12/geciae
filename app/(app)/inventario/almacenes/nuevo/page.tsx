@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { obtenerVinculos } from "@/lib/auth/permisos";
+import { esCEO, obtenerVinculos } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
 import { AlmacenForm } from "../almacen-form";
@@ -9,6 +9,7 @@ export default async function NuevoAlmacenPage() {
   const supabase = createClient();
   const v = await obtenerVinculos();
   const empresasIds = Array.from(new Set(v.map((x) => x.empresa_id)));
+  const ceo = esCEO(v);
 
   const [{ data: empresas }, { data: usuarios }] = await Promise.all([
     supabase
@@ -54,6 +55,7 @@ export default async function NuevoAlmacenPage() {
       <AlmacenForm
         empresas={empresas ?? []}
         responsables={responsables}
+        esCEO={ceo}
       />
     </div>
   );

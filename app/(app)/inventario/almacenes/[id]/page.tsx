@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
-import { esCEO, esRolEn, obtenerVinculos } from "@/lib/auth/permisos";
+import { esCEO as esCEOFn, esRolEn, obtenerVinculos } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
 import { AlmacenForm } from "../almacen-form";
@@ -24,8 +24,15 @@ export default async function EditarAlmacenPage({
 
   if (!alm) notFound();
 
-  const puede =
-    esCEO(v) || esRolEn(v, alm.empresa_id, ["director", "operativo"]);
+  const compartido = Boolean(
+    (alm as unknown as { compartido?: boolean }).compartido,
+  );
+  const ceo = esCEOFn(v);
+  // Compartidos: solo CEO. Propios: CEO o director/operativo de la empresa.
+  const puede = compartido
+    ? ceo
+    : ceo ||
+      (alm.empresa_id && esRolEn(v, alm.empresa_id, ["director", "operativo"]));
   if (!puede) redirect("/inventario/almacenes");
 
   const empresasIds = Array.from(new Set(v.map((x) => x.empresa_id)));
@@ -97,9 +104,11 @@ export default async function EditarAlmacenPage({
       <AlmacenForm
         empresas={empresas ?? []}
         responsables={responsables}
+        esCEO={ceo}
         almacenId={params.id}
         defaults={{
-          empresa_id: alm.empresa_id as string,
+          empresa_id: (alm.empresa_id as string | null) ?? null,
+          compartido,
           codigo: alm.codigo as string,
           nombre: alm.nombre as string,
           tipo: (alm.tipo as string) ?? "principal",

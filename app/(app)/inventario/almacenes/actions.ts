@@ -13,48 +13,71 @@ import { createClient } from "@/lib/supabase/server";
 
 const TIPOS = ["principal", "obra", "virtual_cuadrilla", "otro"] as const;
 
-const AlmacenSchema = z.object({
-  empresa_id: z.string().uuid(),
-  codigo: z
-    .string()
-    .trim()
-    .min(2, "Código mínimo 2 caracteres")
-    .max(20)
-    .transform((v) => v.toUpperCase()),
-  nombre: z.string().trim().min(2).max(150),
-  tipo: z.enum(TIPOS).default("principal"),
-  responsable_id: z
-    .string()
-    .uuid()
-    .optional()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
-  direccion_calle: z
-    .string()
-    .max(200)
-    .optional()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
-  direccion_ciudad: z
-    .string()
-    .max(100)
-    .optional()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
-  direccion_estado: z
-    .string()
-    .max(100)
-    .optional()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
-  direccion_cp: z
-    .string()
-    .max(10)
-    .optional()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
-  activo: z.coerce.boolean().default(true),
-});
+const AlmacenSchema = z
+  .object({
+    empresa_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    compartido: z.coerce.boolean().default(false),
+    codigo: z
+      .string()
+      .trim()
+      .min(2, "Código mínimo 2 caracteres")
+      .max(20)
+      .transform((v) => v.toUpperCase()),
+    nombre: z.string().trim().min(2).max(150),
+    tipo: z.enum(TIPOS).default("principal"),
+    responsable_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    direccion_calle: z
+      .string()
+      .max(200)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    direccion_ciudad: z
+      .string()
+      .max(100)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    direccion_estado: z
+      .string()
+      .max(100)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    direccion_cp: z
+      .string()
+      .max(10)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    activo: z.coerce.boolean().default(true),
+  })
+  .superRefine((d, ctx) => {
+    if (d.compartido && d.empresa_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Si es compartido no debe tener empresa.",
+        path: ["empresa_id"],
+      });
+    }
+    if (!d.compartido && !d.empresa_id) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Selecciona empresa o marca 'Compartido entre empresas'.",
+        path: ["empresa_id"],
+      });
+    }
+  });
 
 export type AlmacenState = {
   ok: boolean;
@@ -64,8 +87,15 @@ export type AlmacenState = {
 
 const initialState: AlmacenState = { ok: false, id: null, error: null };
 
-async function gateAlmacen(empresaId: string): Promise<boolean> {
+async function gateAlmacen(
+  empresaId: string | null,
+  compartido: boolean,
+): Promise<boolean> {
   const v = await obtenerVinculos();
+  // Compartidos: solo CEO
+  if (compartido) return esCEO(v);
+  // Propios: CEO o director/operativo de la empresa dueña
+  if (!empresaId) return false;
   return esCEO(v) || esRolEn(v, empresaId, ["director", "operativo"]);
 }
 
@@ -85,7 +115,8 @@ export async function crearAlmacen(
   formData: FormData,
 ): Promise<AlmacenState> {
   const parsed = AlmacenSchema.safeParse({
-    empresa_id: formData.get("empresa_id"),
+    empresa_id: formData.get("empresa_id") || undefined,
+    compartido: formData.get("compartido") === "on",
     codigo: formData.get("codigo"),
     nombre: formData.get("nombre"),
     tipo: formData.get("tipo") || "principal",
@@ -104,21 +135,28 @@ export async function crearAlmacen(
     };
   }
   const d = parsed.data;
-  if (!(await gateAlmacen(d.empresa_id))) {
-    return { ok: false, id: null, error: "Sin permiso." };
+  if (!(await gateAlmacen(d.empresa_id, d.compartido))) {
+    return {
+      ok: false,
+      id: null,
+      error: d.compartido
+        ? "Solo el CEO puede crear almacenes compartidos."
+        : "Sin permiso.",
+    };
   }
   const supabase = createClient();
   const { data, error } = await supabase
     .from("almacenes")
     .insert({
       empresa_id: d.empresa_id,
+      compartido: d.compartido,
       codigo: d.codigo,
       nombre: d.nombre,
       tipo: d.tipo,
       responsable_id: d.responsable_id,
       direccion: buildDireccion(d),
       activo: d.activo,
-    })
+    } as never)
     .select("id")
     .single();
   if (error) return { ok: false, id: null, error: error.message };
@@ -132,7 +170,8 @@ export async function actualizarAlmacen(
   formData: FormData,
 ): Promise<AlmacenState> {
   const parsed = AlmacenSchema.safeParse({
-    empresa_id: formData.get("empresa_id"),
+    empresa_id: formData.get("empresa_id") || undefined,
+    compartido: formData.get("compartido") === "on",
     codigo: formData.get("codigo"),
     nombre: formData.get("nombre"),
     tipo: formData.get("tipo") || "principal",
@@ -151,21 +190,28 @@ export async function actualizarAlmacen(
     };
   }
   const d = parsed.data;
-  if (!(await gateAlmacen(d.empresa_id))) {
-    return { ok: false, id: almacenId, error: "Sin permiso." };
+  if (!(await gateAlmacen(d.empresa_id, d.compartido))) {
+    return {
+      ok: false,
+      id: almacenId,
+      error: d.compartido
+        ? "Solo el CEO puede modificar almacenes compartidos."
+        : "Sin permiso.",
+    };
   }
   const supabase = createClient();
   const { error } = await supabase
     .from("almacenes")
     .update({
       empresa_id: d.empresa_id,
+      compartido: d.compartido,
       codigo: d.codigo,
       nombre: d.nombre,
       tipo: d.tipo,
       responsable_id: d.responsable_id,
       direccion: buildDireccion(d),
       activo: d.activo,
-    })
+    } as never)
     .eq("id", almacenId);
   if (error) return { ok: false, id: almacenId, error: error.message };
   revalidatePath("/inventario/almacenes");
@@ -177,13 +223,15 @@ export async function toggleAlmacenActivo(
   almacenId: string,
 ): Promise<{ ok: boolean; error: string | null }> {
   const supabase = createClient();
-  const { data: alm } = await supabase
+  const { data: alm } = (await supabase
     .from("almacenes")
-    .select("empresa_id, activo")
+    .select("empresa_id, activo, compartido" as never)
     .eq("id", almacenId)
-    .maybeSingle();
+    .maybeSingle()) as unknown as {
+    data: { empresa_id: string | null; activo: boolean; compartido: boolean } | null;
+  };
   if (!alm) return { ok: false, error: "Almacén no encontrado" };
-  if (!(await gateAlmacen(alm.empresa_id))) {
+  if (!(await gateAlmacen(alm.empresa_id, alm.compartido))) {
     return { ok: false, error: "Sin permiso" };
   }
   const { error } = await supabase

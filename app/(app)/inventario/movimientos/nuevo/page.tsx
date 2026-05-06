@@ -34,11 +34,13 @@ export default async function NuevoMovimientoPage({
       .eq("activo", true)
       .order("nombre")
       .limit(500),
+    // Almacenes propios de las empresas del usuario + compartidos del grupo.
+    // RLS ya filtra; aquí solo aplicamos `activo` y traemos todos.
     supabase
       .from("almacenes")
-      .select("id, codigo, nombre, empresa_id")
-      .in("empresa_id", empresasIds)
+      .select("id, codigo, nombre, empresa_id, compartido" as never)
       .eq("activo", true)
+      .order("compartido", { ascending: false })
       .order("nombre"),
     supabase
       .from("proyectos")
@@ -74,7 +76,7 @@ export default async function NuevoMovimientoPage({
       <MovimientoForm
         empresas={empresas ?? []}
         items={items ?? []}
-        almacenes={almacenes ?? []}
+        almacenes={(almacenes ?? []) as never}
         proyectos={proyectos ?? []}
         proveedores={proveedores ?? []}
         defaults={{

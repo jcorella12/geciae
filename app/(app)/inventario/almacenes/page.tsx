@@ -52,24 +52,31 @@ export default async function AlmacenesPage() {
     puedeConsolidado: puedeVerConsolidado(v),
   });
 
+  // Mostramos: 1) compartidos del grupo, 2) propios de las empresas filtradas.
+  // RLS ya garantiza que el usuario sólo ve los compartidos + los de sus
+  // empresas, así que aquí filtramos en cliente para no excluir los compartidos.
   const { data: almacenes } = await supabase
     .from("almacenes")
     .select(
-      "id, empresa_id, codigo, nombre, tipo, activo, empresas(codigo, nombre_comercial)",
+      "id, empresa_id, codigo, nombre, tipo, activo, compartido, empresas(codigo, nombre_comercial)" as never,
     )
-    .in("empresa_id", filtro.empresasIds)
+    .order("compartido", { ascending: false })
     .order("activo", { ascending: false })
     .order("codigo");
 
-  const lista = (almacenes ?? []) as Array<{
+  const todos = (almacenes ?? []) as unknown as Array<{
     id: string;
-    empresa_id: string;
+    empresa_id: string | null;
     codigo: string;
     nombre: string;
     tipo: string | null;
     activo: boolean;
+    compartido: boolean;
     empresas: { codigo: string; nombre_comercial: string | null } | null;
   }>;
+  const lista = todos.filter(
+    (a) => a.compartido || filtro.empresasIds.includes(a.empresa_id ?? ""),
+  );
 
   const activos = lista.filter((a) => a.activo).length;
   const inactivos = lista.length - activos;
@@ -147,14 +154,20 @@ export default async function AlmacenesPage() {
                     linkLabel={`Editar almacén ${a.codigo}`}
                   >
                     <TableCell>
-                      <span className="inline-flex items-center gap-1.5 text-xs">
-                        <span
-                          className={`inline-block h-2 w-2 rounded-full ${
-                            empresaCodigoColor[codEmp] ?? "bg-muted-foreground"
-                          }`}
-                        />
-                        {codEmp}
-                      </span>
+                      {a.compartido ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[10.5px] font-medium text-violet-800">
+                          Compartido
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 text-xs">
+                          <span
+                            className={`inline-block h-2 w-2 rounded-full ${
+                              empresaCodigoColor[codEmp] ?? "bg-muted-foreground"
+                            }`}
+                          />
+                          {codEmp}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="font-mono text-xs">
                       {a.codigo}

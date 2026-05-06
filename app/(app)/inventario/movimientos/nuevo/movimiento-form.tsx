@@ -30,7 +30,8 @@ type Almacen = {
   id: string;
   codigo: string;
   nombre: string;
-  empresa_id: string;
+  empresa_id: string | null;
+  compartido?: boolean;
 };
 type Proyecto = {
   id: string;
@@ -98,8 +99,13 @@ export function MovimientoForm({
   }, [items, empresaId, busquedaItem]);
 
   const itemSeleccionado = items.find((i) => i.id === productoId);
+  // Mostramos almacenes propios de la empresa + los compartidos del grupo
+  // (los compartidos los reconocemos porque empresa_id es null).
   const almacenesEmpresa = almacenes.filter(
-    (a) => !empresaId || a.empresa_id === empresaId,
+    (a) =>
+      a.empresa_id === null ||
+      !empresaId ||
+      a.empresa_id === empresaId,
   );
   const proyectosEmpresa = proyectos.filter(
     (p) => !empresaId || p.empresa_id === empresaId,
@@ -178,6 +184,7 @@ export function MovimientoForm({
               {almacenesEmpresa.map((a) => (
                 <option key={a.id} value={a.id}>
                   {a.codigo} · {a.nombre}
+                  {a.empresa_id === null ? " (compartido)" : ""}
                 </option>
               ))}
             </select>
