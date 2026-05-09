@@ -26,6 +26,7 @@ import {
   esCEO,
   esRolEn,
   obtenerVinculos,
+  tieneAtributo,
 } from "@/lib/auth/permisos";
 import {
   COLOR_CATEGORIA_INV,
@@ -42,6 +43,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { ActualizarValorBtn } from "./actualizar-valor-btn";
+import { AjustarCantidadBtn } from "./ajustar-cantidad-btn";
 
 export const dynamic = "force-dynamic";
 
@@ -81,6 +83,16 @@ export default async function ItemInventarioPage({
   // consolidado). El detalle se muestra normal; solo CEO puede editarlo.
   if (!item || !item.producto_id) notFound();
 
+  // Edición de valor de mercado: cualquier vínculo con visibilidad al producto
+  const puedeEditarValorMercado =
+    v.length > 0 &&
+    (!item.empresa_id ||
+      esCEO(v) ||
+      v.some((x) => x.empresa_id === item.empresa_id));
+  // Edición de cantidad de stock: solo CEO o atributo contralor (es destructivo)
+  const puedeAjustarCantidad = esCEO(v) || tieneAtributo(v, "contralor");
+  // Operaciones regulares (entrada/salida vía form de movimientos): rol activo
+  // en la empresa del producto. Para productos del grupo solo CEO.
   const puedeEditar = item.empresa_id
     ? esCEO(v) || esRolEn(v, item.empresa_id, ["director", "operativo"])
     : esCEO(v);
@@ -217,18 +229,31 @@ export default async function ItemInventarioPage({
 
       {/* Costos histórico */}
       <section className="mb-6 rounded-lg border border-border bg-card p-5 shadow-sm">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-semibold">
             Histórico de costos (compras)
           </h2>
-          {puedeEditar && item.empresa_id && (
-            <ActualizarValorBtn
-              itemId={item.producto_id}
-              empresaId={item.empresa_id}
-              valorActual={item.valor_mercado}
-              fuenteActual={fuenteValor}
-            />
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {puedeAjustarCantidad && (stockAlm ?? []).length > 0 && (
+              <AjustarCantidadBtn
+                productoId={item.producto_id}
+                almacenes={(stockAlm ?? []).map((a) => ({
+                  almacen_id: a.almacen_id as string,
+                  almacen_codigo: a.almacen_codigo as string,
+                  almacen_nombre: a.almacen_nombre as string,
+                  stock: Number(a.stock ?? 0),
+                }))}
+              />
+            )}
+            {puedeEditarValorMercado && (
+              <ActualizarValorBtn
+                itemId={item.producto_id}
+                empresaId={item.empresa_id ?? null}
+                valorActual={item.valor_mercado}
+                fuenteActual={fuenteValor}
+              />
+            )}
+          </div>
         </div>
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
           <Stat

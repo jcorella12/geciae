@@ -16,7 +16,8 @@ export function ActualizarValorBtn({
   fuenteActual,
 }: {
   itemId: string;
-  empresaId: string;
+  /** null si el producto pertenece al catálogo del grupo (compartido). */
+  empresaId: string | null;
   valorActual: number | null;
   fuenteActual: string | null;
 }) {
