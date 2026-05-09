@@ -166,9 +166,14 @@ export function AppSidebar({
         label: "Cumplimiento fiscal",
         icon: ShieldCheck,
       },
-      // Módulos restringidos (Sprint S) — solo CEO + contralor + tesorero
+      // Módulos restringidos (Sprint S/EF) — solo CEO + contralor + tesorero
       ...(puedeVerAjustesGerenciales
         ? [
+            {
+              href: "/finanzas/estados-gerenciales",
+              label: "Estados gerenciales",
+              icon: BarChart3,
+            },
             {
               href: "/finanzas/ajustes-gerenciales",
               label: "Ajustes gerenciales",

@@ -1,6 +1,7 @@
 import {
   ArrowRight,
   Banknote,
+  BarChart3,
   CalendarDays,
   ClipboardList,
   CreditCard,
@@ -85,6 +86,12 @@ const modulos = [
 ] as const;
 
 const modulosRestringidos = [
+  {
+    href: "/finanzas/estados-gerenciales",
+    label: "Estados gerenciales",
+    desc: "Balance, Resultados y Flujo generados desde el ERP en tiempo real. Aproximación, no oficial fiscalmente.",
+    icon: BarChart3,
+  },
   {
     href: "/finanzas/ajustes-gerenciales",
     label: "Ajustes gerenciales",
