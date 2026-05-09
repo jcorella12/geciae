@@ -77,10 +77,13 @@ export default async function ItemInventarioPage({
     .eq("producto_id", params.id)
     .maybeSingle();
 
-  if (!item || !item.empresa_id || !item.producto_id) notFound();
+  // Productos compartidos del grupo tienen empresa_id = NULL (catálogo
+  // consolidado). El detalle se muestra normal; solo CEO puede editarlo.
+  if (!item || !item.producto_id) notFound();
 
-  const puedeEditar =
-    esCEO(v) || esRolEn(v, item.empresa_id, ["director", "operativo"]);
+  const puedeEditar = item.empresa_id
+    ? esCEO(v) || esRolEn(v, item.empresa_id, ["director", "operativo"])
+    : esCEO(v);
 
   // Producto base — fuente_valor no está expuesta en la vista
   const { data: productoBase } = await supabase
@@ -218,7 +221,7 @@ export default async function ItemInventarioPage({
           <h2 className="text-base font-semibold">
             Histórico de costos (compras)
           </h2>
-          {puedeEditar && (
+          {puedeEditar && item.empresa_id && (
             <ActualizarValorBtn
               itemId={item.producto_id}
               empresaId={item.empresa_id}
