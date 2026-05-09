@@ -48,6 +48,13 @@ const nextConfig = {
     serverActions: {
       bodySizeLimit: "10mb", // CFDIs, INE/CSF escaneadas, etc.
     },
+    // Sprint 8 — @nodecfdi/sat-ws-descarga-masiva v2 es ESM-only y se carga
+    // dinámicamente desde server actions. Excluirlo del bundling de Next
+    // evita errores ERR_REQUIRE_ESM en build.
+    serverComponentsExternalPackages: [
+      "@nodecfdi/sat-ws-descarga-masiva",
+      "yauzl-promise",
+    ],
   },
   env: {
     NEXT_PUBLIC_BUILD_SHA: sha,

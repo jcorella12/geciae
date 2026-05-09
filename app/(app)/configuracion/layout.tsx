@@ -6,9 +6,10 @@ import {
   puedeAccederCentros,
   puedeAccederConfiguracion,
 } from "@/lib/auth/permisos";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-const tabs = [
+const tabsBase = [
   { href: "/configuracion/usuarios", label: "Usuarios" },
   { href: "/configuracion/centros", label: "Centros" },
   { href: "/configuracion/sgc", label: "SGC" },
@@ -27,6 +28,16 @@ export default async function ConfiguracionLayout({
   if (!puedeAccederConfiguracion(vinculos) && !puedeAccederCentros(vinculos)) {
     redirect("/mi-dia");
   }
+
+  // Tab SAT solo si CEO o contralor
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: puedeSat } = await (supabase as any).rpc(
+    "usuario_puede_gestionar_sat",
+  );
+  const tabs = puedeSat
+    ? [...tabsBase, { href: "/configuracion/sat", label: "SAT" }]
+    : tabsBase;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8">
