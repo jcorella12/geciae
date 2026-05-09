@@ -153,26 +153,104 @@ export async function crearItemInventario(
   redirect(`/inventario/${nuevo.id}`);
 }
 
+export type UnidadValorMercado = "mxn_unidad" | "usd_unidad" | "usd_watt";
+
+/**
+ * Actualiza el valor de mercado de un producto. Soporta 3 unidades de captura:
+ *   mxn_unidad  → pesos por unidad (default)
+ *   usd_unidad  → dólares por unidad (se convierte a MXN con TC del momento)
+ *   usd_watt    → dólares por watt × capacidad del producto = USD/unidad → MXN
+ *
+ * Guarda el valor original (en su unidad de captura) + el TC del momento +
+ * el equivalente MXN/unidad canónico para listings y totales.
+ */
 export async function actualizarValorMercado(
   itemId: string,
   empresaId: string | null,
   valor: number,
   fuente: string | null,
+  unidad: UnidadValorMercado = "mxn_unidad",
 ): Promise<MovimientoState> {
-  // Valor de mercado es un dato gerencial — accesible a todos los roles
-  // que tengan visibilidad del producto, no solo CEO/director/operativo.
   const g = await gateValorMercado(empresaId);
   if (!g.ok) return { ...initialMovimientoState, error: g.error };
 
+  if (!Number.isFinite(valor) || valor <= 0) {
+    return { ...initialMovimientoState, error: "Valor inválido" };
+  }
+
   const supabase = createClient();
-  const { error } = await supabase
+
+  // Si captura es USD, necesitamos TC actual para convertir a MXN canónico
+  let tcActual: number | null = null;
+  if (unidad === "usd_unidad" || unidad === "usd_watt") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: tcData } = await (supabase as any).rpc(
+      "tipo_cambio_actual",
+      { p_par: "USD/MXN" },
+    );
+    tcActual = tcData ? Number(tcData) : null;
+    if (!tcActual || tcActual <= 0) {
+      return {
+        ...initialMovimientoState,
+        error:
+          "No hay tipo de cambio USD/MXN disponible. Sincroniza Banxico primero.",
+      };
+    }
+  }
+
+  // Si captura es USD/watt, necesitamos capacidad del producto
+  let capacidadW: number | null = null;
+  if (unidad === "usd_watt") {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: prod } = await (supabase as any)
+      .from("catalogo_productos")
+      .select("capacidad, unidad_capacidad")
+      .eq("id", itemId)
+      .maybeSingle();
+    if (!prod || !prod.capacidad) {
+      return {
+        ...initialMovimientoState,
+        error:
+          "El producto no tiene capacidad registrada (W o kW). Captura primero la capacidad para usar USD/watt.",
+      };
+    }
+    const cap = Number(prod.capacidad);
+    capacidadW =
+      prod.unidad_capacidad === "kW" ? cap * 1000 : cap; // default W
+  }
+
+  // Calcular el valor MXN/unidad canónico
+  let valorMxnUnidad: number;
+  let valorUsdUnidad: number | null = null;
+  let valorUsdWatt: number | null = null;
+
+  if (unidad === "mxn_unidad") {
+    valorMxnUnidad = valor;
+  } else if (unidad === "usd_unidad") {
+    valorUsdUnidad = valor;
+    valorMxnUnidad = valor * (tcActual as number);
+  } else {
+    // usd_watt
+    valorUsdWatt = valor;
+    valorUsdUnidad = valor * (capacidadW as number);
+    valorMxnUnidad = valorUsdUnidad * (tcActual as number);
+  }
+
+  const update: Record<string, unknown> = {
+    valor_mercado: Math.round(valorMxnUnidad * 100) / 100,
+    valor_mercado_unidad: unidad,
+    valor_mercado_usd: valorUsdUnidad,
+    valor_mercado_usd_watt: valorUsdWatt,
+    valor_mercado_tc: tcActual,
+    fecha_actualizacion_valor: new Date().toISOString().slice(0, 10),
+    fuente_valor: fuente,
+    updated_at: new Date().toISOString(),
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("catalogo_productos")
-    .update({
-      valor_mercado: valor,
-      fecha_actualizacion_valor: new Date().toISOString().slice(0, 10),
-      fuente_valor: fuente,
-      updated_at: new Date().toISOString(),
-    })
+    .update(update)
     .eq("id", itemId);
 
   if (error) return { ...initialMovimientoState, error: error.message };

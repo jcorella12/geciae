@@ -97,13 +97,39 @@ export default async function ItemInventarioPage({
     ? esCEO(v) || esRolEn(v, item.empresa_id, ["director", "operativo"])
     : esCEO(v);
 
-  // Producto base — fuente_valor no está expuesta en la vista
-  const { data: productoBase } = await supabase
+  // Producto base — fuente_valor + datos de captura USD no están en la vista
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: productoBase } = await (supabase as any)
     .from("catalogo_productos")
-    .select("fuente_valor")
+    .select(
+      "fuente_valor, capacidad, unidad_capacidad, valor_mercado_unidad, valor_mercado_usd, valor_mercado_usd_watt, valor_mercado_tc",
+    )
     .eq("id", params.id)
     .maybeSingle();
   const fuenteValor: string | null = productoBase?.fuente_valor ?? null;
+  const capacidadW: number | null = (() => {
+    if (!productoBase?.capacidad) return null;
+    const cap = Number(productoBase.capacidad);
+    if (!Number.isFinite(cap)) return null;
+    return productoBase.unidad_capacidad === "kW" ? cap * 1000 : cap;
+  })();
+  const valorMercadoUsd: number | null =
+    productoBase?.valor_mercado_usd != null
+      ? Number(productoBase.valor_mercado_usd)
+      : null;
+  const valorMercadoUsdWatt: number | null =
+    productoBase?.valor_mercado_usd_watt != null
+      ? Number(productoBase.valor_mercado_usd_watt)
+      : null;
+  const valorMercadoUnidad: string | null =
+    productoBase?.valor_mercado_unidad ?? null;
+
+  // TC actual USD/MXN (para conversión en vivo en el form)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: tcData } = await (supabase as any).rpc("tipo_cambio_actual", {
+    p_par: "USD/MXN",
+  });
+  const tcActual: number | null = tcData ? Number(tcData) : null;
 
   // Stock por almacén
   const { data: stockAlm } = await supabase
@@ -251,6 +277,8 @@ export default async function ItemInventarioPage({
                 empresaId={item.empresa_id ?? null}
                 valorActual={item.valor_mercado}
                 fuenteActual={fuenteValor}
+                capacidadW={capacidadW}
+                tcActual={tcActual}
               />
             )}
           </div>
@@ -273,12 +301,75 @@ export default async function ItemInventarioPage({
             value={item.costo_maximo ? fmtMxn.format(Number(item.costo_maximo)) : "—"}
           />
         </div>
-        {fuenteValor && (
-          <p className="mt-3 text-[11.5px] text-ink-3">
-            Valor a mercado actualizado el{" "}
-            {fmtFecha(item.fecha_actualizacion_valor)} · Fuente:{" "}
-            {fuenteValor}
-          </p>
+        {/* Valor de mercado: muestra la unidad de captura si fue USD */}
+        {item.valor_mercado != null && (
+          <div className="mt-4 rounded-md border border-border bg-bg-2/40 p-3">
+            <div className="mb-1.5 flex items-center justify-between">
+              <span className="text-[11px] font-semibold uppercase tracking-wide text-ink-3">
+                Valor de mercado
+              </span>
+              {valorMercadoUnidad && valorMercadoUnidad !== "mxn_unidad" && (
+                <span className="rounded-full bg-card px-2 py-0.5 text-[10px] font-medium text-ink-2 border border-border">
+                  Capturado en{" "}
+                  {valorMercadoUnidad === "usd_unidad"
+                    ? "USD/unidad"
+                    : "USD/watt"}
+                </span>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 text-[12.5px]">
+              <div>
+                <div className="text-[10px] uppercase tracking-wide text-ink-3">
+                  MXN / unidad
+                </div>
+                <div className="font-mono font-semibold tnum">
+                  {fmtMxn.format(Number(item.valor_mercado))}
+                </div>
+              </div>
+              {valorMercadoUsd !== null && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-ink-3">
+                    USD / unidad
+                  </div>
+                  <div className="font-mono font-semibold tnum">
+                    ${valorMercadoUsd.toFixed(2)}
+                  </div>
+                </div>
+              )}
+              {valorMercadoUsdWatt !== null && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-ink-3">
+                    USD / watt
+                  </div>
+                  <div className="font-mono font-semibold tnum">
+                    ${valorMercadoUsdWatt.toFixed(4)}
+                  </div>
+                </div>
+              )}
+              {productoBase?.valor_mercado_tc != null && (
+                <div>
+                  <div className="text-[10px] uppercase tracking-wide text-ink-3">
+                    TC al capturar
+                  </div>
+                  <div className="font-mono tnum">
+                    ${Number(productoBase.valor_mercado_tc).toFixed(4)}
+                    {tcActual &&
+                      Number(productoBase.valor_mercado_tc) !== tcActual && (
+                        <span className="ml-1 text-[10px] text-warn-deep">
+                          (hoy ${tcActual.toFixed(4)})
+                        </span>
+                      )}
+                  </div>
+                </div>
+              )}
+            </div>
+            {fuenteValor && (
+              <p className="mt-2 text-[11px] text-ink-3">
+                Actualizado el {fmtFecha(item.fecha_actualizacion_valor)} ·
+                Fuente: {fuenteValor}
+              </p>
+            )}
+          </div>
         )}
       </section>
 
