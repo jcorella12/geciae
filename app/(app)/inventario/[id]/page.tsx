@@ -28,6 +28,7 @@ import {
   obtenerVinculos,
   tieneAtributo,
 } from "@/lib/auth/permisos";
+import { fmtFechaCorta } from "@/lib/fechas";
 import {
   COLOR_CATEGORIA_INV,
   COLOR_ESTADO_STOCK,
@@ -57,14 +58,8 @@ const fmtMxnShort = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0,
 });
 
-const fmtFecha = (d: string | null) =>
-  d
-    ? new Date(d).toLocaleDateString("es-MX", {
-        day: "2-digit",
-        month: "short",
-        year: "2-digit",
-      })
-    : "—";
+// Para columnas DATE de Postgres usamos helper sin TZ shift (ver lib/fechas.ts).
+const fmtFecha = (d: string | null) => fmtFechaCorta(d);
 
 export default async function ItemInventarioPage({
   params,

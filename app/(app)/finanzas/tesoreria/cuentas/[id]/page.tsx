@@ -21,6 +21,7 @@ import {
   obtenerVinculos,
   tieneAtributo,
 } from "@/lib/auth/permisos";
+import { fmtFechaCorta } from "@/lib/fechas";
 import { createClient } from "@/lib/supabase/server";
 
 import { AutoConciliarButton } from "./auto-conciliar-button";
@@ -57,12 +58,10 @@ const fmtMxnShort = new Intl.NumberFormat("es-MX", {
   maximumFractionDigits: 0,
 });
 
-const fmtFecha = (d: string) =>
-  new Date(d).toLocaleDateString("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  });
+// Para columnas DATE de Postgres (YYYY-MM-DD) NO usar `new Date(d)` directo
+// porque parsea como UTC y al renderizar en TZ local (México UTC-7) muestra
+// el día anterior. Helper de @/lib/fechas parsea sin TZ shift.
+const fmtFecha = (d: string) => fmtFechaCorta(d);
 
 const MESES_ES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -295,13 +294,7 @@ export default async function CuentaDetallePage({
               )}
               sub={
                 cuenta.linea_credito_proximo_pago_fecha
-                  ? new Date(
-                      cuenta.linea_credito_proximo_pago_fecha,
-                    ).toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    })
+                  ? fmtFecha(cuenta.linea_credito_proximo_pago_fecha)
                   : "—"
               }
             />
