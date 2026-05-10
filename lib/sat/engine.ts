@@ -72,10 +72,16 @@ export async function presentarSolicitud(opts: {
 
   const requestType = new lib.RequestType("xml");
 
-  const params = lib.QueryParameters.create()
+  let params = lib.QueryParameters.create()
     .withPeriod(periodo)
     .withDownloadType(downloadType)
     .withRequestType(requestType);
+
+  // Restricción del SAT: para descargar XML de RECIBIDOS hay que filtrar
+  // documentStatus = 'active' (no se permite bajar XMLs cancelados como
+  // receptor). Para emitidos el SAT permite cualquiera, pero por
+  // consistencia también activos.
+  params = params.withDocumentStatus(new lib.DocumentStatus("active"));
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await (service as any).query(params);
