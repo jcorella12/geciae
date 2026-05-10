@@ -61,15 +61,16 @@ export async function presentarSolicitud(opts: {
     `${opts.fechaFin} 23:59:59`,
   );
 
-  // En v2 DownloadType/RequestType son BaseEnum: se construyen con `new`,
-  // no con factory methods estáticos (issued()/received()/xml() ya no existen).
+  // En v2 DownloadType/RequestType son BaseEnum: se construyen con `new` y
+  // toman la KEY del enum ('issued'/'received'/'xml'), no el value
+  // ('RfcEmisor'/'RfcReceptor'). Si pasas DownloadTypeEnum.issued
+  // (que es "RfcEmisor") la librería falla isTypeOf("issued") y arma
+  // una solicitud SOAP vacía → SAT responde "XML mal formado".
   const downloadType = new lib.DownloadType(
-    opts.tipoDescarga === "emitidos"
-      ? lib.DownloadTypeEnum.issued
-      : lib.DownloadTypeEnum.received,
+    opts.tipoDescarga === "emitidos" ? "issued" : "received",
   );
 
-  const requestType = new lib.RequestType(lib.RequestTypeEnum.xml);
+  const requestType = new lib.RequestType("xml");
 
   const params = lib.QueryParameters.create()
     .withPeriod(periodo)
