@@ -60,50 +60,72 @@ export async function subirFiel(formData: FormData): Promise<ResultadoSubirFiel>
     const cerBuffer = Buffer.from(await cerFile.arrayBuffer());
     const keyBuffer = Buffer.from(await keyFile.arrayBuffer());
 
-    // Validar FIEL con la librería
+    // Validar FIEL con @nodecfdi/credentials.
+    // En sat-ws-descarga-masiva v2 el objeto Fiel solo expone isValid()/sign();
+    // los metadatos (rfc, legalName, vigencia, isFiel) están en Credential.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const lib: any = await import("@nodecfdi/sat-ws-descarga-masiva");
-    let fiel;
+    const credentialsLib: any = await import("@nodecfdi/credentials");
+    const CredentialClass =
+      credentialsLib.Credential ?? credentialsLib.default?.Credential;
+    if (!CredentialClass || typeof CredentialClass.create !== "function") {
+      return {
+        ok: false,
+        error: "Librería @nodecfdi/credentials no disponible.",
+      };
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let credential: any;
     try {
-      fiel = lib.Fiel.create(
+      credential = CredentialClass.create(
         cerBuffer.toString("binary"),
         keyBuffer.toString("binary"),
         password,
       );
-    } catch {
+    } catch (parseErr) {
+      const msg = parseErr instanceof Error ? parseErr.message : "";
       return {
         ok: false,
         error:
-          "FIEL inválida. Verifica que .cer y .key correspondan y que la contraseña sea correcta.",
+          "FIEL inválida. Verifica que .cer y .key correspondan y que la contraseña sea correcta. " +
+          (msg ? `(${msg})` : ""),
       };
     }
 
-    if (!fiel.isValid()) {
-      return { ok: false, error: "FIEL inválida o contraseña incorrecta" };
-    }
-
-    const certificate = fiel.getCertificate();
-    let numeroSerie: string;
-    try {
-      numeroSerie = certificate.getSerialNumber().bytes();
-    } catch {
-      numeroSerie = "";
-    }
-    const vigenciaDesde: Date = certificate.validFromDateTime();
-    const vigenciaHasta: Date = certificate.validToDateTime();
-    const rfcCertificado: string = certificate.rfc();
-    const razonSocial: string | null = certificate.legalName?.() ?? null;
-
-    if (
-      typeof certificate.satType === "function" &&
-      !certificate.satType().isFiel()
-    ) {
+    if (typeof credential.isFiel === "function" && !credential.isFiel()) {
       return {
         ok: false,
         error:
           "El certificado no es FIEL/eFirma. Es CSD (Sello Digital). La descarga masiva requiere FIEL.",
       };
     }
+
+    const certificate = credential.certificate();
+    let numeroSerie = "";
+    try {
+      const serial = certificate.serialNumber?.();
+      if (serial) {
+        numeroSerie =
+          typeof serial.bytes === "function"
+            ? serial.bytes()
+            : typeof serial.hex === "function"
+              ? serial.hex()
+              : String(serial);
+      }
+    } catch {
+      numeroSerie = "";
+    }
+    const vigenciaDesde: Date =
+      typeof certificate.validFrom === "function"
+        ? certificate.validFrom()
+        : new Date();
+    const vigenciaHasta: Date =
+      typeof certificate.validTo === "function"
+        ? certificate.validTo()
+        : new Date();
+    const rfcCertificado: string = credential.rfc();
+    const razonSocial: string | null =
+      typeof credential.legalName === "function" ? credential.legalName() : null;
 
     // Validar RFC vs empresa
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -53,6 +53,7 @@ const nextConfig = {
     // evita errores ERR_REQUIRE_ESM en build.
     serverComponentsExternalPackages: [
       "@nodecfdi/sat-ws-descarga-masiva",
+      "@nodecfdi/credentials",
       "yauzl-promise",
     ],
   },
