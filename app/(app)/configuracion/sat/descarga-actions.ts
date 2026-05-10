@@ -133,7 +133,15 @@ export async function crearSolicitud(formData: FormData): Promise<ResultadoCrear
 
 export async function verificarSolicitud(
   descargaId: string,
-): Promise<{ ok: boolean; listo?: boolean; mensaje?: string; error?: string }> {
+  opts: { autoProcesarSiListo?: boolean } = { autoProcesarSiListo: true },
+): Promise<{
+  ok: boolean;
+  listo?: boolean;
+  mensaje?: string;
+  error?: string;
+  /** Si se procesó automáticamente, métricas finales */
+  procesado?: { importados: number; duplicados: number; errores: number };
+}> {
   try {
     await exigirPermiso();
     const supabase = createClient();
@@ -178,6 +186,27 @@ export async function verificarSolicitud(
         })
         .eq("id", descargaId);
 
+      // Auto-procesar si está listo (UX mejorada: un solo click hace todo)
+      if (verif.listo && (opts.autoProcesarSiListo ?? true)) {
+        const proc = await descargarYProcesar(descargaId);
+        revalidatePath("/configuracion/sat");
+        revalidatePath(`/configuracion/sat/descargas/${descargaId}`);
+        revalidatePath("/finanzas/cfdi");
+        return {
+          ok: true,
+          listo: true,
+          mensaje: verif.mensajeEstado,
+          procesado: proc.ok
+            ? {
+                importados: proc.importados ?? 0,
+                duplicados: proc.duplicados ?? 0,
+                errores: proc.errores ?? 0,
+              }
+            : undefined,
+          ...(proc.ok ? {} : { error: proc.error }),
+        };
+      }
+
       revalidatePath("/configuracion/sat");
       revalidatePath(`/configuracion/sat/descargas/${descargaId}`);
 
@@ -199,6 +228,112 @@ export async function verificarSolicitud(
     return {
       ok: false,
       error: e instanceof Error ? e.message : "Error desconocido",
+    };
+  }
+}
+
+/**
+ * Verifica + auto-descarga TODAS las descargas pendientes (solicitada,
+ * verificando o lista_descargar) en una sola operación. Resiliente: si
+ * una falla, continúa con las demás.
+ */
+export async function verificarPendientesEnBloque(): Promise<{
+  ok: boolean;
+  resumen: Array<{
+    descarga_id: string;
+    empresa_codigo: string;
+    tipo: "emitidos" | "recibidos";
+    estado_anterior: string;
+    estado_final?: string;
+    listo: boolean;
+    procesado?: { importados: number; duplicados: number; errores: number };
+    error?: string;
+  }>;
+}> {
+  try {
+    await exigirPermiso();
+    const supabase = createClient();
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: pendientes } = (await (supabase as any)
+      .from("sat_descargas")
+      .select("id, empresa_id, tipo_descarga, estado, empresas(codigo)")
+      .in("estado", ["solicitada", "verificando", "lista_descargar"])
+      .order("created_at", { ascending: true })) as unknown as {
+      data:
+        | Array<{
+            id: string;
+            empresa_id: string;
+            tipo_descarga: "emitidos" | "recibidos";
+            estado: string;
+            empresas: { codigo: string } | null;
+          }>
+        | null;
+    };
+
+    const lista = pendientes ?? [];
+    const resumen: Array<{
+      descarga_id: string;
+      empresa_codigo: string;
+      tipo: "emitidos" | "recibidos";
+      estado_anterior: string;
+      estado_final?: string;
+      listo: boolean;
+      procesado?: { importados: number; duplicados: number; errores: number };
+      error?: string;
+    }> = [];
+
+    for (const d of lista) {
+      const empresaCodigo = d.empresas?.codigo ?? "?";
+
+      // Si ya estaba lista, solo procesar
+      if (d.estado === "lista_descargar") {
+        const proc = await descargarYProcesar(d.id);
+        resumen.push({
+          descarga_id: d.id,
+          empresa_codigo: empresaCodigo,
+          tipo: d.tipo_descarga,
+          estado_anterior: d.estado,
+          estado_final: proc.ok ? "completada" : "error",
+          listo: true,
+          procesado: proc.ok
+            ? {
+                importados: proc.importados ?? 0,
+                duplicados: proc.duplicados ?? 0,
+                errores: proc.errores ?? 0,
+              }
+            : undefined,
+          error: proc.ok ? undefined : proc.error,
+        });
+        continue;
+      }
+
+      // Si está solicitada/verificando, verificar (con auto-procesar)
+      const r = await verificarSolicitud(d.id, { autoProcesarSiListo: true });
+      resumen.push({
+        descarga_id: d.id,
+        empresa_codigo: empresaCodigo,
+        tipo: d.tipo_descarga,
+        estado_anterior: d.estado,
+        estado_final: r.procesado
+          ? "completada"
+          : r.listo
+            ? "lista_descargar"
+            : d.estado,
+        listo: r.listo ?? false,
+        procesado: r.procesado,
+        error: r.ok ? undefined : r.error,
+      });
+    }
+
+    revalidatePath("/configuracion/sat");
+    revalidatePath("/finanzas/cfdi");
+
+    return { ok: true, resumen };
+  } catch {
+    return {
+      ok: false,
+      resumen: [],
     };
   }
 }

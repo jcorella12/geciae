@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { BotonBulkMesActual } from "./boton-bulk-mes";
+import { BotonVerificarPendientes } from "./boton-verificar-pendientes";
 import { listarDescargas } from "./descarga-actions";
 import { listarFiels } from "./fiel-actions";
 import { TablaFiels } from "./tabla-fiels";
@@ -54,6 +55,7 @@ export default async function ConfiguracionSatPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <BotonVerificarPendientes />
           <BotonBulkMesActual />
           <Button asChild variant="outline">
             <Link href="/configuracion/sat/nueva-descarga">

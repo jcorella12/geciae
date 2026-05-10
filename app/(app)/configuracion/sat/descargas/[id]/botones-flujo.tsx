@@ -28,12 +28,17 @@ export function BotonesFlujo({ descarga }: { descarga: DescargaSat }) {
       const r = await verificarSolicitud(descarga.id);
       if (!r.ok) {
         setError(r.error ?? "Error");
+      } else if (r.procesado) {
+        setMensaje(
+          `✓ Procesada automáticamente: ${r.procesado.importados} nuevos, ${r.procesado.duplicados} duplicados${r.procesado.errores > 0 ? `, ${r.procesado.errores} errores` : ""}.`,
+        );
+        router.refresh();
       } else if (r.listo) {
-        setMensaje("¡Lista para descargar!");
+        setMensaje("¡Lista para descargar! Procesando…");
         router.refresh();
       } else {
         setMensaje(
-          r.mensaje ?? "Sigue procesando. Intenta en unos minutos.",
+          r.mensaje ?? "Sigue procesando en el SAT. Intenta en unos minutos.",
         );
         router.refresh();
       }
