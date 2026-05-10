@@ -361,6 +361,152 @@ export async function obtenerDescarga(id: string): Promise<DescargaSat | null> {
   return data as DescargaSat | null;
 }
 
+export type ResumenBulkItem = {
+  empresa_codigo: string;
+  empresa_id: string;
+  tipo: "emitidos" | "recibidos";
+  ok: boolean;
+  descarga_id?: string;
+  error?: string;
+};
+
+/**
+ * Crea solicitudes en bloque (Emitidos + Recibidos) para el mes en curso
+ * (1° del mes → hoy) para TODAS las empresas con FIEL activa vigente.
+ *
+ * Cada empresa genera 2 solicitudes (emitidos + recibidos). No aborta si
+ * una falla — continúa con las demás y retorna el resumen completo.
+ */
+export async function descargarMesActualTodasEmpresas(): Promise<{
+  ok: boolean;
+  resumen: ResumenBulkItem[];
+}> {
+  try {
+    const { userId } = await exigirPermiso();
+    const supabase = createClient();
+
+    // Período: 1° del mes actual → hoy
+    const ahora = new Date();
+    const inicio = new Date(
+      Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), 1),
+    );
+    const fechaInicio = inicio.toISOString().slice(0, 10);
+    const fechaFin = ahora.toISOString().slice(0, 10);
+
+    // FIELs activas vigentes
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: fiels } = (await (supabase as any)
+      .from("v_sat_credenciales_enriquecido")
+      .select("empresa_id, empresa_codigo, estatus_vigencia, estado")
+      .eq("estado", "activa")) as unknown as {
+      data:
+        | Array<{
+            empresa_id: string;
+            empresa_codigo: string;
+            estatus_vigencia: string;
+            estado: string;
+          }>
+        | null;
+    };
+
+    const empresas = (fiels ?? []).filter(
+      (f) => f.estatus_vigencia !== "vencida",
+    );
+
+    if (empresas.length === 0) {
+      return { ok: false, resumen: [] };
+    }
+
+    const { presentarSolicitud } = await import("@/lib/sat/engine");
+
+    const resumen: ResumenBulkItem[] = [];
+
+    for (const emp of empresas) {
+      for (const tipo of ["emitidos", "recibidos"] as const) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: descarga, error: insErr } = (await (supabase as any)
+          .from("sat_descargas")
+          .insert({
+            empresa_id: emp.empresa_id,
+            tipo_descarga: tipo,
+            fecha_inicio: fechaInicio,
+            fecha_fin: fechaFin,
+            estado: "borrador",
+            iniciada_por: userId,
+          })
+          .select("id")
+          .single()) as unknown as {
+          data: { id: string } | null;
+          error: { message: string } | null;
+        };
+
+        if (insErr || !descarga) {
+          resumen.push({
+            empresa_codigo: emp.empresa_codigo,
+            empresa_id: emp.empresa_id,
+            tipo,
+            ok: false,
+            error: insErr?.message ?? "Error creando descarga",
+          });
+          continue;
+        }
+
+        try {
+          const requestId = await presentarSolicitud({
+            empresaId: emp.empresa_id,
+            tipoDescarga: tipo,
+            fechaInicio,
+            fechaFin,
+          });
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any)
+            .from("sat_descargas")
+            .update({ sat_request_id: requestId, estado: "solicitada" })
+            .eq("id", descarga.id);
+
+          resumen.push({
+            empresa_codigo: emp.empresa_codigo,
+            empresa_id: emp.empresa_id,
+            tipo,
+            ok: true,
+            descarga_id: descarga.id,
+          });
+        } catch (e) {
+          const mensaje =
+            e instanceof Error ? e.message : "Error desconocido";
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabase as any)
+            .from("sat_descargas")
+            .update({
+              estado: "error",
+              error_mensaje: interpretarErrorSat(mensaje),
+              error_detalles: { etapa: "solicitar", bulk: true },
+            })
+            .eq("id", descarga.id);
+
+          resumen.push({
+            empresa_codigo: emp.empresa_codigo,
+            empresa_id: emp.empresa_id,
+            tipo,
+            ok: false,
+            descarga_id: descarga.id,
+            error: interpretarErrorSat(mensaje),
+          });
+        }
+      }
+    }
+
+    revalidatePath("/configuracion/sat");
+    revalidatePath("/finanzas/cfdi");
+
+    const totalOk = resumen.filter((r) => r.ok).length;
+    return { ok: totalOk > 0, resumen };
+  } catch {
+    return { ok: false, resumen: [] };
+  }
+}
+
 export async function cancelarDescarga(
   descargaId: string,
   motivo: string,

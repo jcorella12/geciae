@@ -11,6 +11,7 @@ import {
 } from "@/lib/sat/state";
 import { createClient } from "@/lib/supabase/server";
 
+import { BotonBulkMesActual } from "./boton-bulk-mes";
 import { listarDescargas } from "./descarga-actions";
 import { listarFiels } from "./fiel-actions";
 import { TablaFiels } from "./tabla-fiels";
@@ -53,6 +54,7 @@ export default async function ConfiguracionSatPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <BotonBulkMesActual />
           <Button asChild variant="outline">
             <Link href="/configuracion/sat/nueva-descarga">
               <Download className="mr-1.5 h-4 w-4" />
