@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 
-type Mode = "password" | "magic-link" | "signup" | "mfa-challenge";
+type Mode = "password" | "magic-link" | "reset" | "mfa-challenge";
 
 type MfaPending = {
   factorId: string;
@@ -37,6 +37,10 @@ export function LoginForm() {
   const callbackUrl =
     typeof window !== "undefined"
       ? `${window.location.origin}/auth/callback`
+      : "";
+  const resetCallbackUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/auth/callback?next=${encodeURIComponent("/perfil/contrasena")}`
       : "";
 
   async function handleAfterPasswordSignIn(): Promise<void> {
@@ -91,18 +95,16 @@ export function LoginForm() {
         return;
       }
 
-      if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: callbackUrl },
+      if (mode === "reset") {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: resetCallbackUrl,
         });
         if (error) {
           setError(error.message);
           return;
         }
         setInfo(
-          "Cuenta creada. Si la confirmación de correo está activa, revisa tu bandeja para el enlace de verificación.",
+          "Si la cuenta existe, te enviamos un correo con un enlace para restablecer tu contraseña. Revisa tu bandeja (incluida la carpeta de spam).",
         );
         return;
       }
@@ -150,9 +152,10 @@ export function LoginForm() {
       title: "Iniciar sesión",
       description: "Acceso al ERP del Grupo PSENERGIA.",
     },
-    signup: {
-      title: "Crear cuenta",
-      description: "Registra el primer usuario para configurar el sistema.",
+    reset: {
+      title: "Restablecer contraseña",
+      description:
+        "Te enviaremos un enlace al correo para que elijas una nueva contraseña.",
     },
     "magic-link": {
       title: "Enlace mágico",
@@ -227,15 +230,13 @@ export function LoginForm() {
                 />
               </div>
 
-              {mode !== "magic-link" && (
+              {mode === "password" && (
                 <div className="space-y-2">
                   <Label htmlFor="password">Contraseña</Label>
                   <Input
                     id="password"
                     type="password"
-                    autoComplete={
-                      mode === "signup" ? "new-password" : "current-password"
-                    }
+                    autoComplete="current-password"
                     required
                     minLength={8}
                     value={password}
@@ -269,8 +270,8 @@ export function LoginForm() {
               ? "..."
               : mode === "password"
                 ? "Iniciar sesión"
-                : mode === "signup"
-                  ? "Crear cuenta"
+                : mode === "reset"
+                  ? "Enviar enlace de restablecimiento"
                   : mode === "magic-link"
                     ? "Enviar enlace"
                     : "Verificar"}
@@ -279,7 +280,20 @@ export function LoginForm() {
 
         {mode !== "mfa-challenge" ? (
           <div className="mt-6 space-y-2 text-center text-sm">
-            {mode !== "magic-link" && (
+            {mode === "password" && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMode("reset");
+                  setError(null);
+                  setInfo(null);
+                }}
+                className="block w-full text-muted-foreground hover:text-foreground"
+              >
+                ¿Olvidaste tu contraseña? Restablecer
+              </button>
+            )}
+            {mode !== "magic-link" && mode !== "reset" && (
               <button
                 type="button"
                 onClick={() => {
@@ -290,19 +304,6 @@ export function LoginForm() {
                 className="block w-full text-muted-foreground hover:text-foreground"
               >
                 Recibir enlace mágico al correo
-              </button>
-            )}
-            {mode === "password" && (
-              <button
-                type="button"
-                onClick={() => {
-                  setMode("signup");
-                  setError(null);
-                  setInfo(null);
-                }}
-                className="block w-full text-muted-foreground hover:text-foreground"
-              >
-                ¿Primer usuario? Crear cuenta
               </button>
             )}
             {mode !== "password" && (

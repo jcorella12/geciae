@@ -1,4 +1,4 @@
-import { LogOut } from "lucide-react";
+import { KeyRound, LogOut } from "lucide-react";
 import Link from "next/link";
 
 import { DensityToggle } from "@/components/shared/density-toggle";
@@ -11,6 +11,7 @@ import {
   type CreateOption,
 } from "@/components/shared/topbar-create-button";
 import { TopbarBreadcrumbs } from "@/components/shared/topbar-breadcrumbs";
+import { VersionInfo } from "@/components/shared/version-badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -158,6 +159,12 @@ export async function AppTopbar({ email, initials }: Props) {
           <DropdownMenuItem asChild>
             <Link href="/configuracion">Configuración</Link>
           </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/perfil/contrasena" className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4" />
+              Restablecer contraseña
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem asChild>
             <form action="/auth/signout" method="post" className="w-full">
@@ -170,6 +177,8 @@ export async function AppTopbar({ email, initials }: Props) {
               </button>
             </form>
           </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <VersionInfo />
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

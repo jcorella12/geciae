@@ -26,6 +26,9 @@ function fmtFecha(iso: string): string {
  * Badge discreto en esquina inferior derecha con la versión del build.
  * Click expande detalles (SHA completo, branch, fecha exacta).
  *
+ * Solo se muestra en desktop (md+). En móvil tapa el BottomNav y se mueve
+ * a `VersionInfo`, que vive dentro del menú de usuario del topbar.
+ *
  * Útil cuando varios usuarios reportan bugs: pueden mencionar la versión
  * que ven y confirma si están en la última.
  */
@@ -34,7 +37,7 @@ export function VersionBadge() {
   const corto = `${SHA}@${REF.length > 16 ? REF.slice(0, 16) + "…" : REF}`;
 
   return (
-    <div className="pointer-events-auto fixed bottom-2 right-2 z-50 select-none">
+    <div className="pointer-events-auto fixed bottom-2 right-2 z-50 hidden select-none md:block">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -74,6 +77,22 @@ export function VersionBadge() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Bloque informativo compacto con la versión del build, pensado para
+ * insertarse dentro del menú de usuario (DropdownMenu) o cualquier otro
+ * panel. No flota, no se posiciona — solo muestra SHA / rama / fecha.
+ */
+export function VersionInfo() {
+  return (
+    <div className="px-2 py-1.5 text-[10px] leading-tight text-muted-foreground">
+      <p className="font-mono">
+        {SHA} · {REF.length > 20 ? REF.slice(0, 20) + "…" : REF}
+      </p>
+      <p className="mt-0.5">{fmtFecha(DATE)}</p>
     </div>
   );
 }
