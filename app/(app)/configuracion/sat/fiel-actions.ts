@@ -63,8 +63,10 @@ export async function subirFiel(formData: FormData): Promise<ResultadoSubirFiel>
     // Validar FIEL con @nodecfdi/credentials.
     // En sat-ws-descarga-masiva v2 el objeto Fiel solo expone isValid()/sign();
     // los metadatos (rfc, legalName, vigencia, isFiel) están en Credential.
+    // IMPORTANTE: el entry default solo exporta clases base; Credential vive
+    // en el subpath /node (que es lo que necesitamos en server actions).
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const credentialsLib: any = await import("@nodecfdi/credentials");
+    const credentialsLib: any = await import("@nodecfdi/credentials/node");
     const CredentialClass =
       credentialsLib.Credential ?? credentialsLib.default?.Credential;
     if (!CredentialClass || typeof CredentialClass.create !== "function") {
