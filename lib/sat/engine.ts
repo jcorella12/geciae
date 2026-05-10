@@ -61,15 +61,20 @@ export async function presentarSolicitud(opts: {
     `${opts.fechaFin} 23:59:59`,
   );
 
-  const downloadType =
+  // En v2 DownloadType/RequestType son BaseEnum: se construyen con `new`,
+  // no con factory methods estáticos (issued()/received()/xml() ya no existen).
+  const downloadType = new lib.DownloadType(
     opts.tipoDescarga === "emitidos"
-      ? lib.DownloadType.issued()
-      : lib.DownloadType.received();
+      ? lib.DownloadTypeEnum.issued
+      : lib.DownloadTypeEnum.received,
+  );
+
+  const requestType = new lib.RequestType(lib.RequestTypeEnum.xml);
 
   const params = lib.QueryParameters.create()
     .withPeriod(periodo)
     .withDownloadType(downloadType)
-    .withRequestType(lib.RequestType.xml());
+    .withRequestType(requestType);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const result = await (service as any).query(params);
