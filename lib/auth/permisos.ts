@@ -264,6 +264,17 @@ export function puedeAccederConfiguracion(vinculos: Vinculo[]): boolean {
 }
 
 /**
+ * Puede restablecer contraseñas de otros usuarios desde el panel admin.
+ * CEO o contralor — soporte de primer nivel cuando alguien pierde acceso.
+ *
+ * NO incluye otras operaciones admin (invitar, vincular empresas, desactivar):
+ * esas siguen siendo CEO-only.
+ */
+export function puedeRestablecerContrasenas(vinculos: Vinculo[]): boolean {
+  return esCEO(vinculos) || tieneAtributo(vinculos, "contralor");
+}
+
+/**
  * Puede gestionar el catálogo de clientes (alta, edición, vinculación).
  * Spec: cualquier rol con función comercial/operativa.
  */

@@ -5,17 +5,23 @@ import {
   obtenerVinculos,
   puedeAccederCentros,
   puedeAccederConfiguracion,
+  puedeRestablecerContrasenas,
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
-const tabsBase = [
-  { href: "/configuracion/usuarios", label: "Usuarios" },
+type Tab = { href: string; label: string };
+
+const TAB_USUARIOS: Tab = {
+  href: "/configuracion/usuarios",
+  label: "Usuarios",
+};
+const TABS_CEO: Tab[] = [
   { href: "/configuracion/centros", label: "Centros" },
   { href: "/configuracion/sgc", label: "SGC" },
   { href: "/configuracion/ia", label: "IA" },
   { href: "/configuracion/validacion", label: "Validación" },
-] as const;
+];
 
 export default async function ConfiguracionLayout({
   children,
@@ -23,9 +29,14 @@ export default async function ConfiguracionLayout({
   children: React.ReactNode;
 }) {
   const vinculos = await obtenerVinculos();
-  // CEO accede a todo. Director/tesorero/auditor solo a Centros — pero el
-  // gate de cada sub-página lo refina.
-  if (!puedeAccederConfiguracion(vinculos) && !puedeAccederCentros(vinculos)) {
+  // CEO accede a todo. Director/tesorero/auditor solo a Centros; contralor
+  // entra para poder restablecer contraseñas de Usuarios. El gate de cada
+  // sub-página lo refina.
+  if (
+    !puedeAccederConfiguracion(vinculos) &&
+    !puedeAccederCentros(vinculos) &&
+    !puedeRestablecerContrasenas(vinculos)
+  ) {
     redirect("/mi-dia");
   }
 
@@ -35,9 +46,16 @@ export default async function ConfiguracionLayout({
   const { data: puedeSat } = await (supabase as any).rpc(
     "usuario_puede_gestionar_sat",
   );
-  const tabs = puedeSat
-    ? [...tabsBase, { href: "/configuracion/sat", label: "SAT" }]
-    : tabsBase;
+
+  // CEO ve todas las tabs; contralor solo Usuarios (+ SAT si aplica).
+  const esCeo = puedeAccederConfiguracion(vinculos);
+  const tabs: Tab[] = [
+    ...(esCeo || puedeRestablecerContrasenas(vinculos)
+      ? [TAB_USUARIOS]
+      : []),
+    ...(esCeo ? TABS_CEO : []),
+    ...(puedeSat ? [{ href: "/configuracion/sat", label: "SAT" }] : []),
+  ];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8">

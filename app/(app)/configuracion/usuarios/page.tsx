@@ -1,9 +1,14 @@
 import Link from "next/link";
 
-import { obtenerVinculos, esCEO } from "@/lib/auth/permisos";
+import {
+  esCEO,
+  obtenerVinculos,
+  puedeRestablecerContrasenas,
+} from "@/lib/auth/permisos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 import { InvitarForm } from "./invitar-form";
+import { ResetPasswordDialog } from "./reset-password-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -15,9 +20,11 @@ const codigoColor: Record<string, string> = {
 };
 
 export default async function UsuariosPage() {
-  // El layout ya gate'a CEO; revalidamos por defensa en profundidad.
+  // CEO ve todo; contralor entra solo para restablecer contraseñas.
   const vinculosCaller = await obtenerVinculos();
-  if (!esCEO(vinculosCaller)) {
+  const esCeo = esCEO(vinculosCaller);
+  const puedeReset = puedeRestablecerContrasenas(vinculosCaller);
+  if (!esCeo && !puedeReset) {
     return null;
   }
 
@@ -69,7 +76,16 @@ export default async function UsuariosPage() {
 
   return (
     <div className="space-y-8">
-      <InvitarForm empresas={empresas ?? []} />
+      {esCeo ? (
+        <InvitarForm empresas={empresas ?? []} />
+      ) : (
+        <div className="rounded-md border border-info/30 bg-info/10 px-4 py-3 text-[12.5px] text-foreground">
+          Como <span className="font-medium">contralor</span>, puedes
+          restablecer contraseñas de cualquier usuario para resolver problemas
+          de acceso. Las altas, vínculos y desactivaciones siguen siendo
+          responsabilidad del CEO.
+        </div>
+      )}
 
       <section>
         <h2 className="mb-3 text-base font-semibold">
@@ -84,6 +100,9 @@ export default async function UsuariosPage() {
                 <th className="px-4 py-2 font-medium">Empresas y rol</th>
                 <th className="px-4 py-2 font-medium">Atributos</th>
                 <th className="px-4 py-2 font-medium">Último login</th>
+                {puedeReset && (
+                  <th className="px-4 py-2 text-right font-medium">Acciones</th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -96,12 +115,16 @@ export default async function UsuariosPage() {
                 return (
                   <tr key={u.id} className="align-top hover:bg-secondary/30">
                     <td className="px-4 py-3 font-medium">
-                      <Link
-                        href={`/configuracion/usuarios/${u.id}/edit`}
-                        className="hover:text-primary hover:underline"
-                      >
-                        {u.email}
-                      </Link>
+                      {esCeo ? (
+                        <Link
+                          href={`/configuracion/usuarios/${u.id}/edit`}
+                          className="hover:text-primary hover:underline"
+                        >
+                          {u.email}
+                        </Link>
+                      ) : (
+                        <span>{u.email}</span>
+                      )}
                       {u.vinculos?.length === 0 && (
                         <span className="ml-2 rounded-full bg-warning/20 px-2 py-0.5 text-xs text-foreground">
                           sin vínculos
@@ -161,13 +184,21 @@ export default async function UsuariosPage() {
                         ? new Date(u.last_sign_in_at).toLocaleString("es-MX")
                         : "Nunca"}
                     </td>
+                    {puedeReset && (
+                      <td className="px-4 py-3 text-right">
+                        <ResetPasswordDialog
+                          usuarioId={u.id}
+                          email={u.email}
+                        />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
               {filas.length === 0 && (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={puedeReset ? 5 : 4}
                     className="px-4 py-6 text-center text-sm text-muted-foreground"
                   >
                     Sin usuarios.

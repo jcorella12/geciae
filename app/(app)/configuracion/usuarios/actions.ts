@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-import { esCEO, obtenerVinculos } from "@/lib/auth/permisos";
+import {
+  esCEO,
+  obtenerVinculos,
+  puedeRestablecerContrasenas,
+} from "@/lib/auth/permisos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 const ROLES = ["ceo", "director", "operativo", "empleado", "cliente"] as const;
@@ -144,6 +148,87 @@ export async function invitarUsuario(
     message: inviteErr
       ? `Usuario ${email} ya existía — vínculos asignados/actualizados.`
       : `Invitación enviada a ${email}. Asignados ${empresaIds.length} vínculo(s).`,
+  };
+}
+
+const RestablecerSchema = z.object({
+  usuarioId: z.string().uuid(),
+  nuevaContrasena: z
+    .string()
+    .min(8, "La contraseña debe tener al menos 8 caracteres."),
+});
+
+export type RestablecerResult = {
+  ok: boolean;
+  error: string | null;
+  mensaje: string | null;
+  email?: string | null;
+};
+
+/**
+ * Restablece la contraseña de cualquier usuario.
+ * Permitido para CEO o contralor — para soporte cuando alguien pierde acceso.
+ *
+ * Devuelve también el email del usuario (para confirmar al admin a quién le
+ * cambió la contraseña) pero NUNCA expone la contraseña actualizada en logs
+ * ni en el resultado.
+ */
+export async function restablecerContrasenaUsuario(
+  usuarioId: string,
+  nuevaContrasena: string,
+): Promise<RestablecerResult> {
+  // 1. Verificar permiso del caller.
+  const vinculosCaller = await obtenerVinculos();
+  if (!puedeRestablecerContrasenas(vinculosCaller)) {
+    return {
+      ok: false,
+      error: "Solo CEO o contralor pueden restablecer contraseñas.",
+      mensaje: null,
+    };
+  }
+
+  // 2. Validar input.
+  const parsed = RestablecerSchema.safeParse({ usuarioId, nuevaContrasena });
+  if (!parsed.success) {
+    return {
+      ok: false,
+      error: parsed.error.issues.map((i) => i.message).join("; "),
+      mensaje: null,
+    };
+  }
+
+  // 3. Actualizar contraseña via admin API.
+  const admin = createAdminClient();
+
+  // Cargar email para confirmación visual.
+  const { data: userResp, error: userErr } =
+    await admin.auth.admin.getUserById(parsed.data.usuarioId);
+  if (userErr || !userResp.user) {
+    return {
+      ok: false,
+      error: "Usuario no encontrado.",
+      mensaje: null,
+    };
+  }
+
+  const { error: updErr } = await admin.auth.admin.updateUserById(
+    parsed.data.usuarioId,
+    { password: parsed.data.nuevaContrasena },
+  );
+  if (updErr) {
+    return {
+      ok: false,
+      error: `No se pudo actualizar: ${updErr.message}`,
+      mensaje: null,
+    };
+  }
+
+  revalidatePath("/configuracion/usuarios");
+  return {
+    ok: true,
+    error: null,
+    email: userResp.user.email ?? null,
+    mensaje: `Contraseña actualizada para ${userResp.user.email}. Comunícasela al usuario por un canal seguro.`,
   };
 }
 

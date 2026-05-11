@@ -14,6 +14,7 @@ import { AppTopbar } from "@/components/shared/app-topbar";
 import {
   obtenerVinculosConEmpresa,
   puedeAccederConfiguracion,
+  puedeRestablecerContrasenas,
 } from "@/lib/auth/permisos";
 import {
   EMPRESA_COOKIE,
@@ -51,9 +52,13 @@ export default async function AppLayout({
         empresas[0]?.id ??
         null;
 
-  const puedeConfiguracion = puedeAccederConfiguracion(
-    vinculos.map(({ empresa: _e, ...rest }) => rest),
-  );
+  const vinculosLite = vinculos.map(({ empresa: _e, ...rest }) => rest);
+  // Mostrar "Configuración" en la sidebar si tiene cualquier permiso
+  // que le dé acceso a alguna pestaña (CEO completo, o contralor que solo
+  // entra a Usuarios para restablecer contraseñas).
+  const puedeConfiguracion =
+    puedeAccederConfiguracion(vinculosLite) ||
+    puedeRestablecerContrasenas(vinculosLite);
 
   // ¿Puede ver el módulo de Ajustes Gerenciales? (CEO + contralor + tesorero)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
