@@ -4,7 +4,6 @@ import { notFound } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/ui/kpi-card";
-import { Stat } from "@/components/ui/stat";
 import {
   esCEO,
   esRolEn,
