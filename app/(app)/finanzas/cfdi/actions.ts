@@ -255,14 +255,9 @@ export async function subirCfdi(
     }
   }
 
-  // Si está vinculado a OC y la OC no tenía cfdi_recibido_id, asociarlo
-  if (oc_id && !esEmitido) {
-    await supabase
-      .from("ordenes_compra")
-      .update({ cfdi_recibido_id: cfdi.id })
-      .eq("id", oc_id)
-      .is("cfdi_recibido_id", null);
-  }
+  // S2-T4: el vínculo CFDI → OC ya queda en `cfdi.oc_id` (insertado
+  // arriba). Antes había un UPDATE adicional a `ordenes_compra.cfdi_recibido_id`
+  // que duplicaba el dato y solo capturaba el "primer" CFDI. Eliminado.
 
   // S2-T6: si es un CFDI emitido vinculado a una OT inter-co y la OT
   // está en lista_cobrar (o confirmada_destino), pasarla a 'facturada'.
