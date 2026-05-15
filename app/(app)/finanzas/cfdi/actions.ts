@@ -259,6 +259,94 @@ export async function subirCfdi(
   // arriba). Antes había un UPDATE adicional a `ordenes_compra.cfdi_recibido_id`
   // que duplicaba el dato y solo capturaba el "primer" CFDI. Eliminado.
 
+  // S2-T2: si es un complemento de pago (CFDI tipo P), procesar cada
+  // DoctoRelacionado: buscar el CFDI original por UUID, insertar en
+  // cfdi_pagos y actualizar monto_pagado del CFDI pagado. Best-effort:
+  // si el original no se encuentra (aún no subido), se loguea para que
+  // un proceso futuro pueda hacer retry.
+  if (parsed.tipo_comprobante === "P" && parsed.pagos.length > 0) {
+    for (const pago of parsed.pagos) {
+      for (const doc of pago.docto_relacionados) {
+        if (!doc.uuid_documento) continue;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: original } = await (supabase as any)
+          .from("cfdi")
+          .select("id, total, monto_pagado, empresa_id")
+          .ilike("uuid_sat", doc.uuid_documento)
+          .maybeSingle();
+
+        if (!original) {
+          console.warn(
+            `[crearCfdi:complemento ${cfdi.id}] UUID ${doc.uuid_documento} no encontrado. Registra primero el CFDI original.`,
+          );
+          continue;
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: pagoErr } = await (supabase as any)
+          .from("cfdi_pagos")
+          .insert({
+            cfdi_id: cfdi.id,
+            cfdi_pagado_id: original.id,
+            fecha_pago: pago.fecha_pago,
+            forma_pago: pago.forma_pago,
+            moneda: doc.moneda,
+            monto: doc.imp_pagado,
+            num_operacion: pago.num_operacion,
+            manual: false,
+            registrado_por: user.id,
+            observaciones: `Parcialidad ${doc.num_parcialidad}, saldo previo ${doc.imp_saldo_anterior}, saldo restante ${doc.imp_saldo_insoluto}`,
+          });
+
+        if (pagoErr) {
+          console.error(
+            `[crearCfdi:complemento ${cfdi.id}] cfdi_pagos error:`,
+            pagoErr.message,
+          );
+          continue;
+        }
+
+        const yaPagado = Number(original.monto_pagado ?? 0);
+        const totalOriginal = Number(original.total ?? 0);
+        const nuevoPagado = yaPagado + Number(doc.imp_pagado);
+        const totalmentePagado = nuevoPagado >= totalOriginal - 0.01;
+
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const updPayload: any = { monto_pagado: nuevoPagado };
+        if (totalmentePagado) {
+          updPayload.fecha_pago = pago.fecha_pago.slice(0, 10);
+          updPayload.estado = "pagado";
+        }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        await (supabase as any)
+          .from("cfdi")
+          .update(updPayload)
+          .eq("id", original.id);
+
+        // S2-T6: cascada OT 'facturada' → 'cobrada' si el CFDI quedó saldado.
+        if (totalmentePagado) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { data: cfdiOrig } = await (supabase as any)
+            .from("cfdi")
+            .select("ot_id, es_emitido")
+            .eq("id", original.id)
+            .maybeSingle();
+          if (cfdiOrig?.ot_id && cfdiOrig.es_emitido) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            await (supabase as any)
+              .from("ordenes_trabajo_inter_co")
+              .update({
+                estado: "cobrada",
+                updated_at: new Date().toISOString(),
+              })
+              .eq("id", cfdiOrig.ot_id)
+              .eq("estado", "facturada");
+          }
+        }
+      }
+    }
+  }
+
   // S2-T6: si es un CFDI emitido vinculado a una OT inter-co y la OT
   // está en lista_cobrar (o confirmada_destino), pasarla a 'facturada'.
   // Cobertura para flujos donde la OT no marcó manualmente "lista para
