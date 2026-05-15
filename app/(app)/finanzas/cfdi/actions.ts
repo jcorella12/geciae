@@ -264,6 +264,22 @@ export async function subirCfdi(
       .is("cfdi_recibido_id", null);
   }
 
+  // S2-T6: si es un CFDI emitido vinculado a una OT inter-co y la OT
+  // está en lista_cobrar (o confirmada_destino), pasarla a 'facturada'.
+  // Cobertura para flujos donde la OT no marcó manualmente "lista para
+  // cobrar" antes de facturar.
+  if (ot_id && esEmitido) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("ordenes_trabajo_inter_co")
+      .update({
+        estado: "facturada",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", ot_id)
+      .in("estado", ["confirmada_destino", "lista_cobrar"]);
+  }
+
   revalidatePath("/finanzas/cfdi");
   if (oc_id) revalidatePath(`/finanzas/oc/${oc_id}`);
   if (ot_id) revalidatePath(`/finanzas/ot/${ot_id}`);
@@ -373,6 +389,30 @@ export async function registrarPagoCfdi(
     })
     .eq("id", cfdiId);
   if (error) return { ok: false, error: error.message };
+
+  // S2-T6: si el CFDI quedó totalmente pagado y está vinculado a una OT
+  // emitida (cfdi.ot_id IS NOT NULL Y cfdi.es_emitido=TRUE), avanzar la OT
+  // a 'cobrada'.
+  if (totalmentePagado) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: cfdiData } = await (supabase as any)
+      .from("cfdi")
+      .select("ot_id, es_emitido")
+      .eq("id", cfdiId)
+      .maybeSingle();
+    if (cfdiData?.ot_id && cfdiData.es_emitido) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any)
+        .from("ordenes_trabajo_inter_co")
+        .update({
+          estado: "cobrada",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", cfdiData.ot_id)
+        .eq("estado", "facturada");
+      revalidatePath(`/finanzas/ot/${cfdiData.ot_id}`);
+    }
+  }
 
   revalidatePath("/finanzas/cfdi");
   revalidatePath(`/finanzas/cfdi/${cfdiId}`);
