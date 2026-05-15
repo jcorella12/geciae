@@ -275,6 +275,37 @@ export function puedeRestablecerContrasenas(vinculos: Vinculo[]): boolean {
 }
 
 /**
+ * Puede gestionar el catálogo global de capacitaciones (cursos disponibles).
+ * CEO, atributo rh, o cualquier director (los directores arman cursos
+ * propios para su empresa).
+ */
+export function puedeGestionarCatalogoCapacitaciones(
+  vinculos: Vinculo[],
+): boolean {
+  return (
+    esCEO(vinculos) ||
+    tieneAtributo(vinculos, "rh") ||
+    vinculos.some((v) => v.rol === "director")
+  );
+}
+
+/**
+ * Puede asignar/editar capacitaciones de un empleado específico.
+ * CEO, atributo rh, o director de la empresa del empleado.
+ * Coincide con la RLS de `empleados_capacitaciones`.
+ */
+export function puedeAsignarCapacitacionEn(
+  vinculos: Vinculo[],
+  empleadoEmpresaId: string,
+): boolean {
+  if (esCEO(vinculos)) return true;
+  if (tieneAtributo(vinculos, "rh")) return true;
+  return vinculos.some(
+    (v) => v.empresa_id === empleadoEmpresaId && v.rol === "director",
+  );
+}
+
+/**
  * Puede gestionar el catálogo de clientes (alta, edición, vinculación).
  * Spec: cualquier rol con función comercial/operativa.
  */

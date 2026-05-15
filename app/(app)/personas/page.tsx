@@ -1,4 +1,10 @@
-import { AlertTriangle, Download, Plus, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  Download,
+  GraduationCap,
+  Plus,
+  ShieldCheck,
+} from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
@@ -9,6 +15,7 @@ import {
   empresasDondeGestionaEmpleados,
   esCEO,
   obtenerVinculos,
+  puedeGestionarCatalogoCapacitaciones,
 } from "@/lib/auth/permisos";
 import {
   EMPRESA_COOKIE,
@@ -41,6 +48,7 @@ export default async function PersonasPage({
   const vinculos = await obtenerVinculos();
   const puedeAlta = empresasDondeGestionaEmpleados(vinculos).length > 0;
   const ceo = esCEO(vinculos);
+  const puedeCapacitaciones = puedeGestionarCatalogoCapacitaciones(vinculos);
 
   const q = (searchParams.q ?? "").trim();
 
@@ -163,9 +171,17 @@ export default async function PersonasPage({
             activos · {obra} por obra · {repse.length} REPSE
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {ceo && empresas && empresas.length > 0 && (
             <ExportNominaMenu empresas={empresas} />
+          )}
+          {puedeCapacitaciones && (
+            <Button asChild variant="outline">
+              <Link href="/personas/capacitaciones">
+                <GraduationCap className="h-4 w-4" />
+                Capacitaciones
+              </Link>
+            </Button>
           )}
           {puedeAlta && (
             <Button asChild>

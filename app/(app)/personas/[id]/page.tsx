@@ -9,6 +9,7 @@ import {
   esCEO,
   esRolEn,
   obtenerVinculos,
+  puedeAsignarCapacitacionEn,
   puedeGestionarEmpleadosEn,
   puedeVerNominaEmpleado,
   tieneAtributo,
@@ -27,6 +28,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { ProyectoTabs } from "../../proyectos/[id]/proyecto-tabs";
+import { CapacitacionesSection } from "./capacitaciones-section";
 import { DocumentosTab } from "./documentos-tab";
 import { GenerarUsuarioButton } from "./generar-usuario/generar-usuario-button";
 import { RepseCard } from "./repse-card";
@@ -169,12 +171,21 @@ export default async function EmpleadoDetailPage({
     supabase
       .from("empleados_capacitaciones")
       .select(
-        "id, fecha_programada, fecha_inicio, fecha_fin, estado, calificacion_post, fecha_vencimiento, capacitaciones(codigo, nombre)",
+        "id, fecha_programada, fecha_inicio, fecha_fin, estado, calificacion_post, fecha_vencimiento, url_constancia, capacitaciones(codigo, nombre)",
       )
       .eq("empleado_id", params.id)
       .order("fecha_programada", { ascending: false })
-      .limit(20),
+      .limit(50),
   ]);
+
+  // Cursos activos del catálogo para asignar
+  const { data: cursosActivos } = await supabase
+    .from("capacitaciones")
+    .select("id, codigo, nombre, vigencia_constancia_meses")
+    .eq("activo", true)
+    .order("codigo");
+
+  const puedeAsignarCap = puedeAsignarCapacitacionEn(vinculos, emp.empresa_id);
 
   const vacaciones = vacacionesRaw ?? [];
   const viaticos = viaticosRaw ?? [];
@@ -658,57 +669,30 @@ export default async function EmpleadoDetailPage({
             />
           ),
           equipo: (
-            <section>
-              <h2 className="mb-3 text-[13.5px] font-semibold">
-                Capacitaciones
-              </h2>
-              {(capacitaciones?.length ?? 0) === 0 ? (
-                <div className="rounded-md border border-dashed border-border bg-card p-12 text-center text-sm text-ink-3">
-                  Sin capacitaciones registradas.
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {(capacitaciones ?? []).map((c) => {
-                    const cap = c.capacitaciones as
-                      | { codigo: string; nombre: string }
-                      | null;
-                    return (
-                      <div
-                        key={c.id}
-                        className="flex items-center gap-4 rounded-md border border-border bg-card p-4 text-[13px] shadow-xs"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium">
-                            {cap?.nombre ?? "Capacitación"}
-                          </p>
-                          <p className="font-mono text-[11px] text-ink-3">
-                            {cap?.codigo}
-                          </p>
-                        </div>
-                        <Stat
-                          label="Estado"
-                          value={c.estado ?? "—"}
-                          mono={false}
-                        />
-                        {c.calificacion_post != null && (
-                          <Stat
-                            label="Calificación"
-                            value={Number(c.calificacion_post).toFixed(1)}
-                          />
-                        )}
-                        {c.fecha_vencimiento && (
-                          <Stat
-                            label="Vence"
-                            value={fmtFecha(c.fecha_vencimiento)}
-                            mono={false}
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </section>
+            <CapacitacionesSection
+              empleadoId={params.id}
+              asignaciones={(capacitaciones ?? []).map((c) => ({
+                id: c.id,
+                fecha_programada: c.fecha_programada,
+                fecha_inicio: c.fecha_inicio,
+                fecha_fin: c.fecha_fin,
+                estado: c.estado,
+                calificacion_post: c.calificacion_post,
+                fecha_vencimiento: c.fecha_vencimiento,
+                url_constancia: (c as { url_constancia?: string | null })
+                  .url_constancia ?? null,
+                capacitaciones: c.capacitaciones as
+                  | { codigo: string; nombre: string }
+                  | null,
+              }))}
+              cursosCatalogo={(cursosActivos as Array<{
+                id: string;
+                codigo: string;
+                nombre: string;
+                vigencia_constancia_meses: number | null;
+              }> | null) ?? []}
+              puedeGestionar={puedeAsignarCap}
+            />
           ),
         }}
       />
