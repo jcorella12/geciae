@@ -282,6 +282,15 @@ export async function registrarPagoCfdi(
   const formaPago = (formData.get("forma_pago") as string) || null;
   const observaciones = (formData.get("observaciones") as string) || null;
 
+  // S2-T3: idempotency token generado por el cliente. Si llega 2 veces el
+  // mismo (doble click, retry de red), insertar el segundo falla por
+  // UNIQUE y no duplicamos el pago.
+  const idempotencyTokenRaw = formData.get("idempotency_token");
+  const idempotencyToken =
+    typeof idempotencyTokenRaw === "string" && idempotencyTokenRaw.trim()
+      ? idempotencyTokenRaw.trim()
+      : null;
+
   const supabase = createClient();
   const { data: c } = await supabase
     .from("cfdi")
@@ -295,6 +304,21 @@ export async function registrarPagoCfdi(
     return { ok: false, error: "Sin permiso." };
   }
 
+  // S2-T3: si ya existe un pago con este token, devolver OK silencioso
+  // (idempotente — el caller piensa que el pago se aplicó porque ya lo
+  // está, no porque acabamos de aplicarlo).
+  if (idempotencyToken) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: existente } = await (supabase as any)
+      .from("cfdi_pagos")
+      .select("id")
+      .eq("idempotency_token", idempotencyToken)
+      .maybeSingle();
+    if (existente) {
+      return { ok: true, error: null };
+    }
+  }
+
   const total = Number(c.total ?? 0);
   const yaPagado = Number(c.monto_pagado ?? 0);
   const nuevoPagado = yaPagado + monto;
@@ -305,16 +329,47 @@ export async function registrarPagoCfdi(
     };
   }
   const totalmentePagado = nuevoPagado >= total - 0.01;
+  const fechaPago = fecha ?? new Date().toISOString().slice(0, 10);
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // S2-T1: insertar registro en cfdi_pagos para preservar histórico de
+  // cada pago individual. Antes solo crecía cfdi.monto_pagado acumulado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: pagoErr } = await (supabase as any)
+    .from("cfdi_pagos")
+    .insert({
+      cfdi_pagado_id: cfdiId,
+      cfdi_id: null, // pago manual sin CFDI de complemento
+      manual: true,
+      fecha_pago: fechaPago,
+      forma_pago: formaPago,
+      moneda: "MXN",
+      monto: monto,
+      observaciones,
+      idempotency_token: idempotencyToken,
+      registrado_por: user?.id ?? null,
+    });
+  if (pagoErr) {
+    // Si el conflict es por idempotency_token significa que otro request
+    // ganó la carrera — devolvemos OK silencioso.
+    if (
+      pagoErr.code === "23505" &&
+      pagoErr.message.includes("uq_cfdi_pagos_idempotency")
+    ) {
+      return { ok: true, error: null };
+    }
+    return { ok: false, error: pagoErr.message };
+  }
 
   const { error } = await supabase
     .from("cfdi")
     .update({
       monto_pagado: nuevoPagado,
-      fecha_pago: totalmentePagado ? fecha ?? new Date().toISOString().slice(0, 10) : null,
+      fecha_pago: totalmentePagado ? fechaPago : null,
       estado: totalmentePagado ? "pagado" : c.estado,
-      observaciones: observaciones
-        ? `${observaciones}${formaPago ? ` (${formaPago})` : ""}`
-        : null,
     })
     .eq("id", cfdiId);
   if (error) return { ok: false, error: error.message };
@@ -349,12 +404,28 @@ export async function cancelarCfdi(
       error: "Motivo inválido (01, 02, 03 o 04 según SAT).",
     };
   }
+
+  // S2-T8: motivo 01 = "Comprobante emitido con errores con relación".
+  // El SAT exige el UUID del CFDI que sustituye al cancelado. Sin él, el
+  // PAC rechaza la cancelación. Validamos formato UUID v4 (8-4-4-4-12 hex).
+  if (motivo === "01") {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidSustituye || !uuidRegex.test(uuidSustituye.trim())) {
+      return {
+        ok: false,
+        error:
+          "Motivo 01 requiere el UUID del CFDI que sustituye al cancelado (formato xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx).",
+      };
+    }
+  }
+
   const { error } = await supabase
     .from("cfdi")
     .update({
       estado: "cancelado",
       motivo_cancelacion: motivo,
-      uuid_sustituye: uuidSustituye || null,
+      uuid_sustituye: uuidSustituye?.trim() || null,
     })
     .eq("id", cfdiId);
   if (error) return { ok: false, error: error.message };

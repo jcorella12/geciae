@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,17 @@ export function CfdiActions({
   const [pending, start] = useTransition();
   const [motivo, setMotivo] = useState("02");
   const [uuidSust, setUuidSust] = useState("");
+
+  // S2-T3: idempotency token regenerado cada vez que se abre el form
+  // de pago. Si hay doble-click o retry de red, el server detecta el
+  // token duplicado y no registra dos veces.
+  const idempotencyToken = useMemo(
+    () =>
+      showPago && typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : "",
+    [showPago],
+  );
 
   if (!puedeOperar) return null;
 
@@ -124,6 +135,11 @@ export function CfdiActions({
             <Label htmlFor="observaciones">Observaciones</Label>
             <Input id="observaciones" name="observaciones" />
           </div>
+          <input
+            type="hidden"
+            name="idempotency_token"
+            value={idempotencyToken}
+          />
           <div className="mt-3 flex gap-2">
             <Button type="submit" disabled={pending}>
               {pending ? "Guardando…" : "Registrar"}
