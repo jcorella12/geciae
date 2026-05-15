@@ -40,14 +40,17 @@ async function generarNumeroOT(
   supabase: ReturnType<typeof createClient>,
   empresaOrigenId: string,
 ): Promise<string> {
-  const year = new Date().getFullYear();
-  const { count } = await supabase
-    .from("ordenes_trabajo_inter_co")
-    .select("id", { count: "exact", head: true })
-    .eq("empresa_origen_id", empresaOrigenId)
-    .gte("fecha_solicitud", `${year}-01-01`);
-  const next = (count ?? 0) + 1;
-  return `OT-${year}-${String(next).padStart(4, "0")}`;
+  // Reserva atómica vía RPC `siguiente_folio` (advisory lock + UPSERT).
+  // Mata el race condition del viejo "select count + 1".
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("siguiente_folio", {
+    p_empresa_id: empresaOrigenId,
+    p_tipo: "ot",
+  });
+  if (error || !data) {
+    throw new Error(`No se pudo reservar folio OT: ${error?.message}`);
+  }
+  return data as string;
 }
 
 async function getCallerId(

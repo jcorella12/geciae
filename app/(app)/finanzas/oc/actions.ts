@@ -46,14 +46,17 @@ async function generarNumeroOC(
   supabase: ReturnType<typeof createClient>,
   empresaId: string,
 ): Promise<string> {
-  const year = new Date().getFullYear();
-  const { count } = await supabase
-    .from("ordenes_compra")
-    .select("id", { count: "exact", head: true })
-    .eq("empresa_id", empresaId)
-    .gte("fecha_emision", `${year}-01-01`);
-  const next = (count ?? 0) + 1;
-  return `OC-${year}-${String(next).padStart(4, "0")}`;
+  // Reserva atómica vía RPC `siguiente_folio` (advisory lock + UPSERT).
+  // Mata el race condition del viejo "select count + 1".
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("siguiente_folio", {
+    p_empresa_id: empresaId,
+    p_tipo: "oc",
+  });
+  if (error || !data) {
+    throw new Error(`No se pudo reservar folio OC: ${error?.message}`);
+  }
+  return data as string;
 }
 
 async function getCallerId(
