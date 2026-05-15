@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { BottomNav } from "@/components/shared/bottom-nav";
+import { MobileSidebarDrawer } from "@/components/shared/mobile-sidebar-drawer";
 import { PageviewTracker } from "@/components/shared/pageview-tracker";
 import { PeekProvider } from "@/components/shared/peek-provider";
 import { VersionBadge } from "@/components/shared/version-badge";
@@ -107,6 +108,22 @@ export default async function AppLayout({
           <main className="flex-1 overflow-y-auto bg-bg-2 pb-16 md:pb-0">{children}</main>
         </div>
       </div>
+      {/* Drawer móvil — el botón "Más" del BottomNav lo abre */}
+      <MobileSidebarDrawer>
+        <AppSidebar
+          puedeVerConfiguracion={puedeConfiguracion}
+          puedeVerAjustesGerenciales={puedeAjustesGerenciales}
+          empresas={empresas}
+          activaId={activaId}
+          puedeConsolidado={puedeConsolidado}
+          collapsed={false}
+          user={{
+            name: nombreUsuario,
+            initials,
+            role: rolLabel,
+          }}
+        />
+      </MobileSidebarDrawer>
       <BottomNav />
       <VersionBadge />
     </PeekProvider>

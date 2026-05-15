@@ -122,20 +122,28 @@ export async function AppTopbar({ email, initials }: Props) {
 
   return (
     <header
-      className="flex shrink-0 items-center gap-3 border-b border-border bg-surface px-6"
+      className="flex shrink-0 items-center gap-2 border-b border-border bg-surface px-4 md:gap-3 md:px-6"
       style={{ height: "var(--topbar-h)" }}
     >
-      <TopbarBreadcrumbs />
+      <div className="hidden md:block">
+        <TopbarBreadcrumbs />
+      </div>
 
       <div className="ml-auto">
         <GlobalSearch />
       </div>
 
-      <DensityToggle variant="icon" />
+      <div className="hidden md:block">
+        <DensityToggle variant="icon" />
+      </div>
 
-      <ThemeToggle compact />
+      <div className="hidden md:block">
+        <ThemeToggle compact />
+      </div>
 
-      <SugerirMejoraButton />
+      <div className="hidden md:block">
+        <SugerirMejoraButton />
+      </div>
 
       <NotificationBell />
 
