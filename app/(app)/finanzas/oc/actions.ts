@@ -216,11 +216,24 @@ export async function createOC(
 
 async function gateAccionOC(
   ocId: string,
-): Promise<{ ok: true; oc: { id: string; empresa_id: string; estado: string; total: number; capturado_por: string } } | { ok: false; error: string }> {
+): Promise<
+  | {
+      ok: true;
+      oc: {
+        id: string;
+        empresa_id: string;
+        estado: string;
+        total: number;
+        capturado_por: string;
+        comentarios: string | null;
+      };
+    }
+  | { ok: false; error: string }
+> {
   const supabase = createClient();
   const { data: oc } = await supabase
     .from("ordenes_compra")
-    .select("id, empresa_id, estado, total, capturado_por")
+    .select("id, empresa_id, estado, total, capturado_por, comentarios")
     .eq("id", ocId)
     .maybeSingle();
   if (!oc) return { ok: false, error: "OC no encontrada." };
