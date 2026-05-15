@@ -1,5 +1,7 @@
 import { Download, FileText } from "lucide-react";
 import Link from "next/link";
+
+import { Ref } from "@/components/shared/peek-provider";
 import { notFound } from "next/navigation";
 
 import {
@@ -219,35 +221,27 @@ export default async function CfdiDetallePage({
                 {cfdi.proyecto && (
                   <p>
                     Proyecto:{" "}
-                    <Link
-                      href={`/proyectos/${(cfdi.proyecto as { id: string }).id}`}
-                      className="text-primary hover:underline"
+                    <Ref
+                      code={
+                        (cfdi.proyecto as { codigo: string }).codigo
+                      }
                     >
-                      {(cfdi.proyecto as { codigo: string; nombre: string }).codigo} —{" "}
+                      {(cfdi.proyecto as { codigo: string; nombre: string }).codigo}{" "}
+                      —{" "}
                       {(cfdi.proyecto as { codigo: string; nombre: string }).nombre}
-                    </Link>
+                    </Ref>
                   </p>
                 )}
                 {cfdi.oc && (
                   <p>
                     OC:{" "}
-                    <Link
-                      href={`/finanzas/oc/${(cfdi.oc as { id: string }).id}`}
-                      className="text-primary hover:underline"
-                    >
-                      {(cfdi.oc as { numero: string }).numero}
-                    </Link>
+                    <Ref code={(cfdi.oc as { numero: string }).numero} />
                   </p>
                 )}
                 {cfdi.ot && (
                   <p>
                     OT inter-co:{" "}
-                    <Link
-                      href={`/finanzas/ot/${(cfdi.ot as { id: string }).id}`}
-                      className="text-primary hover:underline"
-                    >
-                      {(cfdi.ot as { numero: string }).numero}
-                    </Link>
+                    <Ref code={(cfdi.ot as { numero: string }).numero} />
                   </p>
                 )}
               </div>

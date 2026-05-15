@@ -1,10 +1,10 @@
 "use client";
 
 import { Search, X } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+import { Ref } from "@/components/shared/peek-provider";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -167,12 +167,7 @@ export function OCTable({
                 return (
                   <TableRow key={oc.id}>
                     <TableCell className="font-mono">
-                      <Link
-                        href={`/finanzas/oc/${oc.id}`}
-                        className="font-medium hover:text-brand hover:underline"
-                      >
-                        {oc.numero}
-                      </Link>
+                      <Ref code={oc.numero} className="font-medium" />
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-2 text-xs">
