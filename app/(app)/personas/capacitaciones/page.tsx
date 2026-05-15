@@ -4,10 +4,13 @@ import { redirect } from "next/navigation";
 
 import {
   obtenerVinculos,
+  puedeAsignarCapacitacionEn,
   puedeGestionarCatalogoCapacitaciones,
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import { AsignarMasivoBtn } from "./asignar-masivo-btn";
+import type { EmpleadoLite } from "./asignar-masivo-dialog";
 import { CursoForm } from "./curso-form";
 import { CursoToggleBtns } from "./curso-toggle-btns";
 
@@ -34,17 +37,50 @@ export default async function CapacitacionesCatalogoPage() {
   }
 
   const supabase = createClient();
-  const { data: cursos } = await supabase
-    .from("capacitaciones")
-    .select(
-      "id, codigo, nombre, descripcion, modalidad, duracion_horas, instructor_externo, costo, genera_dc3, vigencia_constancia_meses, activo",
-    )
-    .order("activo", { ascending: false })
-    .order("codigo");
+  const [{ data: cursos }, { data: empleadosRaw }] = await Promise.all([
+    supabase
+      .from("capacitaciones")
+      .select(
+        "id, codigo, nombre, descripcion, modalidad, duracion_horas, instructor_externo, costo, genera_dc3, vigencia_constancia_meses, activo",
+      )
+      .order("activo", { ascending: false })
+      .order("codigo"),
+    supabase
+      .from("empleados")
+      .select(
+        "id, nombre_completo, numero_empleado, puesto, empresa_id, categoria, empresas(codigo)",
+      )
+      .eq("activo", true)
+      .order("nombre_completo"),
+  ]);
 
   const lista = (cursos as Curso[] | null) ?? [];
   const activos = lista.filter((c) => c.activo);
   const inactivos = lista.filter((c) => !c.activo);
+
+  // Filtrar empleados a sólo los que el usuario puede asignar
+  // capacitaciones (CEO/rh ven todos; director sólo su empresa).
+  const empleadosAsignables: EmpleadoLite[] = (
+    (empleadosRaw ?? []) as Array<{
+      id: string;
+      nombre_completo: string;
+      numero_empleado: string;
+      puesto: string;
+      empresa_id: string;
+      categoria: string;
+      empresas: { codigo: string } | null;
+    }>
+  )
+    .filter((e) => puedeAsignarCapacitacionEn(vinculos, e.empresa_id))
+    .map((e) => ({
+      id: e.id,
+      nombre_completo: e.nombre_completo,
+      numero_empleado: e.numero_empleado,
+      puesto: e.puesto ?? "",
+      empresa_id: e.empresa_id,
+      empresa_codigo: e.empresas?.codigo ?? "?",
+      categoria: e.categoria ?? "",
+    }));
 
   return (
     <div className="mx-auto w-full max-w-5xl px-6 py-8 space-y-6">
@@ -78,7 +114,7 @@ export default async function CapacitacionesCatalogoPage() {
             Aún no hay cursos en el catálogo. Crea el primero arriba.
           </p>
         ) : (
-          <CursoTable cursos={activos} />
+          <CursoTable cursos={activos} empleados={empleadosAsignables} />
         )}
       </section>
 
@@ -87,14 +123,20 @@ export default async function CapacitacionesCatalogoPage() {
           <h2 className="mb-3 text-base font-semibold text-muted-foreground">
             Cursos desactivados ({inactivos.length})
           </h2>
-          <CursoTable cursos={inactivos} />
+          <CursoTable cursos={inactivos} empleados={empleadosAsignables} />
         </section>
       )}
     </div>
   );
 }
 
-function CursoTable({ cursos }: { cursos: Curso[] }) {
+function CursoTable({
+  cursos,
+  empleados,
+}: {
+  cursos: Curso[];
+  empleados: EmpleadoLite[];
+}) {
   return (
     <div className="overflow-x-auto rounded-md border border-border">
       <table className="w-full text-sm">
@@ -153,7 +195,19 @@ function CursoTable({ cursos }: { cursos: Curso[] }) {
                 )}
               </td>
               <td className="px-3 py-2 text-right">
-                <CursoToggleBtns id={c.id} activo={c.activo} />
+                <div className="flex justify-end gap-1">
+                  {c.activo && empleados.length > 0 && (
+                    <AsignarMasivoBtn
+                      curso={{
+                        id: c.id,
+                        codigo: c.codigo,
+                        nombre: c.nombre,
+                      }}
+                      empleados={empleados}
+                    />
+                  )}
+                  <CursoToggleBtns id={c.id} activo={c.activo} />
+                </div>
               </td>
             </tr>
           ))}

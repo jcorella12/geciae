@@ -210,6 +210,176 @@ export async function asignarCapacitacion(input: {
   return { ok: true, error: null };
 }
 
+// ----------------------------------------------------------------------------
+// Asignación masiva — un curso a N empleados
+// ----------------------------------------------------------------------------
+
+const AsignarMasivoSchema = z.object({
+  capacitacionId: z.string().uuid(),
+  empleadoIds: z.array(z.string().uuid()).min(1, "Selecciona al menos un empleado."),
+  fechaProgramada: z
+    .preprocess(
+      (v) => (v === "" || v == null ? null : v),
+      z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+        .nullable(),
+    )
+    .optional(),
+  fechaInicio: z
+    .preprocess(
+      (v) => (v === "" || v == null ? null : v),
+      z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+        .nullable(),
+    )
+    .optional(),
+});
+
+export type AsignarMasivoResult = {
+  ok: boolean;
+  insertados: number;
+  saltados: number; // ya estaban inscritos al mismo curso
+  sinPermiso: number;
+  error: string | null;
+};
+
+/**
+ * Asigna un curso a varios empleados en una sola operación. Útil cuando
+ * un curso es para "todos" o un equipo completo.
+ *
+ * - Verifica permiso por empresa de cada empleado.
+ * - Salta empleados que ya tienen este curso en estado inscrito/en_proceso
+ *   (no crea duplicados activos).
+ */
+export async function asignarCapacitacionMasiva(input: {
+  capacitacionId: string;
+  empleadoIds: string[];
+  fechaProgramada: string | null;
+  fechaInicio: string | null;
+}): Promise<AsignarMasivoResult> {
+  const parsed = AsignarMasivoSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      ok: false,
+      insertados: 0,
+      saltados: 0,
+      sinPermiso: 0,
+      error: parsed.error.issues.map((i) => i.message).join("; "),
+    };
+  }
+
+  const supabase = createClient();
+  const vinculos = await obtenerVinculos();
+
+  // Cargar empresa de cada empleado para chequeo de permiso.
+  const { data: empleados, error: empErr } = await supabase
+    .from("empleados")
+    .select("id, empresa_id")
+    .in("id", parsed.data.empleadoIds);
+  if (empErr) return {
+    ok: false,
+    insertados: 0,
+    saltados: 0,
+    sinPermiso: 0,
+    error: empErr.message,
+  };
+
+  const empleadoEmpresaMap = new Map<string, string>();
+  (empleados ?? []).forEach((e) =>
+    empleadoEmpresaMap.set(e.id, e.empresa_id),
+  );
+
+  // Separar autorizados vs no autorizados.
+  const autorizados: string[] = [];
+  let sinPermiso = 0;
+  for (const empleadoId of parsed.data.empleadoIds) {
+    const empresaId = empleadoEmpresaMap.get(empleadoId);
+    if (!empresaId) {
+      sinPermiso++;
+      continue;
+    }
+    if (puedeAsignarCapacitacionEn(vinculos, empresaId)) {
+      autorizados.push(empleadoId);
+    } else {
+      sinPermiso++;
+    }
+  }
+
+  if (autorizados.length === 0) {
+    return {
+      ok: false,
+      insertados: 0,
+      saltados: 0,
+      sinPermiso,
+      error: "No tienes permiso para asignar capacitaciones a ninguno de los seleccionados.",
+    };
+  }
+
+  // Evitar duplicados: saltar empleados que ya tienen este curso en estado
+  // activo (inscrito o en_proceso). Sí permite reinscribir si ya completó/
+  // reprobó antes, para recertificaciones.
+  const { data: existentes } = await supabase
+    .from("empleados_capacitaciones")
+    .select("empleado_id")
+    .eq("capacitacion_id", parsed.data.capacitacionId)
+    .in("empleado_id", autorizados)
+    .in("estado", ["inscrito", "en_proceso"]);
+
+  const yaInscritos = new Set(
+    (existentes ?? []).map((r) => r.empleado_id),
+  );
+  const aInsertar = autorizados.filter((id) => !yaInscritos.has(id));
+  const saltados = yaInscritos.size;
+
+  if (aInsertar.length === 0) {
+    return {
+      ok: false,
+      insertados: 0,
+      saltados,
+      sinPermiso,
+      error: "Todos los empleados seleccionados ya están inscritos a este curso.",
+    };
+  }
+
+  const filas = aInsertar.map((empleadoId) => ({
+    empleado_id: empleadoId,
+    capacitacion_id: parsed.data.capacitacionId,
+    fecha_programada: parsed.data.fechaProgramada ?? null,
+    fecha_inicio: parsed.data.fechaInicio ?? null,
+    estado: parsed.data.fechaInicio ? "en_proceso" : "inscrito",
+  }));
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error: insErr } = await (supabase as any)
+    .from("empleados_capacitaciones")
+    .insert(filas);
+  if (insErr) {
+    return {
+      ok: false,
+      insertados: 0,
+      saltados,
+      sinPermiso,
+      error: insErr.message,
+    };
+  }
+
+  revalidatePath("/personas/capacitaciones");
+  // Revalidar también la ficha de cada empleado por si están abiertas.
+  for (const empleadoId of aInsertar) {
+    revalidatePath(`/personas/${empleadoId}`);
+  }
+
+  return {
+    ok: true,
+    insertados: aInsertar.length,
+    saltados,
+    sinPermiso,
+    error: null,
+  };
+}
+
 const CompletarSchema = z.object({
   asignacionId: z.string().uuid(),
   fechaFin: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
