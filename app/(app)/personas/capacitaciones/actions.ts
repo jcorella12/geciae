@@ -144,19 +144,23 @@ const AsignarSchema = z.object({
   empleadoId: z.string().uuid(),
   capacitacionId: z.string().uuid(),
   fechaProgramada: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .nullable()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
+    .preprocess(
+      (v) => (v === "" || v == null ? null : v),
+      z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+        .nullable(),
+    )
+    .optional(),
   fechaInicio: z
-    .string()
-    .regex(/^\d{4}-\d{2}-\d{2}$/)
-    .optional()
-    .nullable()
-    .or(z.literal(""))
-    .transform((v) => (v ? v : null)),
+    .preprocess(
+      (v) => (v === "" || v == null ? null : v),
+      z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha inválida")
+        .nullable(),
+    )
+    .optional(),
 });
 
 export async function asignarCapacitacion(input: {
@@ -216,11 +220,15 @@ const CompletarSchema = z.object({
     )
     .optional(),
   urlConstancia: z
-    .string()
-    .trim()
-    .max(500)
-    .optional()
-    .transform((v) => (v ? v : null)),
+    .preprocess(
+      (v) => {
+        if (v == null) return null;
+        const s = String(v).trim();
+        return s === "" ? null : s;
+      },
+      z.string().max(500).nullable(),
+    )
+    .optional(),
   estado: z.enum(["completado", "reprobado", "no_asistio"]),
 });
 
