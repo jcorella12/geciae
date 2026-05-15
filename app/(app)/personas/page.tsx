@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   Download,
+  FileText,
   GraduationCap,
   Plus,
   ShieldCheck,
@@ -180,6 +181,14 @@ export default async function PersonasPage({
               <Link href="/personas/capacitaciones">
                 <GraduationCap className="h-4 w-4" />
                 Capacitaciones
+              </Link>
+            </Button>
+          )}
+          {puedeAlta && (
+            <Button asChild variant="outline">
+              <Link href="/personas/finiquitos">
+                <FileText className="h-4 w-4" />
+                Finiquitos
               </Link>
             </Button>
           )}

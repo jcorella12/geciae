@@ -381,6 +381,13 @@ export default async function EmpleadoDetailPage({
                   tieneCuenta={Boolean(emp.usuario_id)}
                 />
                 <Button variant="outline" size="sm" asChild>
+                  <Link
+                    href={`/personas/finiquitos/nuevo?empleado=${emp.id}`}
+                  >
+                    Generar finiquito
+                  </Link>
+                </Button>
+                <Button variant="outline" size="sm" asChild>
                   <Link href={`/personas/${emp.id}/edit`}>
                     <Pencil className="h-3.5 w-3.5" /> Editar
                   </Link>
