@@ -119,7 +119,8 @@ export async function createOC(
   const autoAprobada = puedeAprobarOC(vinculos, d.empresa_id, totales.total);
   const ahora = new Date().toISOString();
 
-  const { data: ocNueva, error: ocErr } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: ocNueva, error: ocErr } = await (supabase as any)
     .from("ordenes_compra")
     .insert({
       empresa_id: d.empresa_id,
@@ -141,6 +142,8 @@ export async function createOC(
       capturado_por: callerId,
       aprobado_por: autoAprobada ? callerId : null,
       fecha_aprobacion: autoAprobada ? ahora : null,
+      auto_aprobada: autoAprobada,
+      aprobacion_metodo: autoAprobada ? "auto_umbral" : null,
     })
     .select("id")
     .single();
@@ -245,6 +248,8 @@ export async function enviarAAprobacion(
         estado: "aprobada" as const,
         aprobado_por: callerId,
         fecha_aprobacion: ahora,
+        auto_aprobada: true,
+        aprobacion_metodo: "auto_umbral",
         updated_at: ahora,
       }
     : {
@@ -252,7 +257,8 @@ export async function enviarAAprobacion(
         updated_at: ahora,
       };
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update(update)
     .eq("id", ocId);
@@ -279,12 +285,15 @@ export async function aprobarOC(
   }
   const supabase = createClient();
   const callerId = await getCallerId(supabase);
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "aprobada",
       aprobado_por: callerId,
       fecha_aprobacion: new Date().toISOString(),
+      auto_aprobada: false,
+      aprobacion_metodo: "manual",
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
