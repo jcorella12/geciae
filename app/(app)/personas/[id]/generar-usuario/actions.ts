@@ -86,11 +86,18 @@ export async function generarUsuarioParaEmpleado(
 
   // 2. Verificar permiso
   const v = await obtenerVinculos();
+  const callerEsCeo = esCEO(v);
+  const callerEsRh = tieneAtributo(v, "rh");
+  const callerEsContralor = tieneAtributo(v, "contralor");
+  const callerEsDirectorEmpresa = v.some(
+    (vi) => vi.rol === "director" && vi.empresa_id === empleado.empresa_id,
+  );
+
   const puede =
-    esCEO(v) ||
-    tieneAtributo(v, "rh") ||
-    tieneAtributo(v, "contralor") ||
-    v.some((vi) => vi.rol === "director" && vi.empresa_id === empleado.empresa_id);
+    callerEsCeo ||
+    callerEsRh ||
+    callerEsContralor ||
+    callerEsDirectorEmpresa;
   if (!puede) {
     return {
       ok: false,
@@ -98,6 +105,26 @@ export async function generarUsuarioParaEmpleado(
         "Sin permiso (requiere CEO, RH, contralor, o director de la empresa del empleado).",
       message: null,
     };
+  }
+
+  // 2.b. ANTI-ESCALADA: si el caller NO es CEO/RH/contralor (es decir,
+  // solo es director), forzar rol=empleado y atributos vacíos. Un director
+  // no puede usar este flujo para crear usuarios con privilegios elevados
+  // (eso sería puerta trasera para auto-asignarse permisos vía un
+  // empleado ficticio + email propio).
+  const puedePromover = callerEsCeo || callerEsRh || callerEsContralor;
+  const rolFinal: (typeof ROLES)[number] = puedePromover ? rol : "empleado";
+  const atributosFinales: (typeof ATRIBUTOS_VALIDOS)[number][] = puedePromover
+    ? atributos
+    : [];
+  if (!puedePromover && (rol !== "empleado" || atributos.length > 0)) {
+    // Lo aceptamos silenciosamente pero clamped — el usuario verá el
+    // resultado y entenderá por qué. (Alternativa: rechazar 403. Elegimos
+    // el flujo gentil porque la UI de directors típicos no expone los
+    // selectores; si llegó hasta acá es probablemente bypass curioso.)
+    console.warn(
+      "[generarUsuarioParaEmpleado] director intentó setear rol/atributos elevados; clamped a empleado/[]",
+    );
   }
 
   // 3. Si el empleado ya tiene usuario_id, devolver mensaje informativo
@@ -181,15 +208,16 @@ export async function generarUsuarioParaEmpleado(
     };
   }
 
-  // 6. Insertar vínculo en usuarios_empresas (rol "empleado" típicamente)
+  // 6. Insertar vínculo en usuarios_empresas (rol "empleado" típicamente).
+  // Usa rolFinal/atributosFinales (clamped si el caller no es CEO/RH/contralor).
   const { error: vincErr } = await admin
     .from("usuarios_empresas")
     .upsert(
       {
         usuario_id: userId,
         empresa_id: empleado.empresa_id,
-        rol,
-        atributos,
+        rol: rolFinal,
+        atributos: atributosFinales,
         puesto: empleado.puesto,
       },
       { onConflict: "usuario_id,empresa_id" },

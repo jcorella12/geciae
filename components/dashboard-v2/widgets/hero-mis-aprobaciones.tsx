@@ -79,7 +79,7 @@ export async function HeroMisAprobaciones() {
       <ul className="mt-3 space-y-1 border-t border-border pt-2 text-[11px]">
         <li>
           <Link
-            href="/oc?estado=pendiente_aprobacion"
+            href="/finanzas/oc?estado=pendiente_aprobacion"
             className="flex items-center justify-between rounded px-1.5 py-1 hover:bg-bg-2"
           >
             <span>OCs</span>
@@ -88,7 +88,7 @@ export async function HeroMisAprobaciones() {
         </li>
         <li>
           <Link
-            href="/ot?estado=solicitada"
+            href="/finanzas/ot?estado=solicitada"
             className="flex items-center justify-between rounded px-1.5 py-1 hover:bg-bg-2"
           >
             <span>OTs inter-co</span>

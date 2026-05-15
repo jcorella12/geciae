@@ -32,7 +32,7 @@ export async function HeroOcsPendientes({
   const total = (data ?? []).reduce((acc, o) => acc + Number(o.total ?? 0), 0);
 
   return (
-    <Link href="/oc?estado=pendiente_aprobacion" className="block">
+    <Link href="/finanzas/oc?estado=pendiente_aprobacion" className="block">
       <div className="flex items-center gap-1.5">
         <ClipboardCheck className="h-3.5 w-3.5 text-ink-3" />
         <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">

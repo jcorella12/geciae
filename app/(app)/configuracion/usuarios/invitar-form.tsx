@@ -23,6 +23,8 @@ const ATRIBUTOS = [
   { value: "auditor_interno", label: "Auditor interno" },
   { value: "vendedor", label: "Vendedor" },
   { value: "supervisor_cuadrilla", label: "Supervisor de cuadrilla" },
+  { value: "rh", label: "Recursos humanos" },
+  { value: "contralor", label: "Contralor" },
 ] as const;
 
 const empresaCodigoColor: Record<string, string> = {

@@ -73,12 +73,6 @@ export default async function CargarNominaPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-base font-semibold">Últimos uploads</h2>
-          <Link
-            href="/personas/cargar-nomina/uploads"
-            className="text-xs text-muted-foreground hover:text-foreground"
-          >
-            Ver todos →
-          </Link>
         </div>
         {(uploads ?? []).length === 0 ? (
           <p className="rounded-md border border-dashed border-border p-6 text-center text-sm text-muted-foreground">

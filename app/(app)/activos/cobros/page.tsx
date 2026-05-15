@@ -1,6 +1,4 @@
-import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { KpiCard } from "@/components/ui/kpi-card";
 import {
   Table,
@@ -72,9 +70,9 @@ export default async function CobrosPage() {
             Préstamos devueltos pendientes de facturar y CFDI consolidados mensuales por empresa.
           </p>
         </div>
-        <Link href="/activos/cobros/cierre-mensual">
-          <Button>Cierre mensual</Button>
-        </Link>
+        {/* TODO: cuando exista el flujo de cierre mensual, restaurar este botón.
+             Removido 2026-05-15 — apuntaba a /activos/cobros/cierre-mensual
+             que nunca se construyó. */}
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

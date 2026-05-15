@@ -14,6 +14,8 @@ const ATRIBUTOS = [
   "auditor_interno",
   "vendedor",
   "supervisor_cuadrilla",
+  "rh",
+  "contralor",
 ] as const;
 
 const ActualizarSchema = z.object({

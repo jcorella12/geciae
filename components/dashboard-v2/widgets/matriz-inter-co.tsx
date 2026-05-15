@@ -41,7 +41,7 @@ export async function MatrizInterCo() {
   }
 
   return (
-    <Link href="/finanzas/inter-co" className="block">
+    <Link href="/finanzas/tesoreria/matriz" className="block">
       <div className="flex items-center gap-1.5">
         <GitBranch className="h-3.5 w-3.5 text-ink-3" />
         <span className="text-[10.5px] font-semibold uppercase tracking-[0.08em] text-ink-3">
