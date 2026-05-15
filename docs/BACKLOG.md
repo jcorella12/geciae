@@ -46,16 +46,36 @@ sección.
   van a usar en práctica?
 - **Estimado:** 5-10 días según alcance.
 
-### Otros módulos con tablas huérfanas (sin UI)
-- **PLD/EMA:** `pld_operaciones_inusuales`, `ema_acreditaciones`,
-  `ema_dictamenes_uvie`, `ema_certificaciones_emitidas`.
-- **RH avanzado:** `finiquitos`, `evaluaciones_desempeno`,
-  `bolsa_talento`, `encuestas_satisfaccion`, `viajes_solicitudes`.
-- **Otros:** `accesos_externos`, `dossier_documentos`,
-  `presupuestos_proyecto`, `productos_serie`, `plantillas_contratos`.
-- **Decisión pendiente:** o se construye UI o se eliminan las
-  migraciones para reducir ruido en el schema. Probablemente eliminar
-  las que no se vayan a usar.
+### Tablas huérfanas — decisión 2026-05-15
+
+Auditadas las 14 tablas que estaban en el schema sin UI. Veredicto:
+
+**🟢 BUILD — construir UI cuando haya tiempo (2)**
+- `finiquitos` — alto impacto, ya tiene RLS. Las 4 empresas pagan
+  finiquitos y hoy se llevan en Excel suelto.
+- `productos_serie` — PSE instala paneles con número de serie y
+  garantía; rastrear serie → cliente → vencimiento es útil real.
+  `inventario_movimientos.serie_id` ya tiene la FK esperándola.
+
+**🟡 DEFER — útiles pero no urgentes (5)**
+- `evaluaciones_desempeno` — útil para ISO 9001 (CIAE/IED).
+- `accesos_externos` — necesita portal cliente/proveedor que aún no
+  existe.
+- `dossier_documentos` — posible duplicado parcial de la pestaña
+  expediente del proyecto; revisar antes de borrar o construir.
+- `presupuestos_proyecto` — `proyecto_pnl` ya cubre parte; reabrir si
+  piden presupuestos formales pre-ejecución.
+- `plantillas_contratos` — generador automático de contratos; reabrir
+  cuando lo pidan.
+
+**🔴 DROP — ya borradas en migration 20260623000000 (7)**
+- Familia EMA (`ema_acreditaciones`, `ema_dictamenes_uvie`,
+  `ema_certificaciones_emitidas`) — Joaquín confirmó que EMA vivirá en
+  sistema separado.
+- `pld_operaciones_inusuales` — GECIAE no es actividad vulnerable.
+- `bolsa_talento` + `encuestas_satisfaccion` — over-engineered para 4
+  empresas chicas con relación directa.
+- `viajes_solicitudes` — duplicaba `viaticos` que ya está en producción.
 
 ---
 
@@ -67,6 +87,10 @@ _(ninguno por el momento)_
 
 ## Completados recientes
 
+- **Limpieza de schema** (2026-05-15) — drop de 7 tablas huérfanas
+  (familia EMA, PLD, bolsa_talento, encuestas_satisfaccion,
+  viajes_solicitudes) que no aplican al alcance real del cliente.
+  Migration `20260623000000_drop_tablas_no_aplican.sql`.
 - **Fixes de cabos sueltos** (2026-05-15):
   - Dashboard widgets (`hero-mis-aprobaciones`, `tesoreria-resumen`,
     `posicion-consolidada`) leían tablas con nombres equivocados y
