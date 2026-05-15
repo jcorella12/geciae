@@ -354,11 +354,14 @@ export async function rechazarOC(
     };
   }
   const supabase = createClient();
-  const { error } = await supabase
+  // S2-T7: motivo de rechazo va a columna dedicada `motivo_rechazo` en vez
+  // de sobrescribir `comentarios`. Conserva los comentarios originales.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "cancelada",
-      comentarios: `RECHAZADA: ${motivo.trim()}`,
+      motivo_rechazo: motivo.trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
@@ -468,11 +471,13 @@ export async function cancelarOC(
       };
     }
   }
-  const { error } = await supabase
+  // S2-T7: motivo va a columna dedicada en vez de sobrescribir comentarios.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "cancelada",
-      comentarios: `CANCELADA: ${motivo.trim()}`,
+      motivo_cancelacion: motivo.trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
