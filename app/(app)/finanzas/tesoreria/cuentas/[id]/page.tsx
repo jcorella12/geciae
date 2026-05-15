@@ -481,8 +481,27 @@ export default async function CuentaDetallePage({
               )}
 
               {movs.length === 0 ? (
-                <div className="rounded-md border border-dashed border-border bg-card p-12 text-center text-sm text-ink-3">
-                  Sin movimientos en este mes.
+                <div className="rounded-md border border-dashed border-border bg-card p-10 text-center">
+                  <div className="mx-auto max-w-md space-y-3">
+                    <div className="text-4xl">📥</div>
+                    <h3 className="text-base font-semibold">
+                      Sin movimientos en este mes
+                    </h3>
+                    <p className="text-[12.5px] text-ink-3">
+                      Sube el PDF del estado de cuenta del banco o un{" "}
+                      <code className="font-mono">.exp</code> de BBVA al
+                      uploader de arriba. La IA extrae todos los movimientos
+                      en segundos.
+                    </p>
+                    <div className="flex justify-center gap-2 pt-2">
+                      <a
+                        href="#edocta-uploader"
+                        className="inline-flex h-9 items-center rounded-md bg-brand px-4 text-[13px] font-medium text-white transition hover:bg-brand-deep"
+                      >
+                        Subir estado de cuenta →
+                      </a>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <TableSurface>
