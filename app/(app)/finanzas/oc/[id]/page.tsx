@@ -1,3 +1,4 @@
+import { AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -97,6 +98,45 @@ export default async function OCDetailPage({
           {estado.label}
         </span>
       </div>
+
+      {/* Patch 4 — alerta cuando el movimiento de centro falló.
+         Cast hasta regenerar types con supabase gen types --linked. */}
+      {(() => {
+        const ocExt = oc as typeof oc & {
+          centro_movimiento_registrado_at: string | null;
+          centro_movimiento_error: string | null;
+        };
+        return (
+          oc.centro_id &&
+          !ocExt.centro_movimiento_registrado_at &&
+          ["aprobada", "recibida", "pagada"].includes(
+            (oc.estado ?? "") as string,
+          ) && (
+            <div className="mb-4 rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+              <div className="flex items-start gap-2">
+                <AlertTriangle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                <div>
+                  <strong>Movimiento de centro pendiente:</strong> esta OC
+                  aprobada todavía no registra su gasto en el centro de
+                  costo.
+                  {ocExt.centro_movimiento_error && (
+                    <>
+                      {" "}Último error:{" "}
+                      <code className="rounded bg-amber-100 px-1 text-xs">
+                        {ocExt.centro_movimiento_error}
+                      </code>
+                      .
+                    </>
+                  )}{" "}
+                  El P&amp;L del centro está incompleto hasta reintentar
+                  (CEO o contralor puede correr el reintento masivo desde
+                  el panel admin).
+                </div>
+              </div>
+            </div>
+          )
+        );
+      })()}
 
       <OCActionButtons
         ocId={oc.id}

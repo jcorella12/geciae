@@ -192,13 +192,19 @@ export async function createOC(
     }
   }
 
-  // Sprint 5.5.3: si la OC quedó autoAprobada y tiene centro, registrar movimiento
+  // Sprint 5.5.3: si la OC quedó autoAprobada y tiene centro, registrar
+  // movimiento. Patch 4 (Sprint 1): el error ya no se silencia — la
+  // función actualiza `centro_movimiento_error` en la OC y la UI lo
+  // mostrará al contralor. La OC SÍ queda creada aunque falle el
+  // movimiento (el caller decide reintentar después).
   if (autoAprobada && d.centro_id) {
-    try {
-      const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
-      await registrarMovimientoOC(ocNueva.id);
-    } catch {
-      // Best-effort
+    const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
+    const r = await registrarMovimientoOC(ocNueva.id);
+    if (!r.ok) {
+      console.error(
+        `[OC ${ocNueva.id}] movimiento centro falló:`,
+        r.error,
+      );
     }
   }
 
@@ -299,12 +305,15 @@ export async function aprobarOC(
     .eq("id", ocId);
   if (error) return { ok: false, error: error.message };
 
-  // Sprint 5.5.3: registrar movimiento en centro de costo (best-effort)
-  try {
+  // Sprint 5.5.3: registrar movimiento en centro de costo.
+  // Patch 4 (Sprint 1): el error ya no se silencia — queda registrado
+  // en `centro_movimiento_error` de la OC para visibilidad/reintento.
+  {
     const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
-    await registrarMovimientoOC(ocId);
-  } catch {
-    // ignore
+    const rMov = await registrarMovimientoOC(ocId);
+    if (!rMov.ok) {
+      console.error(`[OC ${ocId}] movimiento centro falló:`, rMov.error);
+    }
   }
 
   revalidatePath(`/finanzas/oc/${ocId}`);

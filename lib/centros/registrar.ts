@@ -17,6 +17,11 @@ type Result = { ok: true; movimientoId?: string } | { ok: false; error: string }
 /**
  * Registra movimiento de gasto al aprobar una OC.
  * El movimiento es de tipo 'gasto_directo' en el centro asignado.
+ *
+ * Patch 4 — registra el resultado en las columnas
+ * `centro_movimiento_registrado_at` / `centro_movimiento_error` de la OC
+ * para detectar fallas históricas y permitir reintento. Antes los errores
+ * morían en un try/catch silencioso del caller.
  */
 export async function registrarMovimientoOC(ocId: string): Promise<Result> {
   const supabase = createClient();
@@ -28,13 +33,25 @@ export async function registrarMovimientoOC(ocId: string): Promise<Result> {
   if (!oc) return { ok: false, error: "OC no encontrada" };
   if (!oc.centro_id) return { ok: true }; // sin centro: skip silencioso
 
-  // Idempotencia: si ya existe movimiento para esta OC, no duplicar
+  // Idempotencia: si ya existe movimiento para esta OC, no duplicar.
+  // Aprovechamos para marcar la OC como OK (caso típico: backfill manual
+  // de movimientos pre-patch).
   const { count } = await supabase
     .from("centros_movimientos")
     .select("id", { count: "exact", head: true })
     .eq("oc_id", ocId)
     .eq("tipo", "gasto_directo");
-  if ((count ?? 0) > 0) return { ok: true };
+  if ((count ?? 0) > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("ordenes_compra")
+      .update({
+        centro_movimiento_registrado_at: new Date().toISOString(),
+        centro_movimiento_error: null,
+      })
+      .eq("id", ocId);
+    return { ok: true };
+  }
 
   const { data, error } = await supabase
     .from("centros_movimientos")
@@ -51,8 +68,58 @@ export async function registrarMovimientoOC(ocId: string): Promise<Result> {
     })
     .select("id")
     .single();
-  if (error) return { ok: false, error: error.message };
+
+  if (error) {
+    // Registrar el error en la OC para visibilidad y reintento.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (supabase as any)
+      .from("ordenes_compra")
+      .update({ centro_movimiento_error: error.message.slice(0, 500) })
+      .eq("id", ocId);
+    return { ok: false, error: error.message };
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from("ordenes_compra")
+    .update({
+      centro_movimiento_registrado_at: new Date().toISOString(),
+      centro_movimiento_error: null,
+    })
+    .eq("id", ocId);
+
   return { ok: true, movimientoId: data.id };
+}
+
+/**
+ * Reintenta movimientos de centro para OCs aprobadas que tienen centro
+ * asignado pero no han registrado movimiento (o fallaron previamente).
+ * Útil para correr una vez tras aplicar el Patch 4 + cuando una OC quede
+ * con `centro_movimiento_error` visible en la UI.
+ */
+export async function reintentarMovimientosOCFallidos(): Promise<{
+  intentados: number;
+  exitosos: number;
+  fallidos: number;
+}> {
+  const supabase = createClient();
+  const { data: pendientes } = await supabase
+    .from("v_oc_centros_pendientes_registro" as never)
+    .select("id")
+    .limit(100);
+
+  let exitosos = 0;
+  let fallidos = 0;
+  for (const p of (pendientes ?? []) as Array<{ id: string }>) {
+    const r = await registrarMovimientoOC(p.id);
+    if (r.ok) exitosos++;
+    else fallidos++;
+  }
+  return {
+    intentados: pendientes?.length ?? 0,
+    exitosos,
+    fallidos,
+  };
 }
 
 /**
