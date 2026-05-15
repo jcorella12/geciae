@@ -9,6 +9,7 @@ import {
   cancelarOC,
   enviarAAprobacion,
   rechazarOC,
+  regresarOCABorrador,
 } from "../actions";
 
 export function OCActionButtons({
@@ -80,6 +81,27 @@ export function OCActionButtons({
               Rechazar
             </Button>
           </>
+        )}
+
+        {estado === "aprobada" && puedeAprobar && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => {
+              const motivo = pedirMotivo("regreso a borrador");
+              if (!motivo) return;
+              if (
+                !confirm(
+                  "¿Regresar esta OC a borrador? Se borrará el registro de aprobación y el movimiento de centro (si lo hay). El folio NO se pierde.",
+                )
+              )
+                return;
+              run(() => regresarOCABorrador(ocId, motivo));
+            }}
+            disabled={isPending}
+          >
+            Regresar a borrador
+          </Button>
         )}
 
         {!["pagada", "cancelada"].includes(estado) && (esCapturador || puedeAprobar) && (
