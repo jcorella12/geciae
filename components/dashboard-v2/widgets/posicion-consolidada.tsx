@@ -21,19 +21,16 @@ export async function PosicionConsolidada() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("bancos_cuentas")
-      .select("saldo_actual")
+      .select("saldo_actual, tipo, linea_credito_dispuesto")
       .eq("activa", true)
       .in("empresa_id", empresasFiltro),
+    // Préstamos inter-co donde nosotros somos deudores.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
-      .from("prestamos")
-      .select("saldo_actual")
-      .eq("estado", "activo")
-      .in("empresa_id", empresasFiltro)
-      .then(
-        (r: { data: { saldo_actual: number }[] | null }) => r,
-        () => ({ data: [] }),
-      ),
+      .from("prestamos_inter_co")
+      .select("saldo_pendiente")
+      .in("estado", ["ejecutado", "confirmado", "pagado_parcial"])
+      .in("empresa_deudora_id", empresasFiltro),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("cfdi")
@@ -52,14 +49,25 @@ export async function PosicionConsolidada() {
       .in("empresa_id", empresasFiltro),
   ]);
 
-  const cash = ((cuentas as { data: { saldo_actual: number | null }[] | null }).data ?? []).reduce(
-    (acc, c) => acc + Number(c.saldo_actual ?? 0),
-    0,
-  );
-  const credito = ((prestamos as { data: { saldo_actual: number }[] | null }).data ?? []).reduce(
-    (acc, p) => acc + Number(p.saldo_actual ?? 0),
-    0,
-  );
+  type CuentaRow = {
+    saldo_actual: number | null;
+    tipo: string | null;
+    linea_credito_dispuesto: number | null;
+  };
+  const cuentasData = (cuentas as { data: CuentaRow[] | null }).data ?? [];
+  // Cash: cuentas no-crédito (cheques, ahorro, inversión).
+  const cash = cuentasData
+    .filter((c) => c.tipo !== "credito")
+    .reduce((acc, c) => acc + Number(c.saldo_actual ?? 0), 0);
+  // Crédito: dispuesto bancario + inter-co donde nosotros somos deudores.
+  const creditoBancario = cuentasData
+    .filter((c) => c.tipo === "credito")
+    .reduce((acc, c) => acc + Number(c.linea_credito_dispuesto ?? 0), 0);
+  const creditoInterCo = (
+    (prestamos as { data: { saldo_pendiente: number | null }[] | null }).data ??
+    []
+  ).reduce((acc, p) => acc + Number(p.saldo_pendiente ?? 0), 0);
+  const credito = creditoBancario + creditoInterCo;
   const cxcTotal = ((cxc as { data: { total: number }[] | null }).data ?? []).reduce(
     (acc, c) => acc + Number(c.total ?? 0),
     0,

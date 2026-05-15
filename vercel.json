@@ -4,6 +4,12 @@
   "regions": ["iad1"],
   "buildCommand": "next build",
   "installCommand": "npm install",
+  "crons": [
+    {
+      "path": "/api/cron/sat-verificar-pendientes",
+      "schedule": "0 */6 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/sw.js",

@@ -34,15 +34,17 @@ export async function HeroMisAprobaciones() {
       .in("empresa_destino_id", empresasIds)
   );
 
-  // Solicitudes — la tabla puede no existir todavía o tener RLS distinto;
-  // envolvemos con try/catch para tolerarlo sin tirar la página.
+  // Solicitudes de proyecto pendientes de atender — la tabla es
+  // `proyecto_solicitudes` (no `solicitudes`). Cuenta las que estan en
+  // estado solicitada o en_revision, en las empresas que el user puede ver.
   const solicPromise = (async () => {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const r = await (supabase as any)
-        .from("solicitudes")
+        .from("proyecto_solicitudes")
         .select("id", { count: "exact", head: true })
-        .eq("estado", "pendiente");
+        .in("estado", ["solicitada", "en_revision"])
+        .in("empresa_id", empresasIds);
       return r as { count: number | null };
     } catch {
       return { count: null };

@@ -12,11 +12,27 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
+import { isRunningInCron } from "@/lib/sat/cron-context";
 import { interpretarErrorSat } from "@/lib/sat/errores";
 import type { DescargaSat } from "@/lib/sat/state";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
+/**
+ * Devuelve un cliente Supabase apropiado para el contexto: cookies del
+ * usuario en peticiones normales, admin/service-role cuando corre como
+ * Vercel Cron (sin sesión de usuario).
+ */
+function satClient() {
+  return isRunningInCron() ? createAdminClient() : createClient();
+}
+
 async function exigirPermiso(): Promise<{ userId: string }> {
+  // Bypass auth si la llamada viene del Vercel Cron (lo marca el route
+  // handler con `cronContext.run`). El secreto se valida en el route.
+  if (isRunningInCron()) {
+    return { userId: "system-cron" };
+  }
   const supabase = createClient();
   const {
     data: { user },
@@ -44,7 +60,7 @@ export type ResultadoCrear =
 export async function crearSolicitud(formData: FormData): Promise<ResultadoCrear> {
   try {
     const { userId } = await exigirPermiso();
-    const supabase = createClient();
+    const supabase = satClient();
 
     const datos = CrearDescargaSchema.parse({
       empresa_id: formData.get("empresa_id"),
@@ -144,7 +160,7 @@ export async function verificarSolicitud(
 }> {
   try {
     await exigirPermiso();
-    const supabase = createClient();
+    const supabase = satClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: desc } = (await (supabase as any)
@@ -252,7 +268,7 @@ export async function verificarPendientesEnBloque(): Promise<{
 }> {
   try {
     await exigirPermiso();
-    const supabase = createClient();
+    const supabase = satClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: pendientes } = (await (supabase as any)
@@ -347,7 +363,7 @@ export async function descargarYProcesar(descargaId: string): Promise<{
 }> {
   try {
     await exigirPermiso();
-    const supabase = createClient();
+    const supabase = satClient();
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { data: desc } = (await (supabase as any)
@@ -473,7 +489,7 @@ export async function descargarYProcesar(descargaId: string): Promise<{
 
 export async function listarDescargas(): Promise<DescargaSat[]> {
   await exigirPermiso();
-  const supabase = createClient();
+  const supabase = satClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data, error } = await (supabase as any)
     .from("sat_descargas")
@@ -486,7 +502,7 @@ export async function listarDescargas(): Promise<DescargaSat[]> {
 
 export async function obtenerDescarga(id: string): Promise<DescargaSat | null> {
   await exigirPermiso();
-  const supabase = createClient();
+  const supabase = satClient();
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data } = await (supabase as any)
     .from("sat_descargas")
@@ -518,7 +534,7 @@ export async function descargarMesActualTodasEmpresas(): Promise<{
 }> {
   try {
     const { userId } = await exigirPermiso();
-    const supabase = createClient();
+    const supabase = satClient();
 
     // Período: 1° del mes actual → hoy
     const ahora = new Date();
@@ -651,7 +667,7 @@ export async function cancelarDescarga(
     if (!motivo || motivo.length < 10) {
       return { ok: false, error: "Motivo obligatorio (mín 10 caracteres)" };
     }
-    const supabase = createClient();
+    const supabase = satClient();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const { error } = await (supabase as any)
       .from("sat_descargas")

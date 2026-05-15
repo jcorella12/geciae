@@ -11,40 +11,65 @@ export async function TesoreriaResumen() {
   const v = await obtenerVinculos();
   const empresasFiltro = Array.from(new Set(v.map((x) => x.empresa_id)));
 
-  const [cuentas, prestamos] = await Promise.all([
+  // Inicio del mes en ISO para sumar intereses devengados del mes en curso.
+  const ahora = new Date();
+  const inicioMes = `${ahora.getFullYear()}-${String(ahora.getMonth() + 1).padStart(2, "0")}-01`;
+
+  const [cuentas, prestamos, intereses] = await Promise.all([
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
       .from("bancos_cuentas")
-      .select("saldo_actual")
+      .select("saldo_actual, tipo, linea_credito_dispuesto")
       .eq("activa", true)
       .in("empresa_id", empresasFiltro),
+    // Inter-co: el "deudor" es quien debe el dinero.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (supabase as any)
-      .from("prestamos")
-      .select("monto_original, saldo_actual, intereses_devengados_mes")
-      .eq("estado", "activo")
-      .in("empresa_id", empresasFiltro)
+      .from("prestamos_inter_co")
+      .select("saldo_pendiente, empresa_deudora_id")
+      .in("estado", ["ejecutado", "confirmado", "pagado_parcial"])
+      .in("empresa_deudora_id", empresasFiltro),
+    // Intereses devengados del mes en curso (suma diaria desde inicio de mes).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("prestamos_intereses")
+      .select("intereses_dia, prestamos_inter_co!inner(empresa_deudora_id)")
+      .gte("fecha", inicioMes)
+      .in(
+        "prestamos_inter_co.empresa_deudora_id",
+        empresasFiltro,
+      )
       .then(
         (r: unknown) => r,
         () => ({ data: [] }),
       ),
   ]);
 
-  const cash = ((cuentas as { data: { saldo_actual: number | null }[] | null }).data ?? []).reduce(
-    (acc, c) => acc + Number(c.saldo_actual ?? 0),
-    0,
-  );
+  type CuentaRow = {
+    saldo_actual: number | null;
+    tipo: string | null;
+    linea_credito_dispuesto: number | null;
+  };
+  const cuentasData = (cuentas as { data: CuentaRow[] | null }).data ?? [];
+  // Cash = solo cuentas no-crédito; el crédito dispuesto se suma a deuda.
+  const cash = cuentasData
+    .filter((c) => c.tipo !== "credito")
+    .reduce((acc, c) => acc + Number(c.saldo_actual ?? 0), 0);
+  const deudaBancaria = cuentasData
+    .filter((c) => c.tipo === "credito")
+    .reduce((acc, c) => acc + Number(c.linea_credito_dispuesto ?? 0), 0);
 
-  const prestamosData = (
-    prestamos as {
-      data:
-        | { saldo_actual: number; intereses_devengados_mes: number | null }[]
-        | null;
-    }
+  const deudaInterCo = (
+    (prestamos as { data: { saldo_pendiente: number | null }[] | null }).data ??
+    []
+  ).reduce((acc, p) => acc + Number(p.saldo_pendiente ?? 0), 0);
+  const deuda = deudaBancaria + deudaInterCo;
+
+  const interesesData = (
+    intereses as { data: { intereses_dia: number | null }[] | null }
   ).data ?? [];
-  const deuda = prestamosData.reduce((acc, p) => acc + Number(p.saldo_actual ?? 0), 0);
-  const intereses = prestamosData.reduce(
-    (acc, p) => acc + Number(p.intereses_devengados_mes ?? 0),
+  const interesesMes = interesesData.reduce(
+    (acc, i) => acc + Number(i.intereses_dia ?? 0),
     0,
   );
 
@@ -72,7 +97,7 @@ export async function TesoreriaResumen() {
         <div>
           <div className="text-[10.5px] uppercase tracking-wide text-ink-3">Intereses mes</div>
           <div className="mt-1 font-mono text-[14px] font-semibold text-warn-deep tnum">
-            {fmtMxnCompact.format(intereses)}
+            {fmtMxnCompact.format(interesesMes)}
           </div>
         </div>
       </div>

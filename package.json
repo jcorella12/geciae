@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:status": "supabase migration list --linked",
+    "db:push": "supabase db push --linked",
+    "db:diff": "supabase db diff --linked --schema public"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
