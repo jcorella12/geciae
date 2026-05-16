@@ -20,6 +20,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 
 import { CfdiActions } from "./cfdi-actions";
+import { SugerenciasBancarias } from "./sugerencias-bancarias";
 
 const empresaCodigoColor: Record<string, string> = {
   PSE: "bg-pse",
@@ -74,6 +75,22 @@ export default async function CfdiDetallePage({
     esCEO(v) ||
     tieneAtributo(v, "tesorero_corporativo") ||
     esRolEn(v, cfdi.empresa_id, ["director", "operativo"]);
+
+  // S3-T6: sugerencias de auto-conciliación bancaria si el CFDI tiene
+  // saldo pendiente y no está cancelado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let sugerenciasBancarias: any[] = [];
+  if (
+    cfdi.estado !== "cancelado" &&
+    Number(cfdi.saldo_pendiente ?? Number(cfdi.total ?? 0) - Number(cfdi.monto_pagado ?? 0)) > 0.5
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: sug } = await (supabase as any).rpc(
+      "sugerir_movimientos_para_cfdi",
+      { p_cfdi_id: cfdi.id },
+    );
+    sugerenciasBancarias = (sug ?? []) as typeof sugerenciasBancarias;
+  }
 
   const emp = cfdi.empresas as { codigo: string; razon_social: string; nombre_comercial: string | null } | null;
   const total = Number(cfdi.total ?? 0);
@@ -296,6 +313,15 @@ export default async function CfdiDetallePage({
               </table>
             )}
           </div>
+
+          {/* S3-T6: auto-conciliación */}
+          {sugerenciasBancarias.length > 0 && (
+            <SugerenciasBancarias
+              cfdiId={cfdi.id}
+              sugerencias={sugerenciasBancarias}
+              puedeOperar={puedeOperar}
+            />
+          )}
 
           <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
             <h2 className="text-sm font-semibold">Acciones</h2>
