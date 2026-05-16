@@ -120,16 +120,138 @@ export default async function ProyectoDetailPage({
   const puedeGestionar = puedeGestionarProyectosEn(vinculos, p.empresa_id);
   const puedeCrearOC = empresasDondeCreaOC(vinculos).includes(p.empresa_id);
 
-  // OC asignadas a este proyecto
-  const { data: ocs } = await supabase
-    .from("ordenes_compra")
-    .select(
-      "id, numero, fecha_emision, total, estado, proveedores(razon_social)",
-    )
-    .eq("proyecto_id", params.id)
-    .order("fecha_emision", { ascending: false });
+  // S4-T1: paralelizar 14 queries que antes corrían secuencialmente
+  // (~1.4s → ~150ms). Solo dependen del `p` ya cargado.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [
+    ocsResult,
+    otsResult,
+    tareasResult,
+    avanceResult,
+    bitacoraResult,
+    documentosResult,
+    salidasInvResult,
+    reportesResult,
+    equipoResult,
+    candidatosResult,
+    solicitudesResult,
+    empresasGrupoResult,
+    serviciosResult,
+    proveedoresResult,
+    userResult,
+  ] = await Promise.all([
+    supabase
+      .from("ordenes_compra")
+      .select(
+        "id, numero, fecha_emision, total, estado, proveedores(razon_social)",
+      )
+      .eq("proyecto_id", params.id)
+      .order("fecha_emision", { ascending: false }),
+    supabase
+      .from("ordenes_trabajo_inter_co")
+      .select(
+        "id, numero, descripcion, total, estado, fecha_solicitud, empresa_origen_id, empresa_destino_id, origen:empresas!ordenes_trabajo_inter_co_empresa_origen_id_fkey(codigo), destino:empresas!ordenes_trabajo_inter_co_empresa_destino_id_fkey(codigo)",
+      )
+      .eq("proyecto_id", params.id)
+      .order("fecha_solicitud", { ascending: false }),
+    supabase
+      .from("proyecto_tareas")
+      .select(
+        "id, proyecto_id, parent_id, orden, titulo, descripcion, es_hito, estado, prioridad, fecha_inicio_planeada, fecha_fin_planeada, fecha_inicio_real, fecha_fin_real, duracion_dias, porcentaje_avance, asignado_a, horas_estimadas, horas_reales, costo_estimado, costo_real",
+      )
+      .eq("proyecto_id", params.id)
+      .order("orden", { ascending: true })
+      .order("fecha_inicio_planeada", {
+        ascending: true,
+        nullsFirst: false,
+      }),
+    supabase
+      .from("v_proyecto_avance")
+      .select(
+        "avance_promedio, avance_ponderado, total_tareas, tareas_completadas, tareas_en_curso, tareas_bloqueadas, hitos_completados, total_hitos, horas_estimadas_total, horas_reales_total, costo_estimado_total, costo_real_total",
+      )
+      .eq("proyecto_id", params.id)
+      .maybeSingle(),
+    supabase
+      .from("v_proyecto_bitacora")
+      .select(
+        "id, fecha, tipo, titulo, descripcion, tarea_id, tarea_titulo, es_critica, visible_cliente, capturado_por_nombre",
+      )
+      .eq("proyecto_id", params.id)
+      .order("fecha", { ascending: false })
+      .limit(100),
+    supabase
+      .from("proyecto_documentos")
+      .select(
+        "id, categoria, nombre, descripcion, storage_path, mime_type, tamano_bytes, visible_cliente, subido_por_nombre, created_at",
+      )
+      .eq("proyecto_id", params.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("v_inventario_movimientos")
+      .select(
+        "id, fecha, tipo, cantidad, costo_unitario, monto_total, producto_codigo, producto_nombre, unidad_medida, almacen_codigo, observaciones",
+      )
+      .eq("proyecto_id", params.id)
+      .in("tipo", ["salida_proyecto", "salida_obra"])
+      .order("fecha", { ascending: false })
+      .limit(50),
+    supabase
+      .from("v_proyecto_reportes_lista")
+      .select(
+        "id, numero, tipo, severidad, estado, titulo, resumen, contenido, fecha_evento, fecha_reporte, ubicacion, impacto, accion_correctiva, responsable_nombre, fecha_compromiso, fecha_resolucion, visible_cliente, creado_por_nombre, tarea_titulo, adjuntos, created_at",
+      )
+      .eq("proyecto_id", params.id)
+      .order("fecha_reporte", { ascending: false })
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("proyecto_equipo")
+      .select(
+        "id, usuario_id, usuario_nombre, rol, fecha_alta, fecha_baja, observaciones",
+      )
+      .eq("proyecto_id", params.id)
+      .order("fecha_alta", { ascending: false }),
+    supabase
+      .from("empleados")
+      .select(
+        "usuario_id, nombre_completo, puesto, email_personal, empresa_id",
+      )
+      .not("usuario_id", "is", null)
+      .eq("activo", true)
+      .order("nombre_completo"),
+    supabase
+      .from("v_proyecto_solicitudes_lista")
+      .select(
+        "id, numero, tipo, titulo, descripcion, monto_estimado, urgencia, estado, solicitante_id, asignado_a_id, campos_tipo, entidades_relacionadas, razon_rechazo, resuelta_at, created_at, num_comentarios, num_adjuntos",
+      )
+      .eq("proyecto_id", params.id)
+      .order("created_at", { ascending: false }),
+    supabase
+      .from("empresas")
+      .select("id, codigo, razon_social, nombre_comercial")
+      .eq("activa", true)
+      .order("codigo"),
+    supabase
+      .from("catalogo_servicios")
+      .select(
+        "id, empresa_id, codigo, nombre, unidad, costo_base, margen_inter_co, precio_inter_co",
+      )
+      .eq("activo", true)
+      .order("codigo")
+      .limit(500),
+    supabase
+      .from("proveedores")
+      .select("id, razon_social, nombre_comercial")
+      .eq("activo", true)
+      .order("razon_social")
+      .limit(300),
+    supabase.auth.getUser(),
+  ]);
 
-  // CFDI asociados al proyecto (vía oc_id)
+  const ocs = ocsResult.data;
+
+  // CFDI asociados al proyecto (vía oc_id) — depende de `ocs`, queda secuencial
+  // pero solo dispara una query, no 14.
   const ocIds = (ocs ?? []).map((o) => o.id);
   let cfdis: Array<{
     id: string;
@@ -154,44 +276,11 @@ export default async function ProyectoDetailPage({
     cfdis = (data ?? []).map((c) => ({ ...c, total: Number(c.total) }));
   }
 
-  // OT inter-co donde este proyecto es destino
-  const { data: ots } = await supabase
-    .from("ordenes_trabajo_inter_co")
-    .select(
-      "id, numero, descripcion, total, estado, fecha_solicitud, empresa_origen_id, empresa_destino_id, origen:empresas!ordenes_trabajo_inter_co_empresa_origen_id_fkey(codigo), destino:empresas!ordenes_trabajo_inter_co_empresa_destino_id_fkey(codigo)",
-    )
-    .eq("proyecto_id", params.id)
-    .order("fecha_solicitud", { ascending: false });
-
-  // Tareas del proyecto
-  const { data: tareasRaw } = await supabase
-    .from("proyecto_tareas")
-    .select(
-      "id, proyecto_id, parent_id, orden, titulo, descripcion, es_hito, estado, prioridad, fecha_inicio_planeada, fecha_fin_planeada, fecha_inicio_real, fecha_fin_real, duracion_dias, porcentaje_avance, asignado_a, horas_estimadas, horas_reales, costo_estimado, costo_real",
-    )
-    .eq("proyecto_id", params.id)
-    .order("orden", { ascending: true })
-    .order("fecha_inicio_planeada", { ascending: true, nullsFirst: false });
+  const ots = otsResult.data;
+  const tareasRaw = tareasResult.data;
   const tareas = (tareasRaw ?? []) as TareaRow[];
-
-  // Avance ponderado desde la vista
-  const { data: avanceRow } = await supabase
-    .from("v_proyecto_avance")
-    .select(
-      "avance_promedio, avance_ponderado, total_tareas, tareas_completadas, tareas_en_curso, tareas_bloqueadas, hitos_completados, total_hitos, horas_estimadas_total, horas_reales_total, costo_estimado_total, costo_real_total",
-    )
-    .eq("proyecto_id", params.id)
-    .maybeSingle();
-
-  // Bitácora del proyecto (con tarea relacionada)
-  const { data: bitacoraRaw } = await supabase
-    .from("v_proyecto_bitacora")
-    .select(
-      "id, fecha, tipo, titulo, descripcion, tarea_id, tarea_titulo, es_critica, visible_cliente, capturado_por_nombre",
-    )
-    .eq("proyecto_id", params.id)
-    .order("fecha", { ascending: false })
-    .limit(100);
+  const avanceRow = avanceResult.data;
+  const bitacoraRaw = bitacoraResult.data;
   const bitacora = (bitacoraRaw ?? []) as Array<{
     id: string;
     fecha: string;
@@ -214,28 +303,12 @@ export default async function ProyectoDetailPage({
     capturado_por_nombre: string | null;
   }>;
 
-  // Documentos
-  const { data: documentosRaw } = await supabase
-    .from("proyecto_documentos")
-    .select(
-      "id, categoria, nombre, descripcion, storage_path, mime_type, tamano_bytes, visible_cliente, subido_por_nombre, created_at",
-    )
-    .eq("proyecto_id", params.id)
-    .order("created_at", { ascending: false });
+  const documentosRaw = documentosResult.data;
   const documentos = (documentosRaw ?? []).filter(
     (d): d is typeof d & { created_at: string } => d.created_at !== null,
   );
 
-  // Salidas de inventario al proyecto
-  const { data: salidasInvRaw } = await supabase
-    .from("v_inventario_movimientos")
-    .select(
-      "id, fecha, tipo, cantidad, costo_unitario, monto_total, producto_codigo, producto_nombre, unidad_medida, almacen_codigo, observaciones",
-    )
-    .eq("proyecto_id", params.id)
-    .in("tipo", ["salida_proyecto", "salida_obra"])
-    .order("fecha", { ascending: false })
-    .limit(50);
+  const salidasInvRaw = salidasInvResult.data;
   const salidasInv = (salidasInvRaw ?? []) as Array<{
     id: string;
     fecha: string;
@@ -254,42 +327,22 @@ export default async function ProyectoDetailPage({
     0,
   );
 
-  // Reportes formales del proyecto
-  const { data: reportesRaw } = await supabase
-    .from("v_proyecto_reportes_lista")
-    .select(
-      "id, numero, tipo, severidad, estado, titulo, resumen, contenido, fecha_evento, fecha_reporte, ubicacion, impacto, accion_correctiva, responsable_nombre, fecha_compromiso, fecha_resolucion, visible_cliente, creado_por_nombre, tarea_titulo, adjuntos, created_at",
-    )
-    .eq("proyecto_id", params.id)
-    .order("fecha_reporte", { ascending: false })
-    .order("created_at", { ascending: false });
+  const reportesRaw = reportesResult.data;
   const reportes = (reportesRaw ?? []) as ReporteRow[];
 
-  // Equipo (miembros activos + histórico)
-  const { data: equipoRaw } = await supabase
-    .from("proyecto_equipo")
-    .select(
-      "id, usuario_id, usuario_nombre, rol, fecha_alta, fecha_baja, observaciones",
-    )
-    .eq("proyecto_id", params.id)
-    .order("fecha_alta", { ascending: false });
+  const equipoRaw = equipoResult.data;
   const equipo = equipoRaw ?? [];
 
-  // Candidatos: empleados activos con cuenta de usuario en empresas visibles
-  const { data: candidatosRaw } = await supabase
-    .from("empleados")
-    .select("usuario_id, nombre_completo, puesto, email_personal, empresa_id")
-    .not("usuario_id", "is", null)
-    .eq("activo", true)
-    .order("nombre_completo");
+  const candidatosRaw = candidatosResult.data;
   const candidatos = (candidatosRaw ?? [])
     .filter(
-      (c: { empresa_id: string }) =>
-        c.empresa_id === p.empresa_id ||
-        vinculos.some((v) => v.empresa_id === c.empresa_id),
+      (c) =>
+        c.usuario_id != null &&
+        (c.empresa_id === p.empresa_id ||
+          vinculos.some((v) => v.empresa_id === c.empresa_id)),
     )
-    .map((c: { usuario_id: string; nombre_completo: string; email_personal: string | null; puesto: string | null }) => ({
-      usuario_id: c.usuario_id,
+    .map((c) => ({
+      usuario_id: c.usuario_id as string,
       nombre_completo: c.nombre_completo,
       email: c.email_personal,
       puesto: c.puesto,
@@ -323,40 +376,22 @@ export default async function ProyectoDetailPage({
   const estado =
     ESTADOS_PROYECTO.find((s) => s.value === p.estado) ?? ESTADOS_PROYECTO[0];
 
-  // ====================================================================
-  // Sprint 4.2 — Solicitudes del proyecto (vista enriquecida)
-  // ====================================================================
-  const { data: solicitudesRaw } = await supabase
-    .from("v_proyecto_solicitudes_lista")
-    .select(
-      "id, numero, tipo, titulo, descripcion, monto_estimado, urgencia, estado, solicitante_id, asignado_a_id, campos_tipo, entidades_relacionadas, razon_rechazo, resuelta_at, created_at, num_comentarios, num_adjuntos",
-    )
-    .eq("proyecto_id", params.id)
-    .order("created_at", { ascending: false });
-  const solicitudes: SolicitudListItem[] = (solicitudesRaw ?? []) as SolicitudListItem[];
+  // Sprint 4.2 — Solicitudes del proyecto + servicios + empresas del grupo
+  // + proveedores + sesión: todo ya cargado en el Promise.all de arriba.
+  const solicitudesRaw = solicitudesResult.data;
+  const solicitudes: SolicitudListItem[] =
+    (solicitudesRaw ?? []) as SolicitudListItem[];
   const solicitudesActivas = solicitudes.filter((s) =>
     ["solicitada", "en_revision", "aprobada"].includes(s.estado),
   ).length;
 
-  // Servicios y empresas del grupo para los pickers contextuales
-  const { data: empresasGrupoRaw } = await supabase
-    .from("empresas")
-    .select("id, codigo, razon_social, nombre_comercial")
-    .eq("activa", true)
-    .order("codigo");
+  const empresasGrupoRaw = empresasGrupoResult.data;
   const empresasGrupo = (empresasGrupoRaw ?? []).map((e) => ({
     id: e.id,
     codigo: e.codigo,
     nombre: e.nombre_comercial ?? e.razon_social,
   }));
-  const { data: serviciosRaw } = await supabase
-    .from("catalogo_servicios")
-    .select(
-      "id, empresa_id, codigo, nombre, unidad, costo_base, margen_inter_co, precio_inter_co",
-    )
-    .eq("activo", true)
-    .order("codigo")
-    .limit(500);
+  const serviciosRaw = serviciosResult.data;
   const serviciosGrupo = (serviciosRaw ?? []).map((s) => ({
     id: s.id,
     empresa_id: s.empresa_id,
@@ -369,16 +404,10 @@ export default async function ProyectoDetailPage({
     precio_inter_co:
       s.precio_inter_co != null ? Number(s.precio_inter_co) : null,
   }));
-  const { data: proveedoresRaw } = await supabase
-    .from("proveedores")
-    .select("id, razon_social, nombre_comercial")
-    .eq("activo", true)
-    .order("razon_social")
-    .limit(300);
+  const proveedoresRaw = proveedoresResult.data;
 
-  // Permisos sobre solicitudes
-  const { data: usrSession } = await supabase.auth.getUser();
-  const yo = usrSession.user?.id ?? null;
+  // Permisos sobre solicitudes — usrSession ya cargado en Promise.all.
+  const yo = userResult.data.user?.id ?? null;
   const puedeAprobar =
     esCEO(vinculos) ||
     tieneAtributo(vinculos, "aprobador_financiero") ||
