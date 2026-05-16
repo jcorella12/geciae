@@ -20,6 +20,10 @@ sección.
 - **Detectado:** `mfa-section.tsx:131` promete "Sprint 9". Hoy CEO,
   aprobador financiero > 500k y tesorero corporativo pueden operar sin
   segundo factor; MFA es 100 % opt-in.
+- **Decisión 2026-05-15 (Joaquín):** activar cuando el sistema ya esté
+  en uso productivo cotidiano. Hoy aún hay configuración y onboarding
+  de usuarios — forzar MFA generaría fricción innecesaria. Reabrir
+  cuando esté el flujo diario corriendo.
 - **Resumen:** middleware o server-action guard que rechace
   operaciones sensibles cuando el AAL del usuario < `aal2`. Catálogo de
   acciones que exigen MFA (aprobaciones de OC, transferencias inter-co,
