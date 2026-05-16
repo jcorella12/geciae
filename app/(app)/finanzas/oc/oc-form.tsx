@@ -6,6 +6,7 @@ import { useFormState, useFormStatus } from "react-dom";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
 import { DocumentExtractor } from "@/components/shared/document-extractor";
+import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -111,7 +112,6 @@ export function OCForm({
   const [proyectoId, setProyectoId] = useState<string>(defaultProyectoId ?? "");
   const [descuento, setDescuento] = useState("0");
   const [retenciones, setRetenciones] = useState("0");
-  const [busquedaProv, setBusquedaProv] = useState("");
   const [condicionesPago, setCondicionesPago] = useState("");
   const [cotizacionInfo, setCotizacionInfo] =
     useState<CotizacionDefaults | null>(null);
@@ -152,17 +152,16 @@ export function OCForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empresaId]);
 
-  const proveedoresFiltrados = useMemo(() => {
-    const q = busquedaProv.trim().toLowerCase();
-    return proveedores
-      .filter((p) => p.semaforo !== "rojo" && p.semaforo !== "negro")
-      .filter((p) =>
-        q
-          ? p.razon_social.toLowerCase().includes(q) ||
-            p.rfc.toLowerCase().includes(q)
-          : true,
-      );
-  }, [proveedores, busquedaProv]);
+  // Solo proveedores en semáforo verde o amarillo — los rojos/negros
+  // bloquean la creación de OC por compliance. ProveedorPicker maneja
+  // su propia búsqueda interna.
+  const proveedoresFiltrados = useMemo(
+    () =>
+      proveedores.filter(
+        (p) => p.semaforo !== "rojo" && p.semaforo !== "negro",
+      ),
+    [proveedores],
+  );
 
   const proveedorSeleccionado = useMemo(
     () => proveedores.find((p) => p.id === proveedorId) ?? null,
@@ -399,66 +398,41 @@ export function OCForm({
         </div>
       </section>
 
-      {/* Proveedor */}
+      {/* Proveedor — S3-T3: ProveedorPicker con quick-create inline */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Proveedor</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Solo se listan proveedores activos en semáforo verde o amarillo. Los
-          rojos/negros bloquean la creación de OC.
+          Solo se listan proveedores activos en semáforo verde o amarillo.
+          Los rojos/negros bloquean la creación de OC. Si el proveedor no
+          existe aún, créalo aquí mismo sin abandonar la OC.
         </p>
 
-        <input type="hidden" name="proveedor_id" value={proveedorId} />
-
         <div className="mt-4 space-y-2">
-          <Input
-            type="search"
-            placeholder="Buscar por razón social o RFC…"
-            value={busquedaProv}
-            onChange={(e) => setBusquedaProv(e.target.value)}
+          <ProveedorPicker
+            proveedores={proveedoresFiltrados.map((p) => ({
+              id: p.id,
+              razon_social: p.razon_social,
+              rfc: p.rfc,
+              nombre_comercial: null,
+            }))}
+            value={proveedorId}
+            onChange={setProveedorId}
+            empresaId={empresaId || null}
           />
-          <div className="max-h-48 overflow-y-auto rounded-md border border-border">
-            {proveedoresFiltrados.length === 0 ? (
-              <p className="px-3 py-4 text-center text-sm text-muted-foreground">
-                Sin resultados.
-              </p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {proveedoresFiltrados.map((p) => (
-                  <li key={p.id}>
-                    <button
-                      type="button"
-                      onClick={() => setProveedorId(p.id)}
-                      className={`flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm transition-colors ${
-                        proveedorId === p.id
-                          ? "bg-primary/10"
-                          : "hover:bg-secondary/50"
-                      }`}
-                    >
-                      <span className="min-w-0 flex-1">
-                        <span className="block font-medium">
-                          {p.razon_social}
-                        </span>
-                        <span className="block font-mono text-xs text-muted-foreground">
-                          {p.rfc}
-                        </span>
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-xs ${
-                          semaforoBadge[p.semaforo ?? "verde"] ?? "bg-secondary"
-                        }`}
-                      >
-                        {p.semaforo ?? "verde"}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
           {proveedorSeleccionado && (
             <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
-              Seleccionado: <strong>{proveedorSeleccionado.razon_social}</strong>{" "}
-              · {proveedorSeleccionado.rfc}
+              Seleccionado:{" "}
+              <strong>{proveedorSeleccionado.razon_social}</strong> ·{" "}
+              <span className="font-mono">{proveedorSeleccionado.rfc}</span>{" "}
+              ·{" "}
+              <span
+                className={`rounded-full px-2 py-0.5 ${
+                  semaforoBadge[proveedorSeleccionado.semaforo ?? "verde"] ??
+                  "bg-secondary"
+                }`}
+              >
+                semáforo {proveedorSeleccionado.semaforo ?? "verde"}
+              </span>
               {proveedorSeleccionado.semaforo === "amarillo" && (
                 <span className="ml-2 text-warning-foreground">
                   ⚠ Documentación próxima a vencer.
