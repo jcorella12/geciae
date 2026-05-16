@@ -50,6 +50,23 @@ sección.
   `crearProyectoRapido` con campos mínimos.
 - **Estimado:** 0.5-1 día.
 
+### Wiring `useFormDraft` en 6 forms críticos
+- **Origen:** Sprint 4 / T3 + T4. El hook `lib/hooks/use-form-draft.ts`
+  y el banner `components/shared/draft-recovery-banner.tsx` están
+  listos. Falta retrofittear:
+  - `oc-form` (718 líneas)
+  - `cotizacion-form` (661 líneas)
+  - `cliente-form` (439 líneas)
+  - `proyecto/nuevo`, `persona/nuevo`, `proveedor/nuevo` (más chicos)
+- **Bloqueador:** los 6 forms usan inputs **uncontrolled** con
+  `FormData` puro. Para que autosave funcione hay que pasar cada
+  input a controlled state. Es refactor por form — riesgoso meterlo
+  prisa sin probar cada campo.
+- **Resumen:** cuando se toque un form por otra razón (bugfix,
+  nueva validación, etc.), aprovechar para hacer el wiring del
+  hook. Marcar el form ya migrado en este ticket.
+- **Estimado:** 0.5 día por form × 6 = 3 días si se hace de un golpe.
+
 ### Reemplazar `window.confirm/alert/prompt` con shadcn AlertDialog
 - **Origen:** Sprint 3 / S3-T8 — más de 30 archivos usan
   `window.confirm/alert/prompt`. El peor offender:
@@ -119,6 +136,16 @@ _(ninguno por el momento)_
 
 ## Completados recientes
 
+- **Sprint 4 — Performance + Autosave** (2026-05-15) — 3 de 5 tickets en
+  rama `feat/sprint-4-performance-autosave`: `Promise.all` en
+  `proyectos/[id]/page.tsx` paraleliza 14 queries que antes corrían
+  secuencialmente (T1), `Promise.all` en `perfil/page.tsx` paraleliza
+  7 queries (T2 — `tesoreria/cuentas/[id]` y `personas/[id]` ya
+  estaban paralelizados), reparado `convertirAProyecto` propagando
+  cotización + oportunidad + copiando conceptos como tareas (T5).
+  Hook `useFormDraft` + banner construidos como foundation; el wiring
+  en 6 forms (T3+T4) movido al backlog por requerir refactor a
+  controlled state.
 - **Sprint 3 — UX DROP feeling** (2026-05-15) — 7 de 8 tickets en rama
   `feat/sprint-3-ux-drop`: unificada búsqueda global (T1), `<Ref>` en
   OC table + CFDI detalle (T2), IA factura-vehiculo en alta de vehículo
