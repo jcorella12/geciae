@@ -3,7 +3,7 @@ import Link from "next/link";
 import { obtenerVinculos } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
-import { VehiculoForm } from "../vehiculo-form";
+import { VehiculoFormConIa } from "./page-wrapper";
 
 export default async function NuevoVehiculoPage() {
   const supabase = createClient();
@@ -49,7 +49,7 @@ export default async function NuevoVehiculoPage() {
         </p>
       </div>
 
-      <VehiculoForm
+      <VehiculoFormConIa
         empresas={empresas ?? []}
         gastosRecurrentes={gastosRec ?? []}
         empleados={empleados ?? []}
