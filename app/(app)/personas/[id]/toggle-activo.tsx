@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { toggleActivoEmpleado } from "../actions";
 
@@ -20,7 +21,7 @@ export function ToggleActivoEmpleadoButton({
 }) {
   const [isPending, startTransition] = useTransition();
 
-  function handleClick() {
+  async function handleClick() {
     let mensaje: string;
     if (activo) {
       mensaje = "¿Seguro que quieres dar de baja a este empleado?";
@@ -35,7 +36,14 @@ export function ToggleActivoEmpleadoButton({
           "\n\nSe reactivará el vínculo con la empresa del empleado. Los vínculos con OTRAS empresas (si tenía) NO se reactivan automáticamente.";
       }
     }
-    if (!confirm(mensaje)) return;
+    if (
+      !(await confirm({
+        message: mensaje,
+        danger: activo,
+        confirmLabel: activo ? "Dar de baja" : "Reactivar",
+      }))
+    )
+      return;
     startTransition(async () => {
       const res = await toggleActivoEmpleado(empleadoId, empresaId, !activo);
       if (!res.ok) alert(`Error: ${res.error}`);

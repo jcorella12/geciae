@@ -4,6 +4,8 @@ import { Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { confirm } from "@/components/ui/confirm";
+
 import { extraerSaldoEdocuentaIA } from "./actions";
 
 /**
@@ -22,14 +24,14 @@ export function EdoctaIAButton({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  function handleClick() {
+  async function handleClick() {
     setError(null);
     setSuccess(null);
     if (
       yaExtraido &&
-      !confirm(
+      !(await confirm(
         "Este estado ya tiene datos extraídos. ¿Volver a leerlo con IA? (Costo: ~1 call a Claude Haiku, gratis si usa cache)",
-      )
+      ))
     ) {
       return;
     }

@@ -4,6 +4,7 @@ import { Settings2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   CATALOGO_WIDGETS,
   type WidgetLayout,
@@ -52,7 +53,12 @@ export function WidgetCustomizer({
   }
 
   async function restablecer() {
-    if (!confirm("¿Restablecer al layout recomendado por tu rol? Se sobreescribirá tu personalización.")) return;
+    if (
+      !(await confirm(
+        "¿Restablecer al layout recomendado por tu rol? Se sobreescribirá tu personalización.",
+      ))
+    )
+      return;
     startTransition(async () => {
       await restablecerRecomendado(pagina);
       window.location.reload();

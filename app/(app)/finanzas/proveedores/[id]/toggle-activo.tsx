@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { toggleActivoProveedor } from "../actions";
 
@@ -15,9 +16,15 @@ export function ToggleActivoProveedorButton({
 }) {
   const [isPending, startTransition] = useTransition();
 
-  function handleClick() {
+  async function handleClick() {
     const accion = activo ? "desactivar" : "reactivar";
-    if (!confirm(`¿Seguro que quieres ${accion} este proveedor?`)) return;
+    if (
+      !(await confirm({
+        message: `¿Seguro que quieres ${accion} este proveedor?`,
+        danger: activo,
+      }))
+    )
+      return;
     startTransition(async () => {
       const res = await toggleActivoProveedor(proveedorId, !activo);
       if (!res.ok) alert(`Error: ${res.error}`);

@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Label } from "@/components/ui/label";
 import {
   ETIQUETA_TIPO_SOLICITUD,
@@ -600,8 +601,8 @@ function CerrarBtn({ solicitudId }: { solicitudId: string }) {
       size="sm"
       variant="ghost"
       disabled={isPending}
-      onClick={() => {
-        if (!confirm("¿Cerrar esta solicitud?")) return;
+      onClick={async () => {
+        if (!(await confirm("¿Cerrar esta solicitud?"))) return;
         startTransition(async () => {
           const fd = new FormData();
           fd.set("solicitud_id", solicitudId);

@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import {
   cancelarOT,
@@ -105,8 +106,8 @@ export function OTActionButtons(props: OTAccionesProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                if (!confirm("¿Marcar como completada?")) return;
+              onClick={async () => {
+                if (!(await confirm("¿Marcar como completada?"))) return;
                 run(() => marcarCompletadaOT(props.ocId));
               }}
               disabled={isPending}
@@ -119,8 +120,9 @@ export function OTActionButtons(props: OTAccionesProps) {
         {props.estado === "completada_origen" && esOrigen && (
           <Button
             size="sm"
-            onClick={() => {
-              if (!confirm("¿Confirmar que recibiste el servicio?")) return;
+            onClick={async () => {
+              if (!(await confirm("¿Confirmar que recibiste el servicio?")))
+                return;
               run(() => confirmarRecibidoOT(props.ocId));
             }}
             disabled={isPending}
@@ -133,11 +135,11 @@ export function OTActionButtons(props: OTAccionesProps) {
         {props.estado === "confirmada_destino" && esOrigen && (
           <Button
             size="sm"
-            onClick={() => {
+            onClick={async () => {
               if (
-                !confirm(
+                !(await confirm(
                   "¿Autorizar a la empresa destino a emitir la factura inter-co? Después, al timbrar el CFDI emitido vinculado a esta OT, pasa automáticamente a 'facturada' y al cobrarlo, a 'cobrada'.",
-                )
+                ))
               )
                 return;
               run(() => marcarOTListaParaCobrar(props.ocId));

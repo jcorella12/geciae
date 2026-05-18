@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import type { EstadoCotizacion } from "@/lib/cotizaciones/state";
 
 import {
@@ -59,8 +60,9 @@ export function CotizacionAcciones({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
-              if (!confirm("¿Aprobar internamente esta cotización?")) return;
+            onClick={async () => {
+              if (!(await confirm("¿Aprobar internamente esta cotización?")))
+                return;
               run(() => aprobarInternamente(cotizacionId));
             }}
             disabled={isPending}
@@ -73,8 +75,12 @@ export function CotizacionAcciones({
           <>
             <Button
               size="sm"
-              onClick={() => {
-                if (!confirm("¿Enviar al cliente? Pasará a estado 'enviada'."))
+              onClick={async () => {
+                if (
+                  !(await confirm(
+                    "¿Enviar al cliente? Pasará a estado 'enviada'.",
+                  ))
+                )
                   return;
                 run(() => enviarACliente(cotizacionId));
               }}
@@ -85,11 +91,14 @@ export function CotizacionAcciones({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
+              onClick={async () => {
                 if (
-                  !confirm(
-                    "¿Eliminar este borrador? Esta acción no se puede deshacer.",
-                  )
+                  !(await confirm({
+                    message:
+                      "¿Eliminar este borrador? Esta acción no se puede deshacer.",
+                    danger: true,
+                    confirmLabel: "Eliminar",
+                  }))
                 )
                   return;
                 run(async () => {
@@ -110,8 +119,9 @@ export function CotizacionAcciones({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                if (!confirm("¿Marcar como aceptada por el cliente?")) return;
+              onClick={async () => {
+                if (!(await confirm("¿Marcar como aceptada por el cliente?")))
+                  return;
                 run(() => marcarAceptada(cotizacionId));
               }}
               disabled={isPending}
@@ -150,8 +160,9 @@ export function CotizacionAcciones({
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                if (!confirm("¿Crear una nueva versión basada en ésta?")) return;
+              onClick={async () => {
+                if (!(await confirm("¿Crear una nueva versión basada en ésta?")))
+                  return;
                 startTransition(async () => {
                   const r = await nuevaVersion(cotizacionId);
                   if (r.ok && r.nuevaCotizacionId) {

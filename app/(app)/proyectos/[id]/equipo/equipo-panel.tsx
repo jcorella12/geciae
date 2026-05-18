@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -59,8 +60,15 @@ export function EquipoPanel({
   const activos = miembros.filter((m) => !m.fecha_baja);
   const inactivos = miembros.filter((m) => m.fecha_baja);
 
-  const onRemover = (id: string) => {
-    if (!confirm("¿Dar de baja a este miembro del proyecto?")) return;
+  const onRemover = async (id: string) => {
+    if (
+      !(await confirm({
+        message: "¿Dar de baja a este miembro del proyecto?",
+        danger: true,
+        confirmLabel: "Dar de baja",
+      }))
+    )
+      return;
     startTransition(() => {
       removerMiembro(id, proyectoId);
     });

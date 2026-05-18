@@ -17,6 +17,7 @@ import {
   toggleModoCompacto,
 } from "@/app/(app)/dashboard/widget-actions";
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -147,9 +148,9 @@ export function DashboardToolbar({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={() => {
+                onClick={async () => {
                   if (
-                    window.confirm(
+                    await confirm(
                       "¿Restablecer layout? Se borran tus preferencias y vuelve al default por rol.",
                     )
                   ) {

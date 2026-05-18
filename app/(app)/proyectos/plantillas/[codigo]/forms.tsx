@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -444,11 +445,14 @@ export function EliminarEtapaButton({
       size="sm"
       disabled={pending}
       className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
-      onClick={() => {
+      onClick={async () => {
         if (
-          !window.confirm(
-            "¿Eliminar esta etapa? Eliminará también sus tareas asociadas. Los proyectos ya creados con esta plantilla no se ven afectados.",
-          )
+          !(await confirm({
+            message:
+              "¿Eliminar esta etapa? Eliminará también sus tareas asociadas. Los proyectos ya creados con esta plantilla no se ven afectados.",
+            danger: true,
+            confirmLabel: "Eliminar",
+          }))
         )
           return;
         start(async () => {
@@ -476,8 +480,15 @@ export function EliminarTareaButton({
       size="sm"
       disabled={pending}
       className="h-6 px-1 text-[10px] text-destructive hover:bg-destructive/10"
-      onClick={() => {
-        if (!window.confirm("¿Eliminar esta tarea?")) return;
+      onClick={async () => {
+        if (
+          !(await confirm({
+            message: "¿Eliminar esta tarea?",
+            danger: true,
+            confirmLabel: "Eliminar",
+          }))
+        )
+          return;
         start(async () => {
           await eliminarTarea(tareaId, plantillaCodigo);
         });
@@ -503,11 +514,14 @@ export function EliminarDocumentoButton({
       size="sm"
       disabled={pending}
       className="h-7 px-2 text-xs text-destructive hover:bg-destructive/10"
-      onClick={() => {
+      onClick={async () => {
         if (
-          !window.confirm(
-            "¿Eliminar este documento requerido? Solo afecta proyectos NUEVOS creados con esta plantilla a partir de ahora.",
-          )
+          !(await confirm({
+            message:
+              "¿Eliminar este documento requerido? Solo afecta proyectos NUEVOS creados con esta plantilla a partir de ahora.",
+            danger: true,
+            confirmLabel: "Eliminar",
+          }))
         )
           return;
         start(async () => {

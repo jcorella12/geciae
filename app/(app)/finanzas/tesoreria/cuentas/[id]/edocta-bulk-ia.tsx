@@ -4,6 +4,8 @@ import { Sparkles, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { confirm } from "@/components/ui/confirm";
+
 import { extraerSaldoEdocuentaIA } from "./actions";
 
 /**
@@ -26,13 +28,13 @@ export function EdoctaBulkIA({
 
   if (pendientesIds.length === 0) return null;
 
-  function handleClick() {
+  async function handleClick() {
     if (
-      !confirm(
+      !(await confirm(
         `Procesar ${pendientesIds.length} estados de cuenta con Claude Haiku.\n\n` +
           `Costo aproximado: ~$0.005 USD por PDF (~$${(pendientesIds.length * 0.005).toFixed(2)} USD total).\n\n` +
           `Re-procesos del mismo PDF son gratis (cache).\n\n¿Continuar?`,
-      )
+      ))
     )
       return;
     setActivo(true);

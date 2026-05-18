@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { EstadoPrestamo } from "@/lib/prestamos/state";
@@ -41,8 +42,8 @@ export function PrestamoActions({
   const [comprobante, setComprobante] = useState("");
   const [motivoCancel, setMotivoCancel] = useState("");
 
-  function aprobar() {
-    if (!confirm("¿Aprobar este préstamo?")) return;
+  async function aprobar() {
+    if (!(await confirm("¿Aprobar este préstamo?"))) return;
     startTransition(async () => {
       const r = await aprobarPrestamo(prestamoId);
       if (!r.ok) alert(`Error: ${r.error}`);
@@ -60,8 +61,11 @@ export function PrestamoActions({
     });
   }
 
-  function confirmar() {
-    if (!confirm("¿Confirmas que recibiste la transferencia en banco?")) return;
+  async function confirmar() {
+    if (
+      !(await confirm("¿Confirmas que recibiste la transferencia en banco?"))
+    )
+      return;
     startTransition(async () => {
       const r = await confirmarRecepcionPrestamo(prestamoId);
       if (!r.ok) alert(`Error: ${r.error}`);

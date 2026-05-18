@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -63,8 +64,8 @@ export function MovimientoAcciones({
     });
   }
 
-  function deshacer() {
-    if (!confirm("¿Desconciliar este movimiento?")) return;
+  async function deshacer() {
+    if (!(await confirm("¿Desconciliar este movimiento?"))) return;
     start(async () => {
       const r = await desconciliar(movimientoId);
       if (!r.ok) alert(`Error: ${r.error}`);

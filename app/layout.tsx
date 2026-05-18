@@ -4,6 +4,7 @@ import { GeistMono } from "geist/font/mono";
 import { cookies } from "next/headers";
 import "./globals.css";
 import { SWRegister } from "@/components/shared/sw-register";
+import { ConfirmHost } from "@/components/ui/confirm";
 import { SIDEBAR_COOKIE } from "@/lib/preferences/sidebar-state";
 import { cn } from "@/lib/utils";
 
@@ -53,6 +54,7 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         {children}
+        <ConfirmHost />
         <SWRegister />
       </body>
     </html>

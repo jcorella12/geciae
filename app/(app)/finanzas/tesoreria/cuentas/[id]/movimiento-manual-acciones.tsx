@@ -4,6 +4,7 @@ import { Trash2 } from "lucide-react";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { eliminarMovimientoManual } from "./movimientos-actions";
 
@@ -17,8 +18,14 @@ import { eliminarMovimientoManual } from "./movimientos-actions";
 export function MovimientoManualAcciones({ movId }: { movId: string }) {
   const [isPending, startTransition] = useTransition();
 
-  const onEliminar = () => {
-    if (!confirm("¿Eliminar este movimiento? Se recalcularán los saldos.")) {
+  const onEliminar = async () => {
+    if (
+      !(await confirm({
+        message: "¿Eliminar este movimiento? Se recalcularán los saldos.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    ) {
       return;
     }
     startTransition(async () => {

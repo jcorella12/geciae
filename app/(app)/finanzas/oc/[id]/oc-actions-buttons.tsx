@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import {
   aprobarOC,
@@ -60,8 +61,8 @@ export function OCActionButtons({
           <>
             <Button
               size="sm"
-              onClick={() => {
-                if (!confirm("¿Aprobar esta OC?")) return;
+              onClick={async () => {
+                if (!(await confirm("¿Aprobar esta OC?"))) return;
                 run(() => aprobarOC(ocId));
               }}
               disabled={isPending}
@@ -87,13 +88,16 @@ export function OCActionButtons({
           <Button
             size="sm"
             variant="outline"
-            onClick={() => {
+            onClick={async () => {
               const motivo = pedirMotivo("regreso a borrador");
               if (!motivo) return;
               if (
-                !confirm(
-                  "¿Regresar esta OC a borrador? Se borrará el registro de aprobación y el movimiento de centro (si lo hay). El folio NO se pierde.",
-                )
+                !(await confirm({
+                  message:
+                    "¿Regresar esta OC a borrador? Se borrará el registro de aprobación y el movimiento de centro (si lo hay). El folio NO se pierde.",
+                  danger: true,
+                  confirmLabel: "Regresar a borrador",
+                }))
               )
                 return;
               run(() => regresarOCABorrador(ocId, motivo));

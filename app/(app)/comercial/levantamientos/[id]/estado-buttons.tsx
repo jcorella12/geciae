@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Label } from "@/components/ui/label";
 import { initialSimpleLevState } from "@/lib/levantamientos/state";
 
@@ -185,13 +186,16 @@ function BtnNoConvert() {
       size="sm"
       disabled={pending}
       onClick={(e) => {
-        if (
-          !window.confirm(
+        e.preventDefault();
+        const button = e.currentTarget;
+        const form = button.form;
+        if (!form) return;
+        void (async () => {
+          const ok = await confirm(
             "¿Marcar como NO convertido? El costo queda en el sub-centro del vendedor para evaluación.",
-          )
-        ) {
-          e.preventDefault();
-        }
+          );
+          if (ok) form.requestSubmit(button);
+        })();
       }}
     >
       No convertido
@@ -208,9 +212,19 @@ function BtnCancelar() {
       size="sm"
       disabled={pending}
       onClick={(e) => {
-        if (!window.confirm("¿Cancelar este levantamiento?")) {
-          e.preventDefault();
-        }
+        e.preventDefault();
+        const button = e.currentTarget;
+        const form = button.form;
+        if (!form) return;
+        void (async () => {
+          const ok = await confirm({
+            message: "¿Cancelar este levantamiento?",
+            danger: true,
+            confirmLabel: "Cancelar levantamiento",
+            cancelLabel: "Volver",
+          });
+          if (ok) form.requestSubmit(button);
+        })();
       }}
       className="text-destructive hover:bg-destructive/10"
     >

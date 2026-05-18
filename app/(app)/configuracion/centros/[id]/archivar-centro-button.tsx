@@ -2,9 +2,10 @@
 
 import { useRouter } from "next/navigation";
 import { useFormState, useFormStatus } from "react-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   initialSimpleCentroState,
   type SimpleCentroState,
@@ -17,6 +18,7 @@ const initial: SimpleCentroState = initialSimpleCentroState;
 export function ArchivarCentroButton({ centroId }: { centroId: string }) {
   const router = useRouter();
   const [state, formAction] = useFormState(archivarCentro, initial);
+  const confirmedRef = useRef(false);
 
   useEffect(() => {
     if (state.ok) {
@@ -28,13 +30,24 @@ export function ArchivarCentroButton({ centroId }: { centroId: string }) {
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (
-          !window.confirm(
-            "¿Archivar este centro? No se podrá usar para nuevas asignaciones, pero su histórico se conserva.",
-          )
-        ) {
-          e.preventDefault();
+        if (confirmedRef.current) {
+          confirmedRef.current = false;
+          return;
         }
+        e.preventDefault();
+        const form = e.currentTarget;
+        void (async () => {
+          const ok = await confirm({
+            message:
+              "¿Archivar este centro? No se podrá usar para nuevas asignaciones, pero su histórico se conserva.",
+            danger: true,
+            confirmLabel: "Archivar",
+          });
+          if (ok) {
+            confirmedRef.current = true;
+            form.requestSubmit();
+          }
+        })();
       }}
     >
       <input type="hidden" name="centro_id" value={centroId} />

@@ -3,6 +3,7 @@
 import { CheckCircle2, Circle, Diamond, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 
+import { confirm } from "@/components/ui/confirm";
 import {
   Table,
   TableBody,
@@ -66,8 +67,15 @@ export function ListaView({
     });
   };
 
-  const onEliminar = (tareaId: string) => {
-    if (!confirm("¿Eliminar esta tarea? No se puede deshacer.")) return;
+  const onEliminar = async (tareaId: string) => {
+    if (
+      !(await confirm({
+        message: "¿Eliminar esta tarea? No se puede deshacer.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    )
+      return;
     startTransition(() => {
       eliminarTarea(tareaId, proyectoId);
     });

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   ETAPAS_PIPELINE,
   ETIQUETA_ESTADO_OPORTUNIDAD,
@@ -40,8 +41,8 @@ export function OportunidadAcciones({
     });
   }
 
-  function ganar() {
-    if (!confirm("¿Marcar esta oportunidad como GANADA?")) return;
+  async function ganar() {
+    if (!(await confirm("¿Marcar esta oportunidad como GANADA?"))) return;
     setError(null);
     startTransition(async () => {
       const r = await cerrarOportunidadGanada(oportunidadId);

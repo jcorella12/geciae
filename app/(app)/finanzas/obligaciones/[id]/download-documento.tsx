@@ -4,6 +4,7 @@ import { Download, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import {
   eliminarAcuse,
@@ -37,8 +38,14 @@ export function DownloadDocumento({
     else alert("No se pudo generar URL de descarga.");
   };
 
-  const onEliminar = () => {
-    if (!confirm(`¿Eliminar ${label}? Esta acción no se puede deshacer.`)) {
+  const onEliminar = async () => {
+    if (
+      !(await confirm({
+        message: `¿Eliminar ${label}? Esta acción no se puede deshacer.`,
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    ) {
       return;
     }
     startTransition(async () => {
