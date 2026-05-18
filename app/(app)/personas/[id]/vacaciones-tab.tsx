@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import { Stat } from "@/components/ui/stat";
 import {
   Table,
@@ -80,7 +81,7 @@ export function VacacionesTab({
     if (!(await confirm("¿Aprobar esta solicitud?"))) return;
     startTransition(async () => {
       const r = await aprobarVacacion(id);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 
@@ -89,7 +90,7 @@ export function VacacionesTab({
     if (!motivo || !motivo.trim()) return;
     startTransition(async () => {
       const r = await rechazarVacacion(id, motivo.trim());
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 

@@ -8,6 +8,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import {
   ETIQUETA_TIPO_SOLICITUD,
   initialComentarioState,
@@ -584,7 +585,7 @@ function RevisarBtn({ solicitudId }: { solicitudId: string }) {
             { ok: false, error: null },
             fd,
           );
-          if (!res.ok) alert(`Error: ${res.error}`);
+          if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
         });
       }}
     >
@@ -607,7 +608,7 @@ function CerrarBtn({ solicitudId }: { solicitudId: string }) {
           const fd = new FormData();
           fd.set("solicitud_id", solicitudId);
           const res = await cerrarSolicitud({ ok: false, error: null }, fd);
-          if (!res.ok) alert(`Error: ${res.error}`);
+          if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
         });
       }}
     >

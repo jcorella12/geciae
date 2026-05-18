@@ -6,6 +6,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 
 import { vincularMovimientoACfdi } from "./sugerencias-actions";
 
@@ -58,7 +59,7 @@ export function SugerenciasBancarias({
         movimientoId: mov.movimiento_id,
       });
       if (!r.ok) {
-        alert(`Error: ${r.error}`);
+        notify({ message: r.error ?? "Error", variant: "error" });
         return;
       }
       router.refresh();

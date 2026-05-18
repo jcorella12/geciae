@@ -5,6 +5,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 import {
   estadoVigencia,
   tipoDocumentoLabel,
@@ -45,7 +46,7 @@ export function DocRow({
     if (res.url) {
       window.open(res.url, "_blank", "noopener,noreferrer");
     } else {
-      alert(`Error: ${res.error}`);
+      notify({ message: res.error ?? "Error", variant: "error" });
     }
   }
 
@@ -61,7 +62,7 @@ export function DocRow({
       return;
     startTransition(async () => {
       const res = await eliminarDocumentoProveedor(proveedorId, doc.id);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   }
 

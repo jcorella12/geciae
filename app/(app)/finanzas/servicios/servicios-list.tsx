@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 
 import { toggleServicioActivo } from "./actions";
 
@@ -45,7 +46,7 @@ export function ServiciosList({
   function toggle(id: string, proximo: boolean) {
     startTransition(async () => {
       const res = await toggleServicioActivo(id, proximo);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   }
 

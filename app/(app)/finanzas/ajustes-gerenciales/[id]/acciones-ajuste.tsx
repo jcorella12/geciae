@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { promptInput } from "@/components/ui/prompt-input";
 import {
   cambiarEstadoAjuste,
   cancelarAjuste,
@@ -40,15 +41,16 @@ export function AccionesAjuste({
     });
   }
 
-  function cancelar() {
-    const motivo = window.prompt(
-      "Motivo de cancelación (mínimo 20 caracteres):",
-    );
+  async function cancelar() {
+    const motivo = await promptInput({
+      title: "Cancelar ajuste gerencial",
+      message:
+        "Indica el motivo de cancelación. Mínimo 20 caracteres para dejar trazabilidad.",
+      label: "Motivo de cancelación",
+      minLength: 20,
+      multiline: true,
+    });
     if (!motivo) return;
-    if (motivo.length < 20) {
-      alert("El motivo debe tener al menos 20 caracteres.");
-      return;
-    }
     setError(null);
     startTransition(async () => {
       const r = await cancelarAjuste(id, motivo);

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 import {
   Table,
   TableBody,
@@ -64,7 +65,7 @@ export function LineasList({
   function toggle(l: Linea) {
     startTransition(async () => {
       const res = await toggleLineaActiva(l.id, !(l.activa ?? false));
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   }
 

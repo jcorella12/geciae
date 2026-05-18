@@ -5,6 +5,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 
 import { eliminarMovimientoManual } from "./movimientos-actions";
 
@@ -30,7 +31,7 @@ export function MovimientoManualAcciones({ movId }: { movId: string }) {
     }
     startTransition(async () => {
       const res = await eliminarMovimientoManual(movId);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   };
 

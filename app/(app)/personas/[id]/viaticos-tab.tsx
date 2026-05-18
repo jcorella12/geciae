@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
+import { promptInput } from "@/components/ui/prompt-input";
 import { Stat } from "@/components/ui/stat";
 import {
   Table,
@@ -106,7 +108,10 @@ export function ViaticosTab({
     startOcr(async () => {
       const r = await ocrTicketViatico(fd);
       if (!r.ok) {
-        alert(`No se pudo leer el ticket: ${r.error}`);
+        notify({
+          message: `No se pudo leer el ticket: ${r.error}`,
+          variant: "error",
+        });
         return;
       }
       const f = formRef.current;
@@ -146,22 +151,28 @@ export function ViaticosTab({
   function aprobar(id: string) {
     startTransition(async () => {
       const r = await aprobarViatico(id);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
-  function rechazar(id: string) {
-    const motivo = prompt("Motivo del rechazo:");
-    if (!motivo || !motivo.trim()) return;
+  async function rechazar(id: string) {
+    const motivo = await promptInput({
+      title: "Rechazar viático",
+      message: "Indica el motivo del rechazo.",
+      label: "Motivo",
+      minLength: 3,
+      multiline: true,
+    });
+    if (!motivo) return;
     startTransition(async () => {
-      const r = await rechazarViatico(id, motivo.trim());
-      if (!r.ok) alert(`Error: ${r.error}`);
+      const r = await rechazarViatico(id, motivo);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
   async function reembolsar(id: string) {
     if (!(await confirm("¿Marcar como reembolsado?"))) return;
     startTransition(async () => {
       const r = await marcarReembolsado(id);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 

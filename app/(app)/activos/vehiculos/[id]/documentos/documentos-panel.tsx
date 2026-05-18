@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import { cn } from "@/lib/utils";
 import {
   CATEGORIAS_CON_MONTO,
@@ -126,7 +127,7 @@ export function DocumentosVehiculoPanel({
   const onDescargar = async (path: string) => {
     const url = await getDownloadUrlVehiculo(path);
     if (url) window.open(url, "_blank", "noopener");
-    else alert("No se pudo generar enlace de descarga.");
+    else notify({ message: "No se pudo generar enlace de descarga.", variant: "error" });
   };
 
   const onEliminar = async (id: string, path: string) => {

@@ -13,6 +13,7 @@ import {
 import { useState, useTransition } from "react";
 
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 import {
   COLOR_ESTADO_REPORTE,
   COLOR_SEVERIDAD,
@@ -135,7 +136,7 @@ export function ReportesPanel({
   const onDescargar = async (path: string) => {
     const url = await getDownloadUrlReporte(path);
     if (url) window.open(url, "_blank", "noopener");
-    else alert("No se pudo generar enlace de descarga.");
+    else notify({ message: "No se pudo generar enlace de descarga.", variant: "error" });
   };
 
   // Conteos por tipo (solo en visibles)
