@@ -11,6 +11,7 @@ import {
   confirmarRecibidoOT,
   iniciarTrabajoOT,
   marcarCompletadaOT,
+  marcarOTListaParaCobrar,
 } from "../actions";
 
 export type OTAccionesProps = {
@@ -125,6 +126,25 @@ export function OTActionButtons(props: OTAccionesProps) {
             disabled={isPending}
           >
             Confirmar recibido
+          </Button>
+        )}
+
+        {/* S2-T6: CONFIRMADA_DESTINO → empresa origen autoriza facturar */}
+        {props.estado === "confirmada_destino" && esOrigen && (
+          <Button
+            size="sm"
+            onClick={() => {
+              if (
+                !confirm(
+                  "¿Autorizar a la empresa destino a emitir la factura inter-co? Después, al timbrar el CFDI emitido vinculado a esta OT, pasa automáticamente a 'facturada' y al cobrarlo, a 'cobrada'.",
+                )
+              )
+                return;
+              run(() => marcarOTListaParaCobrar(props.ocId));
+            }}
+            disabled={isPending}
+          >
+            Autorizar facturación
           </Button>
         )}
 

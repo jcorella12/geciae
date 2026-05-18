@@ -21,6 +21,29 @@ export type CfdiConceptoParsed = {
   iva_importe: number | null;
 };
 
+export type CfdiDoctoRelacionadoParsed = {
+  /** UUID del CFDI de Ingreso/Egreso que se está pagando con este complemento. */
+  uuid_documento: string;
+  serie: string | null;
+  folio: string | null;
+  moneda: string;
+  equivalencia: number; // tipo de cambio entre moneda del docto y la del pago
+  num_parcialidad: number;
+  imp_saldo_anterior: number;
+  imp_pagado: number;
+  imp_saldo_insoluto: number;
+};
+
+export type CfdiPagoParsed = {
+  fecha_pago: string; // ISO con hora
+  forma_pago: string | null; // 01, 03, etc.
+  moneda: string;
+  tipo_cambio: number;
+  monto: number; // total del pago (puede cubrir varios documentos)
+  num_operacion: string | null;
+  docto_relacionados: CfdiDoctoRelacionadoParsed[];
+};
+
 export type CfdiParsed = {
   version: string;
   serie: string | null;
@@ -45,6 +68,11 @@ export type CfdiParsed = {
   isr_retenido: number;
   total: number;
   conceptos: CfdiConceptoParsed[];
+  /**
+   * Pagos extraídos del complemento Pago20 si `tipo_comprobante === 'P'`.
+   * Vacío si no es complemento de pago.
+   */
+  pagos: CfdiPagoParsed[];
 };
 
 const TIPO_COMPROBANTE_MAP: Record<string, "ingreso" | "egreso" | "traslado" | "pago" | "nomina"> = {
@@ -180,6 +208,76 @@ export function parseCfdiXml(xml: string): CfdiParsed {
     }
   }
 
+  // ---- Complemento de pago (Pago20) ----
+  // Solo aplica cuando TipoDeComprobante = 'P'. Estructura:
+  //   Complemento > pago20:Pagos > pago20:Pago > pago20:DoctoRelacionado
+  const tipoComp = getAttr(comp, "TipoDeComprobante") ?? "I";
+  const pagos: CfdiPagoParsed[] = [];
+  let totalPagos = 0;
+  if (tipoComp === "P" && complemento) {
+    const pagosRoot = pickNs(complemento, ["pago20:Pagos", "Pagos"]);
+    if (pagosRoot) {
+      const totalesNode = pickNs(pagosRoot, [
+        "pago20:Totales",
+        "Totales",
+      ]);
+      if (totalesNode) {
+        totalPagos = num(
+          getAttr(totalesNode, "MontoTotalPagos"),
+          0,
+        );
+      }
+      const pagoNodeRaw = pickNs(pagosRoot, ["pago20:Pago", "Pago"]);
+      const listaPagos = Array.isArray(pagoNodeRaw)
+        ? (pagoNodeRaw as Record<string, unknown>[])
+        : pagoNodeRaw
+          ? [pagoNodeRaw as Record<string, unknown>]
+          : [];
+      for (const p of listaPagos) {
+        const doctosRaw = pickNs(p, [
+          "pago20:DoctoRelacionado",
+          "DoctoRelacionado",
+        ]);
+        const listaDoctos = Array.isArray(doctosRaw)
+          ? (doctosRaw as Record<string, unknown>[])
+          : doctosRaw
+            ? [doctosRaw as Record<string, unknown>]
+            : [];
+        pagos.push({
+          fecha_pago:
+            getAttr(p, "FechaPago") ?? new Date().toISOString(),
+          forma_pago: getAttr(p, "FormaDePagoP"),
+          moneda: getAttr(p, "MonedaP") ?? "MXN",
+          tipo_cambio: num(getAttr(p, "TipoCambioP"), 1),
+          monto: num(getAttr(p, "Monto"), 0),
+          num_operacion: getAttr(p, "NumOperacion"),
+          docto_relacionados: listaDoctos.map((d) => ({
+            uuid_documento: (
+              getAttr(d, "IdDocumento") ?? ""
+            ).toLowerCase(),
+            serie: getAttr(d, "Serie"),
+            folio: getAttr(d, "Folio"),
+            moneda: getAttr(d, "MonedaDR") ?? "MXN",
+            equivalencia: num(getAttr(d, "EquivalenciaDR"), 1),
+            num_parcialidad: num(getAttr(d, "NumParcialidad"), 1),
+            imp_saldo_anterior: num(getAttr(d, "ImpSaldoAnt"), 0),
+            imp_pagado: num(getAttr(d, "ImpPagado"), 0),
+            imp_saldo_insoluto: num(
+              getAttr(d, "ImpSaldoInsoluto"),
+              0,
+            ),
+          })),
+        });
+      }
+    }
+  }
+
+  // Para complementos de pago, el `total` del Comprobante es 0 pero el
+  // total real viene de Pagos.Totales.MontoTotalPagos. Lo usamos para
+  // que la fila en `cfdi` refleje el monto correcto del complemento.
+  const totalRoot = num(getAttr(comp, "Total"), 0);
+  const totalEffective = tipoComp === "P" ? totalPagos : totalRoot;
+
   return {
     version: getAttr(comp, "Version") ?? "4.0",
     serie: getAttr(comp, "Serie"),
@@ -191,7 +289,7 @@ export function parseCfdiXml(xml: string): CfdiParsed {
     nombre_emisor: getAttr(emisor, "Nombre"),
     rfc_receptor: getAttr(receptor, "Rfc") ?? "",
     nombre_receptor: getAttr(receptor, "Nombre"),
-    tipo_comprobante: getAttr(comp, "TipoDeComprobante") ?? "I",
+    tipo_comprobante: tipoComp,
     uso_cfdi: receptor ? getAttr(receptor, "UsoCFDI") : null,
     metodo_pago: getAttr(comp, "MetodoPago"),
     forma_pago: getAttr(comp, "FormaPago"),
@@ -202,8 +300,9 @@ export function parseCfdiXml(xml: string): CfdiParsed {
     iva_trasladado: ivaTrasladado,
     iva_retenido: ivaRetenido,
     isr_retenido: isrRetenido,
-    total: num(getAttr(comp, "Total"), 0),
+    total: totalEffective,
     conceptos,
+    pagos,
   };
 }
 

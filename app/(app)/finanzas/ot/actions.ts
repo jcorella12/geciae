@@ -470,6 +470,52 @@ export async function confirmarRecibidoOT(
   return { ok: true, error: null };
 }
 
+/**
+ * S2-T6 — Marca una OT como "lista para cobrar" (confirmada_destino →
+ * lista_cobrar). Es el paso manual donde la empresa origen reconoce que
+ * el servicio fue completado y autoriza a la empresa destino a facturar.
+ *
+ * Tras esto, la empresa destino crea un CFDI emitido con `ot_id`
+ * apuntando a esta OT — eso dispara la transición a 'facturada'
+ * automáticamente desde el server action que crea el CFDI. Al cobrar
+ * ese CFDI completamente, transita a 'cobrada'.
+ *
+ * Permiso: CEO/director/operativo de la empresa ORIGEN (la que paga).
+ */
+export async function marcarOTListaParaCobrar(
+  otId: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const g = await gateOT(otId);
+  if (!g.ok) return { ok: false, error: g.error };
+  if (g.oc.estado !== "confirmada_destino") {
+    return {
+      ok: false,
+      error: `OT en estado "${g.oc.estado}". Solo desde 'confirmada_destino' se puede pasar a lista_cobrar.`,
+    };
+  }
+  const v = await obtenerVinculos();
+  if (!esCEODirOperEnEmpresa(v, g.oc.empresa_origen_id)) {
+    return {
+      ok: false,
+      error:
+        "Solo la empresa origen (que paga) puede autorizar la facturación.",
+    };
+  }
+  const supabase = createClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("ordenes_trabajo_inter_co")
+    .update({
+      estado: "lista_cobrar",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", otId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/ot/${otId}`);
+  revalidatePath("/finanzas/ot");
+  return { ok: true, error: null };
+}
+
 export async function cancelarOT(
   ocId: string,
   motivo: string,

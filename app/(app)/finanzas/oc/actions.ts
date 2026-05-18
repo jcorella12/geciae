@@ -216,11 +216,24 @@ export async function createOC(
 
 async function gateAccionOC(
   ocId: string,
-): Promise<{ ok: true; oc: { id: string; empresa_id: string; estado: string; total: number; capturado_por: string } } | { ok: false; error: string }> {
+): Promise<
+  | {
+      ok: true;
+      oc: {
+        id: string;
+        empresa_id: string;
+        estado: string;
+        total: number;
+        capturado_por: string;
+        comentarios: string | null;
+      };
+    }
+  | { ok: false; error: string }
+> {
   const supabase = createClient();
   const { data: oc } = await supabase
     .from("ordenes_compra")
-    .select("id, empresa_id, estado, total, capturado_por")
+    .select("id, empresa_id, estado, total, capturado_por, comentarios")
     .eq("id", ocId)
     .maybeSingle();
   if (!oc) return { ok: false, error: "OC no encontrada." };
@@ -341,15 +354,95 @@ export async function rechazarOC(
     };
   }
   const supabase = createClient();
-  const { error } = await supabase
+  // S2-T7: motivo de rechazo va a columna dedicada `motivo_rechazo` en vez
+  // de sobrescribir `comentarios`. Conserva los comentarios originales.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "cancelada",
-      comentarios: `RECHAZADA: ${motivo.trim()}`,
+      motivo_rechazo: motivo.trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
   if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/oc/${ocId}`);
+  revalidatePath("/finanzas/oc");
+  return { ok: true, error: null };
+}
+
+/**
+ * S2-T5 — Regresar una OC ya aprobada a borrador para corregir.
+ *
+ * Antes, la única salida si se aprobaba mal era cancelar (pierde el folio).
+ * Esta acción permite des-aprobar manteniendo número, sin tocar la
+ * trazabilidad: se borran `aprobado_por`, `fecha_aprobacion`,
+ * `auto_aprobada` y se regresa estado a `borrador`.
+ *
+ * También borra el movimiento de centro si lo había, para que el P&L del
+ * centro no quede con un gasto fantasma.
+ *
+ * Permiso: CEO, contralor, o quien tenga umbral suficiente para aprobar
+ * esta OC. NO basta con ser el capturador (eso permitiría loops de
+ * "auto-aprobar → corregir → auto-aprobar" sin supervisión).
+ */
+export async function regresarOCABorrador(
+  ocId: string,
+  motivo: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  if (!motivo || motivo.trim().length < 5) {
+    return {
+      ok: false,
+      error: "Captura un motivo de regreso (mínimo 5 caracteres).",
+    };
+  }
+  const g = await gateAccionOC(ocId);
+  if (!g.ok) return { ok: false, error: g.error };
+  if (g.oc.estado !== "aprobada") {
+    return {
+      ok: false,
+      error: `OC en estado "${g.oc.estado}". Solo se pueden regresar las aprobadas (las recibidas/pagadas requieren cancelar).`,
+    };
+  }
+  const v = await obtenerVinculos();
+  if (!puedeAprobarOC(v, g.oc.empresa_id, Number(g.oc.total))) {
+    return {
+      ok: false,
+      error:
+        "Solo CEO o un aprobador con umbral suficiente puede regresar una OC aprobada a borrador.",
+    };
+  }
+
+  const supabase = createClient();
+  const callerId = await getCallerId(supabase);
+  const ahora = new Date().toISOString();
+
+  // 1) Deshacer movimiento de centro si existe (best-effort).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from("centros_movimientos")
+    .delete()
+    .eq("oc_id", ocId)
+    .eq("tipo", "gasto_directo");
+
+  // 2) Reset de campos de aprobación.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("ordenes_compra")
+    .update({
+      estado: "borrador",
+      aprobado_por: null,
+      fecha_aprobacion: null,
+      auto_aprobada: false,
+      aprobacion_metodo: null,
+      centro_movimiento_registrado_at: null,
+      centro_movimiento_error: null,
+      comentarios: `REGRESADA A BORRADOR por ${callerId ?? "?"}: ${motivo.trim()}\n---\n${g.oc.comentarios ?? ""}`.slice(0, 5000),
+      updated_at: ahora,
+    })
+    .eq("id", ocId);
+  if (error) return { ok: false, error: error.message };
+
   revalidatePath(`/finanzas/oc/${ocId}`);
   revalidatePath("/finanzas/oc");
   return { ok: true, error: null };
@@ -378,11 +471,13 @@ export async function cancelarOC(
       };
     }
   }
-  const { error } = await supabase
+  // S2-T7: motivo va a columna dedicada en vez de sobrescribir comentarios.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "cancelada",
-      comentarios: `CANCELADA: ${motivo.trim()}`,
+      motivo_cancelacion: motivo.trim(),
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
