@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import type { DescargaSat, EstadoDescargaSat } from "@/lib/sat/state";
 
 import {
@@ -45,11 +46,11 @@ export function BotonesFlujo({ descarga }: { descarga: DescargaSat }) {
     });
   }
 
-  function descargar() {
+  async function descargar() {
     if (
-      !window.confirm(
+      !(await confirm(
         "¿Descargar y procesar paquetes? Esto puede tardar varios minutos.",
-      )
+      ))
     ) {
       return;
     }

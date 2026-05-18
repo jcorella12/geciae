@@ -15,6 +15,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -128,8 +129,15 @@ export function DocumentosVehiculoPanel({
     else alert("No se pudo generar enlace de descarga.");
   };
 
-  const onEliminar = (id: string, path: string) => {
-    if (!confirm("¿Eliminar el documento? No se puede deshacer.")) return;
+  const onEliminar = async (id: string, path: string) => {
+    if (
+      !(await confirm({
+        message: "¿Eliminar el documento? No se puede deshacer.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    )
+      return;
     startTransition(() => {
       eliminarDocumentoVehiculo(id, vehiculoId, path);
     });

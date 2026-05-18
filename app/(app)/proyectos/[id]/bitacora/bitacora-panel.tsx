@@ -3,6 +3,7 @@
 import { AlertTriangle, Eye, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { confirm } from "@/components/ui/confirm";
 import {
   COLOR_TIPO_BITACORA,
   ETIQUETA_TIPO_BITACORA,
@@ -51,8 +52,15 @@ export function BitacoraPanel({
   const filtrados =
     filtro === "todos" ? eventos : eventos.filter((e) => e.tipo === filtro);
 
-  const onEliminar = (id: string) => {
-    if (!confirm("¿Eliminar este evento? No se puede deshacer.")) return;
+  const onEliminar = async (id: string) => {
+    if (
+      !(await confirm({
+        message: "¿Eliminar este evento? No se puede deshacer.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    )
+      return;
     startTransition(() => {
       eliminarEventoBitacora(id, proyectoId);
     });

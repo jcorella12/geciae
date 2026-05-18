@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { vincularMovimientoACfdi } from "./sugerencias-actions";
 
@@ -44,11 +45,11 @@ export function SugerenciasBancarias({
 
   if (sugerencias.length === 0) return null;
 
-  function vincular(mov: Sugerencia) {
+  async function vincular(mov: Sugerencia) {
     if (
-      !confirm(
+      !(await confirm(
         `¿Registrar pago de ${fmtMxn(mov.monto)} del ${fmtFecha(mov.fecha)} (${mov.cuenta_alias}) en este CFDI? El movimiento bancario quedará conciliado.`,
-      )
+      ))
     )
       return;
     startTransition(async () => {

@@ -1,8 +1,10 @@
 "use client";
 
+import { useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   initialSimpleCentroState,
   type SimpleCentroState,
@@ -14,18 +16,30 @@ const initial: SimpleCentroState = initialSimpleCentroState;
 
 export function ArchivarReglaButton({ reglaId }: { reglaId: string }) {
   const [state, formAction] = useFormState(archivarReglaReparto, initial);
+  const confirmedRef = useRef(false);
 
   return (
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (
-          !window.confirm(
-            "¿Archivar esta regla? Dejará de aplicarse en futuros cierres mensuales.",
-          )
-        ) {
-          e.preventDefault();
+        if (confirmedRef.current) {
+          confirmedRef.current = false;
+          return;
         }
+        e.preventDefault();
+        const form = e.currentTarget;
+        void (async () => {
+          const ok = await confirm({
+            message:
+              "¿Archivar esta regla? Dejará de aplicarse en futuros cierres mensuales.",
+            danger: true,
+            confirmLabel: "Archivar",
+          });
+          if (ok) {
+            confirmedRef.current = true;
+            form.requestSubmit();
+          }
+        })();
       }}
       className="inline"
     >

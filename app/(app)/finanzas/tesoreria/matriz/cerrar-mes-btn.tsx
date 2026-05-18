@@ -4,6 +4,7 @@ import { Lock } from "lucide-react";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { cerrarInteresesMes } from "../prestamos/actions";
 
@@ -14,11 +15,11 @@ import { cerrarInteresesMes } from "../prestamos/actions";
 export function CerrarMesBtn({ anio, mes }: { anio: number; mes: number }) {
   const [pending, start] = useTransition();
 
-  function cerrar() {
+  async function cerrar() {
     if (
-      !confirm(
+      !(await confirm(
         `¿Cerrar intereses de ${String(mes).padStart(2, "0")}/${anio}?\n\nEsto genera (o regenera) el snapshot por par de empresas. Idempotente — puedes correrlo de nuevo si hay ajustes después.`,
-      )
+      ))
     ) {
       return;
     }

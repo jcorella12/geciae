@@ -5,6 +5,7 @@ import { useRef, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Stat } from "@/components/ui/stat";
@@ -156,8 +157,8 @@ export function ViaticosTab({
       if (!r.ok) alert(`Error: ${r.error}`);
     });
   }
-  function reembolsar(id: string) {
-    if (!confirm("¿Marcar como reembolsado?")) return;
+  async function reembolsar(id: string) {
+    if (!(await confirm("¿Marcar como reembolsado?"))) return;
     startTransition(async () => {
       const r = await marcarReembolsado(id);
       if (!r.ok) alert(`Error: ${r.error}`);

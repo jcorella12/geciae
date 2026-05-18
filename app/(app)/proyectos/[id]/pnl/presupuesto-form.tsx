@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -35,8 +36,11 @@ export function PresupuestoForm({ proyectoId, cerrado, initial }: Props) {
     });
   }
 
-  function handleCerrar() {
-    if (!confirm("¿Cerrar el presupuesto? No podrá editarse sin reabrir.")) return;
+  async function handleCerrar() {
+    if (
+      !(await confirm("¿Cerrar el presupuesto? No podrá editarse sin reabrir."))
+    )
+      return;
     startTransition(async () => {
       const r = await cerrarPresupuesto(proyectoId);
       setMsg(r.ok ? "✓ Cerrado" : `✗ ${r.error}`);

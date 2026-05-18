@@ -4,6 +4,7 @@ import { ShieldCheck, ShieldOff } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
@@ -88,12 +89,15 @@ export function MfaSection({ existingFactor }: Props) {
     });
   }
 
-  function unenrollExisting() {
+  async function unenrollExisting() {
     if (!existingFactor) return;
     if (
-      !confirm(
-        "¿Desactivar MFA? Tu cuenta quedará protegida solo por contraseña.",
-      )
+      !(await confirm({
+        message:
+          "¿Desactivar MFA? Tu cuenta quedará protegida solo por contraseña.",
+        danger: true,
+        confirmLabel: "Desactivar",
+      }))
     )
       return;
     setError(null);

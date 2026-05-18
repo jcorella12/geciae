@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import {
   descargarMesActualTodasEmpresas,
@@ -45,13 +46,13 @@ export function BotonBulkMesActual({
   const ahora = new Date();
   const labelMes = `${MESES[ahora.getMonth()]} ${ahora.getFullYear()}`;
 
-  function handleClick() {
+  async function handleClick() {
     if (
-      !window.confirm(
+      !(await confirm(
         `Se crearán solicitudes al SAT para TODAS las empresas con FIEL activa, ` +
           `cubriendo del 1 al ${ahora.getDate()} de ${labelMes} ` +
           `(emitidos + recibidos). ¿Continuar?`,
-      )
+      ))
     ) {
       return;
     }

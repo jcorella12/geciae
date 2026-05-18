@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { confirm } from "@/components/ui/confirm";
 import {
   COLOR_ESTADO_REPORTE,
   COLOR_SEVERIDAD,
@@ -116,11 +117,14 @@ export function ReportesPanel({
     });
   };
 
-  const onEliminar = (id: string) => {
+  const onEliminar = async (id: string) => {
     if (
-      !confirm(
-        "¿Eliminar el reporte y sus adjuntos? Esta acción no se puede deshacer.",
-      )
+      !(await confirm({
+        message:
+          "¿Eliminar el reporte y sus adjuntos? Esta acción no se puede deshacer.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
     )
       return;
     startTransition(() => {

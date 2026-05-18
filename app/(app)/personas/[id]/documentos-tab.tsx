@@ -4,6 +4,7 @@ import { Download, FileText, Trash2, Upload } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -59,8 +60,15 @@ export function DocumentosTab({
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
-  function eliminar(id: string) {
-    if (!confirm("¿Eliminar este documento?")) return;
+  async function eliminar(id: string) {
+    if (
+      !(await confirm({
+        message: "¿Eliminar este documento?",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    )
+      return;
     start(async () => {
       const r = await eliminarDocumentoEmpleado(id);
       if (!r.ok) alert(`Error: ${r.error}`);

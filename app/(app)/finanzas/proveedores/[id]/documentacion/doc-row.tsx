@@ -4,6 +4,7 @@ import { Download, Trash2 } from "lucide-react";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import {
   estadoVigencia,
   tipoDocumentoLabel,
@@ -48,11 +49,14 @@ export function DocRow({
     }
   }
 
-  function eliminar() {
+  async function eliminar() {
     if (
-      !confirm(
-        "¿Eliminar este documento? Se borra el archivo y se recalcula el semáforo del proveedor.",
-      )
+      !(await confirm({
+        message:
+          "¿Eliminar este documento? Se borra el archivo y se recalcula el semáforo del proveedor.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
     )
       return;
     startTransition(async () => {

@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Stat } from "@/components/ui/stat";
@@ -75,8 +76,8 @@ export function VacacionesTab({
   );
   const [, startTransition] = useTransition();
 
-  function aprobar(id: string) {
-    if (!confirm("¿Aprobar esta solicitud?")) return;
+  async function aprobar(id: string) {
+    if (!(await confirm("¿Aprobar esta solicitud?"))) return;
     startTransition(async () => {
       const r = await aprobarVacacion(id);
       if (!r.ok) alert(`Error: ${r.error}`);

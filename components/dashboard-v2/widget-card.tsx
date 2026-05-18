@@ -3,6 +3,7 @@
 import { GripVertical, MoreVertical, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { confirm } from "@/components/ui/confirm";
 import { cn } from "@/lib/utils";
 
 import {
@@ -113,7 +114,9 @@ export function WidgetCard({
           type="button"
           onClick={async () => {
             if (
-              window.confirm(`¿Ocultar widget "${titulo}"? Lo puedes reactivar desde "+ Agregar widget".`)
+              await confirm(
+                `¿Ocultar widget "${titulo}"? Lo puedes reactivar desde "+ Agregar widget".`,
+              )
             ) {
               await ocultarWidget(widgetId);
             }

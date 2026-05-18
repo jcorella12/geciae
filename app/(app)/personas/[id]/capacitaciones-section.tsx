@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -216,8 +217,15 @@ function EliminarBtn({
   onDone: () => void;
 }) {
   const [pending, startTransition] = useTransition();
-  function go() {
-    if (!confirm("¿Eliminar esta asignación?")) return;
+  async function go() {
+    if (
+      !(await confirm({
+        message: "¿Eliminar esta asignación?",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
+    )
+      return;
     startTransition(async () => {
       const r = await eliminarAsignacion(asignacionId);
       if (!r.ok) {

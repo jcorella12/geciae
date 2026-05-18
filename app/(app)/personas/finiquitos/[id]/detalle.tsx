@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -170,8 +171,11 @@ export function FiniquitoDetalle({
     setError(null);
   }
 
-  function aprobar() {
-    if (!confirm("¿Aprobar este finiquito? Ya no se podrá editar.")) return;
+  async function aprobar() {
+    if (
+      !(await confirm("¿Aprobar este finiquito? Ya no se podrá editar."))
+    )
+      return;
     setError(null);
     startTransition(async () => {
       const r = await aprobarFiniquito(finiquito.id);
@@ -196,11 +200,11 @@ export function FiniquitoDetalle({
     });
   }
 
-  function ratificar() {
+  async function ratificar() {
     if (
-      !confirm(
+      !(await confirm(
         "¿Marcar como ratificado ante Centro de Conciliación? Solo después de la audiencia.",
-      )
+      ))
     )
       return;
     setError(null);
@@ -214,11 +218,13 @@ export function FiniquitoDetalle({
     });
   }
 
-  function eliminar() {
+  async function eliminar() {
     if (
-      !confirm(
-        "¿Eliminar este finiquito en borrador? No se puede deshacer.",
-      )
+      !(await confirm({
+        message: "¿Eliminar este finiquito en borrador? No se puede deshacer.",
+        danger: true,
+        confirmLabel: "Eliminar",
+      }))
     )
       return;
     setError(null);

@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 
 import { exportarVistaRealExcel } from "./actions";
 
@@ -13,9 +14,9 @@ export function BotonExportar({ empresaId }: { empresaId?: string }) {
 
   async function handleClick() {
     if (
-      !window.confirm(
+      !(await confirm(
         "Vas a exportar información gerencial confidencial. Cada exportación queda registrada. ¿Continuar?",
-      )
+      ))
     ) {
       return;
     }

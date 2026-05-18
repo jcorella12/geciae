@@ -4,6 +4,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -271,13 +272,19 @@ function DesactivarBtn() {
       size="sm"
       disabled={pending}
       onClick={(e) => {
-        if (
-          !confirm(
-            "¿Desactivar este vínculo? Se conserva el histórico (soft-delete).",
-          )
-        ) {
-          e.preventDefault();
-        }
+        e.preventDefault();
+        const button = e.currentTarget;
+        const form = button.form;
+        if (!form) return;
+        void (async () => {
+          const ok = await confirm({
+            message:
+              "¿Desactivar este vínculo? Se conserva el histórico (soft-delete).",
+            danger: true,
+            confirmLabel: "Desactivar",
+          });
+          if (ok) form.requestSubmit(button);
+        })();
       }}
     >
       {pending ? "…" : "Desactivar vínculo"}
