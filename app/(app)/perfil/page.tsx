@@ -121,105 +121,107 @@ export default async function PerfilPage() {
   } | null = null;
 
   if (empleado) {
-    // Recibos del año (hasta 6 más recientes)
-    const { data: r } = await supabase
-      .from("nomina_recibos")
-      .select(
-        "id, fecha_pago, total_neto, total_percepciones, total_deducciones, periodicidad, tipo, url_pdf",
-      )
-      .eq("empleado_id", empleado.id)
-      .gte("fecha_pago", `${anio}-01-01`)
-      .order("fecha_pago", { ascending: false })
-      .limit(6);
-    recibosRecientes = (r ?? []) as never;
-
-    // Bonos del año
-    const { data: b } = await supabase
-      .from("empleado_bonos_manuales")
-      .select("id, fecha_pago, tipo, concepto, monto")
-      .eq("empleado_id", empleado.id)
-      .gte("fecha_pago", `${anio}-01-01`)
-      .order("fecha_pago", { ascending: false });
-    bonos = (b ?? []) as never;
-
-    // Saldo vacaciones
-    const { data: sv } = await (
-      supabase.from("v_saldo_vacaciones" as never) as unknown as {
-        select: (cols: string) => {
-          eq: (
-            col: string,
-            val: string,
-          ) => {
-            maybeSingle: () => Promise<{
-              data: {
-                dias_disponibles: number;
-                dias_ganados: number;
-                dias_disfrutados: number;
-              } | null;
-            }>;
-          };
-        };
-      }
-    )
-      .select("dias_disponibles, dias_ganados, dias_disfrutados")
-      .eq("empleado_id", empleado.id)
-      .maybeSingle();
-    saldoVacaciones = sv ?? null;
-
-    // Vehículo asignado
-    const { data: veh } = await supabase
-      .from("vehiculos")
-      .select("placa, marca, modelo, anio")
-      .eq("asignado_a", user.id)
-      .eq("estatus", "activo")
-      .maybeSingle();
-    vehiculo = veh ?? null;
-
-    // Capacitaciones del año
-    const { data: caps } = await supabase
-      .from("empleados_capacitaciones")
-      .select(
-        "id, fecha_fin, fecha_inicio, capacitaciones(nombre, instructor)",
-      )
-      .eq("empleado_id", empleado.id)
-      .gte("fecha_fin", `${anio}-01-01`)
-      .order("fecha_fin", { ascending: false });
-    capacitaciones = (caps ?? []) as never;
-
-    // Documentos personales
-    const { data: docsData } = await supabase
-      .from("empleados_documentos")
-      .select(
-        "id, nombre, tipo, fecha_documento, fecha_vencimiento, url_archivo",
-      )
-      .eq("empleado_id", empleado.id)
-      .order("created_at", { ascending: false })
-      .limit(8);
-    docs = (docsData ?? []) as never;
-
-    // Compensación anual consolidada
-    const { data: comp } = await (
-      supabase.from("v_empleado_compensacion_anual" as never) as unknown as {
-        select: (cols: string) => {
-          eq: (
-            col: string,
-            val: string,
-          ) => {
+    // S4-T2: paralelizar 7 queries que antes corrían secuencialmente.
+    // Todas dependen solo de empleado.id y user.id ya cargados.
+    const [
+      recibosResult,
+      bonosResult,
+      saldoVacResult,
+      vehiculoResult,
+      capacitacionesResult,
+      docsResult,
+      compResult,
+    ] = await Promise.all([
+      supabase
+        .from("nomina_recibos")
+        .select(
+          "id, fecha_pago, total_neto, total_percepciones, total_deducciones, periodicidad, tipo, url_pdf",
+        )
+        .eq("empleado_id", empleado.id)
+        .gte("fecha_pago", `${anio}-01-01`)
+        .order("fecha_pago", { ascending: false })
+        .limit(6),
+      supabase
+        .from("empleado_bonos_manuales")
+        .select("id, fecha_pago, tipo, concepto, monto")
+        .eq("empleado_id", empleado.id)
+        .gte("fecha_pago", `${anio}-01-01`)
+        .order("fecha_pago", { ascending: false }),
+      (
+        supabase.from("v_saldo_vacaciones" as never) as unknown as {
+          select: (cols: string) => {
             eq: (
               col: string,
-              val: number,
+              val: string,
             ) => {
-              maybeSingle: () => Promise<{ data: typeof compensacion }>;
+              maybeSingle: () => Promise<{
+                data: {
+                  dias_disponibles: number;
+                  dias_ganados: number;
+                  dias_disfrutados: number;
+                } | null;
+              }>;
             };
           };
-        };
-      }
-    )
-      .select("*")
-      .eq("empleado_id", empleado.id)
-      .eq("anio", anio)
-      .maybeSingle();
-    compensacion = comp ?? null;
+        }
+      )
+        .select("dias_disponibles, dias_ganados, dias_disfrutados")
+        .eq("empleado_id", empleado.id)
+        .maybeSingle(),
+      supabase
+        .from("vehiculos")
+        .select("placa, marca, modelo, anio")
+        .eq("asignado_a", user.id)
+        .eq("estatus", "activo")
+        .maybeSingle(),
+      supabase
+        .from("empleados_capacitaciones")
+        .select(
+          "id, fecha_fin, fecha_inicio, capacitaciones(nombre, instructor)",
+        )
+        .eq("empleado_id", empleado.id)
+        .gte("fecha_fin", `${anio}-01-01`)
+        .order("fecha_fin", { ascending: false }),
+      supabase
+        .from("empleados_documentos")
+        .select(
+          "id, nombre, tipo, fecha_documento, fecha_vencimiento, url_archivo",
+        )
+        .eq("empleado_id", empleado.id)
+        .order("created_at", { ascending: false })
+        .limit(8),
+      (
+        supabase.from(
+          "v_empleado_compensacion_anual" as never,
+        ) as unknown as {
+          select: (cols: string) => {
+            eq: (
+              col: string,
+              val: string,
+            ) => {
+              eq: (
+                col: string,
+                val: number,
+              ) => {
+                maybeSingle: () => Promise<{ data: typeof compensacion }>;
+              };
+            };
+          };
+        }
+      )
+        .select("*")
+        .eq("empleado_id", empleado.id)
+        .eq("anio", anio)
+        .maybeSingle(),
+    ]);
+
+    recibosRecientes = (recibosResult.data ?? []) as never;
+    bonos = (bonosResult.data ?? []) as never;
+    saldoVacaciones = saldoVacResult.data ?? null;
+    vehiculo = vehiculoResult.data ?? null;
+    capacitaciones = (capacitacionesResult.data ?? []) as never;
+    docs = (docsResult.data ?? []) as never;
+    compensacion = compResult.data ?? null;
   }
 
   return (

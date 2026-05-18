@@ -384,10 +384,11 @@ export async function convertirAProyecto(
   if (!user)
     return { ok: false, error: "Sin sesión.", proyectoId: null };
 
+  // S4-T5: cargar también oportunidad_id para propagarlo al proyecto.
   const { data: c } = await supabase
     .from("cotizaciones")
     .select(
-      "id, empresa_id, cliente_id, numero, total, notas, fecha_emision, estado",
+      "id, empresa_id, cliente_id, numero, total, notas, fecha_emision, estado, oportunidad_id",
     )
     .eq("id", cotizacionId)
     .maybeSingle();
@@ -419,7 +420,17 @@ export async function convertirAProyecto(
     };
   }
 
-  const { data: nuevo, error } = await supabase
+  // S4-T5: cargar conceptos para copiarlos al proyecto.
+  const { data: conceptosRaw } = await supabase
+    .from("cotizaciones_conceptos")
+    .select(
+      "orden, descripcion, cantidad, unidad_sat, precio_unitario, descuento, iva_tasa, observaciones",
+    )
+    .eq("cotizacion_id", cotizacionId)
+    .order("orden");
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: nuevo, error } = await (supabase as any)
     .from("proyectos")
     .insert({
       empresa_id: c.empresa_id,
@@ -440,6 +451,9 @@ export async function convertirAProyecto(
       marca_visible_id: c.empresa_id,
       semaforo: "verde",
       activo: true,
+      // S4-T5: trazabilidad cotización + oportunidad origen.
+      cotizacion_id: cotizacionId,
+      oportunidad_id: c.oportunidad_id ?? null,
     })
     .select("id")
     .single();
@@ -449,6 +463,38 @@ export async function convertirAProyecto(
       error: error?.message ?? "Error al crear proyecto.",
       proyectoId: null,
     };
+  }
+
+  // S4-T5: copiar partidas de la cotización como tareas del proyecto.
+  // Cada concepto = una tarea de tipo "entregable" en el plan inicial.
+  // El PM puede después desglosar/reordenar.
+  if (conceptosRaw && conceptosRaw.length > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error: tareasErr } = await (supabase as any)
+      .from("proyecto_tareas")
+      .insert(
+        conceptosRaw.map((cn, idx) => ({
+          proyecto_id: nuevo.id,
+          orden: idx + 1,
+          titulo: cn.descripcion,
+          descripcion:
+            cn.observaciones ??
+            `Cantidad: ${cn.cantidad} ${cn.unidad_sat ?? ""} · Precio unit. $${cn.precio_unitario}`,
+          estado: "pendiente",
+          prioridad: "media",
+          porcentaje_avance: 0,
+          costo_estimado:
+            Number(cn.cantidad ?? 0) * Number(cn.precio_unitario ?? 0),
+        })),
+      );
+    if (tareasErr) {
+      // No abortamos — el proyecto ya está creado. Solo log para que
+      // alguien revise el por qué no copió las partidas.
+      console.error(
+        `[convertirAProyecto ${cotizacionId}] no se copiaron partidas:`,
+        tareasErr.message,
+      );
+    }
   }
 
   // Marcar cotización como convertida
