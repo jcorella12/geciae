@@ -219,8 +219,11 @@ export default async function MatrizMensualPage({
         <DevengarBtn />
         <CerrarMesBtn anio={year} mes={month} />
         <p className="text-xs text-muted-foreground">
-          Cron automático corre cada noche a las 23:55 (MX). Botones para
-          forzar manualmente o cerrar el mes con snapshot por par de empresas.
+          Cron automático corre cada noche a las 23:55 (Sonora UTC-7) vía
+          Vercel (endpoint{" "}
+          <code className="font-mono">/api/cron/devengar-intereses</code>).
+          Botones para forzar manualmente o cerrar el mes con snapshot por
+          par de empresas.
         </p>
       </div>
 

@@ -46,14 +46,17 @@ async function generarNumeroOC(
   supabase: ReturnType<typeof createClient>,
   empresaId: string,
 ): Promise<string> {
-  const year = new Date().getFullYear();
-  const { count } = await supabase
-    .from("ordenes_compra")
-    .select("id", { count: "exact", head: true })
-    .eq("empresa_id", empresaId)
-    .gte("fecha_emision", `${year}-01-01`);
-  const next = (count ?? 0) + 1;
-  return `OC-${year}-${String(next).padStart(4, "0")}`;
+  // Reserva atómica vía RPC `siguiente_folio` (advisory lock + UPSERT).
+  // Mata el race condition del viejo "select count + 1".
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data, error } = await (supabase as any).rpc("siguiente_folio", {
+    p_empresa_id: empresaId,
+    p_tipo: "oc",
+  });
+  if (error || !data) {
+    throw new Error(`No se pudo reservar folio OC: ${error?.message}`);
+  }
+  return data as string;
 }
 
 async function getCallerId(
@@ -116,7 +119,8 @@ export async function createOC(
   const autoAprobada = puedeAprobarOC(vinculos, d.empresa_id, totales.total);
   const ahora = new Date().toISOString();
 
-  const { data: ocNueva, error: ocErr } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: ocNueva, error: ocErr } = await (supabase as any)
     .from("ordenes_compra")
     .insert({
       empresa_id: d.empresa_id,
@@ -138,6 +142,8 @@ export async function createOC(
       capturado_por: callerId,
       aprobado_por: autoAprobada ? callerId : null,
       fecha_aprobacion: autoAprobada ? ahora : null,
+      auto_aprobada: autoAprobada,
+      aprobacion_metodo: autoAprobada ? "auto_umbral" : null,
     })
     .select("id")
     .single();
@@ -186,13 +192,19 @@ export async function createOC(
     }
   }
 
-  // Sprint 5.5.3: si la OC quedó autoAprobada y tiene centro, registrar movimiento
+  // Sprint 5.5.3: si la OC quedó autoAprobada y tiene centro, registrar
+  // movimiento. Patch 4 (Sprint 1): el error ya no se silencia — la
+  // función actualiza `centro_movimiento_error` en la OC y la UI lo
+  // mostrará al contralor. La OC SÍ queda creada aunque falle el
+  // movimiento (el caller decide reintentar después).
   if (autoAprobada && d.centro_id) {
-    try {
-      const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
-      await registrarMovimientoOC(ocNueva.id);
-    } catch {
-      // Best-effort
+    const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
+    const r = await registrarMovimientoOC(ocNueva.id);
+    if (!r.ok) {
+      console.error(
+        `[OC ${ocNueva.id}] movimiento centro falló:`,
+        r.error,
+      );
     }
   }
 
@@ -242,6 +254,8 @@ export async function enviarAAprobacion(
         estado: "aprobada" as const,
         aprobado_por: callerId,
         fecha_aprobacion: ahora,
+        auto_aprobada: true,
+        aprobacion_metodo: "auto_umbral",
         updated_at: ahora,
       }
     : {
@@ -249,7 +263,8 @@ export async function enviarAAprobacion(
         updated_at: ahora,
       };
 
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update(update)
     .eq("id", ocId);
@@ -276,23 +291,29 @@ export async function aprobarOC(
   }
   const supabase = createClient();
   const callerId = await getCallerId(supabase);
-  const { error } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
     .from("ordenes_compra")
     .update({
       estado: "aprobada",
       aprobado_por: callerId,
       fecha_aprobacion: new Date().toISOString(),
+      auto_aprobada: false,
+      aprobacion_metodo: "manual",
       updated_at: new Date().toISOString(),
     })
     .eq("id", ocId);
   if (error) return { ok: false, error: error.message };
 
-  // Sprint 5.5.3: registrar movimiento en centro de costo (best-effort)
-  try {
+  // Sprint 5.5.3: registrar movimiento en centro de costo.
+  // Patch 4 (Sprint 1): el error ya no se silencia — queda registrado
+  // en `centro_movimiento_error` de la OC para visibilidad/reintento.
+  {
     const { registrarMovimientoOC } = await import("@/lib/centros/registrar");
-    await registrarMovimientoOC(ocId);
-  } catch {
-    // ignore
+    const rMov = await registrarMovimientoOC(ocId);
+    if (!rMov.ok) {
+      console.error(`[OC ${ocId}] movimiento centro falló:`, rMov.error);
+    }
   }
 
   revalidatePath(`/finanzas/oc/${ocId}`);
