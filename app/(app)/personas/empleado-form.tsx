@@ -1,7 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,6 +16,7 @@ import {
   initialEmpleadoState,
   type EmpleadoState,
 } from "@/lib/empleados/state";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import { ESTADOS_MX } from "@/lib/sat/catalogos";
 
 import { createEmpleado, updateEmpleado } from "./actions";
@@ -97,6 +100,16 @@ export function EmpleadoForm({
         updateEmpleado(empleadoId, prev, fd)
     : createEmpleado;
   const [state, formAction] = useFormState(action, initialEmpleadoState);
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `empleado-form-${empleadoId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
 
   const dom = defaults?.domicilio ?? null;
@@ -118,7 +131,21 @@ export function EmpleadoForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este empleado. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       {/* Empresa contratante */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Empresa contratante</h2>
@@ -416,6 +443,7 @@ export function EmpleadoForm({
 
       <SubmitButton mode={empleadoId ? "edit" : "create"} />
     </form>
+    </>
   );
 }
 

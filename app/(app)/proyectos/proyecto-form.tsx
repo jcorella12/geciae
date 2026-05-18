@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { ClientePicker } from "@/components/shared/cliente-picker";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import {
   ESTADOS_PROYECTO,
   initialProyectoState,
@@ -120,6 +122,15 @@ export function ProyectoForm({
 
   const esSolar = tipo?.startsWith("solar_") || tipo === "limpieza_solar" || tipo === "mantenimiento_solar";
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `proyecto-form-${proyectoId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
 
   if (empresas.length === 0) {
@@ -134,7 +145,21 @@ export function ProyectoForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este proyecto. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       {/* Empresa solicitante */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Empresa ejecutora</h2>
@@ -481,6 +506,7 @@ export function ProyectoForm({
 
       <SubmitBtn mode={proyectoId ? "edit" : "create"} />
     </form>
+    </>
   );
 }
 
