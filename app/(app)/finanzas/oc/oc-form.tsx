@@ -1,16 +1,18 @@
 "use client";
 
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
 import { DocumentExtractor } from "@/components/shared/document-extractor";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CentroOpcion } from "@/lib/centros/listar";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import { calcularTotalesOC } from "@/lib/oc/schemas";
 import { initialOCState, TASA_IVA_DEFAULT } from "@/lib/oc/state";
 
@@ -210,6 +212,22 @@ export function OCForm({
     })),
   );
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `oc-form-${empresaId || "nueva"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom<{ conceptos: ConceptoLocal[] }>(formRef, formKey, {
+      stateExtra: { conceptos },
+      onRestoreExtra: (extra) => {
+        if (extra?.conceptos && extra.conceptos.length > 0) {
+          setConceptos(extra.conceptos);
+        }
+      },
+    });
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   if (empresas.length === 0) {
     return (
       <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
@@ -239,7 +257,21 @@ export function OCForm({
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de esta OC (incluye conceptos). ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       {/* Solicitud de origen (si la OC se crea desde una solicitud aprobada) */}
       {solicitudOrigenId && (
         <input
@@ -670,6 +702,7 @@ export function OCForm({
 
       <SubmitButton />
     </form>
+    </>
   );
 }
 
