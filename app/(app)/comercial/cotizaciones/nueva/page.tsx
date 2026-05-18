@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { obtenerVinculos } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
-import { CotizacionForm } from "../cotizacion-form";
+import { CotizacionFormConIa } from "./page-wrapper";
 
 export default async function NuevaCotizacionPage({
   searchParams,
@@ -63,7 +63,7 @@ export default async function NuevaCotizacionPage({
         .order("nombre"),
     ]);
 
-  const defaults: Parameters<typeof CotizacionForm>[0]["defaults"] = {
+  const defaults: Parameters<typeof CotizacionFormConIa>[0]["defaults"] = {
     cliente_id: searchParams?.cliente,
     oportunidad_id: searchParams?.oportunidad,
   };
@@ -95,7 +95,7 @@ export default async function NuevaCotizacionPage({
         </p>
       </div>
 
-      <CotizacionForm
+      <CotizacionFormConIa
         empresas={empresas ?? []}
         clientes={clientes ?? []}
         oportunidades={oportunidades ?? []}

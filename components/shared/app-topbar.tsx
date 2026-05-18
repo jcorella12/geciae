@@ -2,8 +2,8 @@ import { KeyRound, LogOut } from "lucide-react";
 import Link from "next/link";
 
 import { DensityToggle } from "@/components/shared/density-toggle";
-import { GlobalSearch } from "@/components/shared/global-search";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { SearchTrigger } from "@/components/shared/search-trigger";
 import { SugerirMejoraButton } from "@/components/shared/sugerir-mejora-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import {
@@ -130,7 +130,7 @@ export async function AppTopbar({ email, initials }: Props) {
       </div>
 
       <div className="ml-auto">
-        <GlobalSearch />
+        <SearchTrigger />
       </div>
 
       <div className="hidden md:block">

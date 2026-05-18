@@ -20,6 +20,10 @@ sección.
 - **Detectado:** `mfa-section.tsx:131` promete "Sprint 9". Hoy CEO,
   aprobador financiero > 500k y tesorero corporativo pueden operar sin
   segundo factor; MFA es 100 % opt-in.
+- **Decisión 2026-05-15 (Joaquín):** activar cuando el sistema ya esté
+  en uso productivo cotidiano. Hoy aún hay configuración y onboarding
+  de usuarios — forzar MFA generaría fricción innecesaria. Reabrir
+  cuando esté el flujo diario corriendo.
 - **Resumen:** middleware o server-action guard que rechace
   operaciones sensibles cuando el AAL del usuario < `aal2`. Catálogo de
   acciones que exigen MFA (aprobaciones de OC, transferencias inter-co,
@@ -35,6 +39,34 @@ sección.
   ajuste umbrales por empresa y por tipo de transacción. Refactor de
   `emisor.ts` para leer de la tabla.
 - **Estimado:** 0.5-1 día.
+
+### Quick-create de empleado y proyecto desde autocompletes
+- **Origen:** Sprint 3 / S3-T3 — el patrón quick-create ya está
+  implementado para `cliente` (ClientePicker) y `proveedor`
+  (ProveedorPicker, wired en OC nueva). Falta el mismo patrón para
+  crear empleado y proyecto desde modales/autocompletes.
+- **Resumen:** `EmpleadoPicker` y `ProyectoPicker` espejo de los
+  existentes + server actions `crearEmpleadoRapido` y
+  `crearProyectoRapido` con campos mínimos.
+- **Estimado:** 0.5-1 día.
+
+### Reemplazar `window.confirm/alert/prompt` con shadcn AlertDialog
+- **Origen:** Sprint 3 / S3-T8 — más de 30 archivos usan
+  `window.confirm/alert/prompt`. El peor offender:
+  `comercial/levantamientos/[id]/estado-buttons.tsx` con
+  `window.prompt`.
+- **Resumen:** `<ConfirmProvider>` + `useConfirm()` que retorne
+  `Promise<boolean>` (Radix Dialog ya está en deps). Pasada mecánica.
+- **Estimado:** 0.5-1 día.
+
+### Cierre transaccional de centros (Sprint 1 / P5)
+- **Origen:** Sprint 1 — patch del paquete original quedó bloqueado.
+- **Bloqueado por:** necesita portar `previewCierreMes` de TS
+  (`app/(app)/finanzas/centros/cierre/actions.ts:75`) a una RPC SQL
+  `calcular_preview_cierre_centros` antes de aplicar.
+- **Resumen:** RPC `ejecutar_cierre_mes_centros` ya escrita; rollback
+  total si algo falla a mitad del cierre. Idempotente.
+- **Estimado:** 1 día extra (portado preview TS→SQL) + el patch.
 
 ### Módulo SGC completo
 - **Detectado:** tablas `sgc_procesos`, `sgc_indicadores`,
@@ -87,6 +119,25 @@ _(ninguno por el momento)_
 
 ## Completados recientes
 
+- **Sprint 3 — UX DROP feeling** (2026-05-15) — 7 de 8 tickets en rama
+  `feat/sprint-3-ux-drop`: unificada búsqueda global (T1), `<Ref>` en
+  OC table + CFDI detalle (T2), IA factura-vehiculo en alta de vehículo
+  (T4), IA cotización en nueva cotización (T5), auto-conciliación
+  bancaria en detalle CFDI con RPC nueva (T6), empty-state CTA en
+  cuenta bancaria vacía (T7), ProveedorPicker en OC nueva (T3-parcial).
+  T3 completo (empleado/proyecto) y T8 (window dialogs) movidos al
+  backlog.
+- **Sprint 2 — Pagos CFDI + flow OC/OT** (2026-05-15) — 8 de 8 tickets
+  en rama `feat/sprint-2-pagos-cfdi-flow-oc-ot`: historial cfdi_pagos
+  + idempotencia + uuid_sustituye (T1+T3+T8), procesamiento complemento
+  de pago SAT (T2), drop cfdi_recibido_id (T4), regresarOCABorrador
+  (T5), wiring auto OT facturada/cobrada (T6), motivo_rechazo y
+  motivo_cancelacion separados (T7).
+- **Sprint 1 — Críticos de Finanzas** (2026-05-15) — 4 de 5 patches en
+  rama `feat/sprint-1-finanzas-criticos`: cron devengo + fix UI (P1),
+  folios atómicos OC/OT con advisory lock (P2), auto-aprobación
+  distinguible (P3), centros best-effort con audit (P4). Patch 5
+  diferido a backlog.
 - **Limpieza de schema** (2026-05-15) — drop de 7 tablas huérfanas
   (familia EMA, PLD, bolsa_talento, encuestas_satisfaccion,
   viajes_solicitudes) que no aplican al alcance real del cliente.
