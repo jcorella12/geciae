@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 
 import { useFormDraft } from "./use-form-draft";
 
@@ -14,7 +14,11 @@ import { useFormDraft } from "./use-form-draft";
  * radios. Para inputs controlados (con `value`/`onChange`) dispara
  * eventos sintéticos para que React actualice el state.
  *
- * Patrón de uso:
+ * Para forms con state React complejo (arrays dinámicos, ej.
+ * conceptos[] de una cotización), pasa `stateExtra` con el state
+ * actual y `onRestoreExtra` para hidratarlo al restaurar.
+ *
+ * Patrón básico (forms uncontrolled):
  *
  * ```tsx
  * const formRef = useRef<HTMLFormElement>(null);
@@ -36,32 +40,74 @@ import { useFormDraft } from "./use-form-draft";
  *   </>
  * );
  * ```
+ *
+ * Con stateExtra (cotización con conceptos dinámicos):
+ *
+ * ```tsx
+ * const [conceptos, setConceptos] = useState<Concepto[]>([nuevo()]);
+ * const { showBanner, onInput, applyDraft, ... } = useFormDraftDom(
+ *   formRef,
+ *   `cotizacion-${id ?? "nueva"}`,
+ *   {
+ *     stateExtra: { conceptos },
+ *     onRestoreExtra: (extra) => {
+ *       if (extra?.conceptos) setConceptos(extra.conceptos);
+ *     },
+ *   },
+ * );
+ * ```
  */
-type DraftSnapshot = Record<string, string[]>;
+type DomFields = Record<string, string[]>;
 
-export function useFormDraftDom(
+type Snapshot<E> = {
+  dom: DomFields;
+  extra?: E;
+};
+
+export function useFormDraftDom<E = unknown>(
   formRef: RefObject<HTMLFormElement>,
   key: string,
-  options?: { debounceMs?: number },
+  options?: {
+    debounceMs?: number;
+    /** State React extra a persistir (objeto serializable). Se vuelve a leer
+     *  en cada onInput, así que pasar la referencia actual del state. */
+    stateExtra?: E;
+    /** Callback para hidratar el state React al restaurar un draft. */
+    onRestoreExtra?: (extra: E | undefined) => void;
+  },
 ): {
   /** TRUE cuando hay un draft recuperado y aún no se decidió restaurar/descartar. */
   showBanner: boolean;
   /** Handler para `onInput` del form. Snapshot via FormData con debounce. */
   onInput: () => void;
-  /** Restaura los valores del draft al DOM. */
+  /** Restaura los valores del draft al DOM y al state extra. */
   applyDraft: () => void;
   /** Descarta el draft sin restaurar. */
   discardDraft: () => void;
   /** Borra el draft de localStorage (llamar tras submit exitoso). */
   clearDraft: () => void;
 } {
-  const { draft, saveDraft, clearDraft, hasDraft } = useFormDraft<DraftSnapshot>(
+  // Mantener stateExtra en ref para no recrear `onInput` en cada cambio del
+  // state extra (haría que el form re-render y se pierda el foco del input).
+  const stateExtraRef = useRef<E | undefined>(options?.stateExtra);
+  stateExtraRef.current = options?.stateExtra;
+
+  const onRestoreExtraRef = useRef(options?.onRestoreExtra);
+  onRestoreExtraRef.current = options?.onRestoreExtra;
+
+  const { draft, saveDraft, clearDraft, hasDraft } = useFormDraft<Snapshot<E>>(
     key,
-    {},
+    { dom: {} },
     {
       debounceMs: options?.debounceMs ?? 500,
-      // No guardes drafts vacíos (form recién montado, todos los inputs vacíos).
-      shouldSave: (v) => Object.values(v).some((arr) => arr.some((x) => x !== "")),
+      // No guardes snapshots completamente vacíos.
+      shouldSave: (v) => {
+        const domHasValues = Object.values(v.dom ?? {}).some((arr) =>
+          arr.some((x) => x !== ""),
+        );
+        const extraHasValues = v.extra != null;
+        return domHasValues || extraHasValues;
+      },
     },
   );
 
@@ -70,13 +116,13 @@ export function useFormDraftDom(
   const onInput = useCallback(() => {
     if (!formRef.current) return;
     const fd = new FormData(formRef.current);
-    const snap: DraftSnapshot = {};
+    const dom: DomFields = {};
     fd.forEach((v, k) => {
       if (typeof v !== "string") return; // Skip File objects
-      snap[k] ??= [];
-      snap[k].push(v);
+      dom[k] ??= [];
+      dom[k].push(v);
     });
-    saveDraft(snap);
+    saveDraft({ dom, extra: stateExtraRef.current });
   }, [formRef, saveDraft]);
 
   const applyDraft = useCallback(() => {
@@ -84,42 +130,65 @@ export function useFormDraftDom(
       setShowBanner(false);
       return;
     }
-    const form = formRef.current;
 
-    // Reset checkboxes/radios primero (defaults pueden tener algunos marcados).
-    form
-      .querySelectorAll<HTMLInputElement>(
-        'input[type="checkbox"], input[type="radio"]',
-      )
-      .forEach((el) => {
-        el.checked = false;
-      });
+    // Restaurar state extra PRIMERO — si re-renderiza inputs nuevos (ej.
+    // agrega filas de conceptos), después podemos setear sus values.
+    if (draft.extra !== undefined && onRestoreExtraRef.current) {
+      onRestoreExtraRef.current(draft.extra);
+    }
 
-    for (const [name, values] of Object.entries(draft)) {
-      const elements = form.querySelectorAll<
-        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-      >(`[name="${CSS.escape(name)}"]`);
-      elements.forEach((el) => {
-        if (el instanceof HTMLInputElement) {
-          if (el.type === "checkbox" || el.type === "radio") {
-            el.checked = values.some((v) => v === el.value);
-          } else {
-            el.value = values[0] ?? "";
-            // Dispara eventos para que React actualice state de inputs
-            // controlados (RFC, CURP con uppercase, etc.).
+    // Esperar un tick a que React re-renderice los inputs nuevos antes de
+    // poblar values del DOM. requestAnimationFrame es suficiente.
+    const applyDom = () => {
+      const form = formRef.current;
+      if (!form) return;
+
+      // Reset checkboxes/radios primero (defaults pueden tener algunos marcados).
+      form
+        .querySelectorAll<HTMLInputElement>(
+          'input[type="checkbox"], input[type="radio"]',
+        )
+        .forEach((el) => {
+          el.checked = false;
+        });
+
+      for (const [name, values] of Object.entries(draft.dom ?? {})) {
+        const elements = form.querySelectorAll<
+          HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+        >(`[name="${CSS.escape(name)}"]`);
+
+        // Para arrays (conceptos[0][descripcion], conceptos[1][descripcion]),
+        // querySelectorAll devuelve 1 elemento por cada idx único, así que
+        // usamos forEach con el primer value disponible.
+        elements.forEach((el, i) => {
+          const value = values[i] ?? values[0] ?? "";
+          if (el instanceof HTMLInputElement) {
+            if (el.type === "checkbox" || el.type === "radio") {
+              el.checked = values.some((v) => v === el.value);
+            } else {
+              el.value = value;
+              el.dispatchEvent(new Event("input", { bubbles: true }));
+              el.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+          } else if (el instanceof HTMLSelectElement) {
+            el.value = value;
+            el.dispatchEvent(new Event("change", { bubbles: true }));
+          } else if (el instanceof HTMLTextAreaElement) {
+            el.value = value;
             el.dispatchEvent(new Event("input", { bubbles: true }));
             el.dispatchEvent(new Event("change", { bubbles: true }));
           }
-        } else if (el instanceof HTMLSelectElement) {
-          el.value = values[0] ?? "";
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-        } else if (el instanceof HTMLTextAreaElement) {
-          el.value = values[0] ?? "";
-          el.dispatchEvent(new Event("input", { bubbles: true }));
-          el.dispatchEvent(new Event("change", { bubbles: true }));
-        }
-      });
+        });
+      }
+    };
+
+    if (draft.extra !== undefined && onRestoreExtraRef.current) {
+      // Wait two ticks for React to flush the state update + commit.
+      requestAnimationFrame(() => requestAnimationFrame(applyDom));
+    } else {
+      applyDom();
     }
+
     setShowBanner(false);
   }, [draft, formRef]);
 
@@ -128,8 +197,6 @@ export function useFormDraftDom(
     setShowBanner(false);
   }, [clearDraft]);
 
-  // Si el form se desmonta con cambios sin guardar, el debounce ya hizo
-  // su trabajo — no necesitamos cleanup adicional.
   useEffect(() => {
     void key; // ensure dependency
   }, [key]);

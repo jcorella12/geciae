@@ -2,10 +2,11 @@
 
 import { Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { ClientePicker } from "@/components/shared/cliente-picker";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +14,7 @@ import {
   calcularTotales,
   initialCotizacionState,
 } from "@/lib/cotizaciones/state";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 
 import { actualizarCotizacion, crearCotizacion } from "./actions";
 
@@ -170,6 +172,22 @@ export function CotizacionForm({
     }
   }, [state.ok, state.cotizacionId, router]);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `cotizacion-form-${cotizacionId ?? "nueva"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom<{ conceptos: ConceptoLocal[] }>(formRef, formKey, {
+      stateExtra: { conceptos },
+      onRestoreExtra: (extra) => {
+        if (extra?.conceptos && extra.conceptos.length > 0) {
+          setConceptos(extra.conceptos);
+        }
+      },
+    });
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const oportunidadesFiltradas = useMemo(
     () =>
       empresaId
@@ -225,7 +243,21 @@ export function CotizacionForm({
   }
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de esta cotización (incluye conceptos). ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       {/* Empresa */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Empresa emisora</h2>
@@ -624,6 +656,7 @@ export function CotizacionForm({
         />
       </div>
     </form>
+    </>
   );
 }
 
