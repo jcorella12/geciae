@@ -1,10 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import { Label } from "@/components/ui/label";
 
 import type { CentroOpcion } from "@/lib/centros/listar";
 import { initialGastoState } from "@/lib/gastos-recurrentes/state";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 
 import {
   actualizarGastoRecurrente,
@@ -98,13 +100,36 @@ export function GastoForm({
     }
   }, [state.ok, router]);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `gasto-form-${gastoId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const today = new Date().toISOString().slice(0, 10);
   const centroDefault =
     defaults?.centro_id ??
     (empresaId ? centroDefaultPorEmpresa[empresaId] ?? null : null);
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este gasto. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Información básica</h2>
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -357,6 +382,7 @@ export function GastoForm({
         <SubmitBtn edit={Boolean(gastoId)} />
       </div>
     </form>
+    </>
   );
 }
 

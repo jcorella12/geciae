@@ -1,13 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { EmpleadoPicker } from "@/components/shared/empleado-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import { initialVehiculoState } from "@/lib/vehiculos/state";
 
 import { actualizarVehiculo, crearVehiculo } from "./actions";
@@ -103,8 +105,31 @@ export function VehiculoForm({
     }
   }, [state.ok, state.id, router]);
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `vehiculo-form-${vehiculoId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este vehículo. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Identificación</h2>
         <div className="mt-4 grid grid-cols-3 gap-3">
@@ -474,6 +499,7 @@ export function VehiculoForm({
         <SubmitBtn edit={Boolean(vehiculoId)} />
       </div>
     </form>
+    </>
   );
 }
 

@@ -47,7 +47,11 @@ export function useFormDraft<T>(
   hasDraft: boolean;
 } {
   const debounceMs = options?.debounceMs ?? 500;
-  const shouldSave = options?.shouldSave ?? (() => true);
+  // Conserva la referencia estable de shouldSave entre renders — si el
+  // caller pasa una arrow inline, no queremos invalidar el useCallback de
+  // saveDraft en cada render.
+  const shouldSaveRef = useRef(options?.shouldSave);
+  shouldSaveRef.current = options?.shouldSave;
 
   // Cargar draft solo en el primer render (lazy initializer).
   const [draft, setDraftState] = useState<T | null>(() => {
@@ -69,7 +73,8 @@ export function useFormDraft<T>(
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         try {
-          if (shouldSave(value)) {
+          const guard = shouldSaveRef.current;
+          if (!guard || guard(value)) {
             window.localStorage.setItem(key, JSON.stringify(value));
             setDraftState(value);
           }
@@ -78,7 +83,7 @@ export function useFormDraft<T>(
         }
       }, debounceMs);
     },
-    [key, debounceMs, shouldSave],
+    [key, debounceMs],
   );
 
   const clearDraft = useCallback(() => {

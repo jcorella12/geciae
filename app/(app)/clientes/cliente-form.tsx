@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CollapsibleSection } from "@/components/shared/collapsible-section";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import {
   ESTADOS_MX,
   REGIMENES_FISCALES,
@@ -80,11 +82,40 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
   const [state, formAction] = useFormState(action, initialClienteState);
   const [rfc, setRfc] = useState(defaults?.rfc ?? "");
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `cliente-form-${clienteId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  // Limpiar draft tras submit exitoso (state.ok pasa a true en redirect path).
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const direccion = defaults?.direccion_fiscal ?? null;
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este cliente. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => {
+          // En éxito hace redirect() (state.ok nunca llega al cliente).
+          // Limpiamos draft al submit; si falla validación los inputs
+          // uncontrolled retienen sus valores y el usuario puede corregir.
+          clearDraft();
+        }}
+        className="space-y-6"
+      >
       {/* Datos fiscales */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Datos fiscales</h2>
@@ -317,6 +348,7 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
         <SubmitButton mode={clienteId ? "edit" : "create"} />
       </div>
     </form>
+    </>
   );
 }
 

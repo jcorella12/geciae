@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CollapsibleSection } from "@/components/shared/collapsible-section";
+import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import {
   CLASIFICACIONES_PROVEEDOR,
   SEMAFOROS,
@@ -97,12 +99,36 @@ export function ProveedorForm({ empresas, defaults, proveedorId }: Props) {
   const [estaAprobado, setEstaAprobado] = useState(
     defaults?.esta_aprobado ?? false,
   );
+
+  const formRef = useRef<HTMLFormElement>(null);
+  const formKey = `proveedor-form-${proveedorId ?? "nuevo"}`;
+  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
+    useFormDraftDom(formRef, formKey);
+
+  useEffect(() => {
+    if (state.ok) clearDraft();
+  }, [state.ok, clearDraft]);
+
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
   const direccion = defaults?.direccion_fiscal ?? null;
   const cuenta = defaults?.cuenta_bancaria ?? null;
 
   return (
-    <form action={formAction} className="space-y-6">
+    <>
+      {showBanner && (
+        <DraftRecoveryBanner
+          onRestore={applyDraft}
+          onDiscard={discardDraft}
+          label="Tienes un borrador sin guardar de este proveedor. ¿Restaurarlo?"
+        />
+      )}
+      <form
+        ref={formRef}
+        action={formAction}
+        onInput={onInput}
+        onSubmit={() => clearDraft()}
+        className="space-y-6"
+      >
       {/* Datos fiscales */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Datos fiscales</h2>
@@ -326,6 +352,7 @@ export function ProveedorForm({ empresas, defaults, proveedorId }: Props) {
 
       <SubmitButton mode={proveedorId ? "edit" : "create"} />
     </form>
+    </>
   );
 }
 
