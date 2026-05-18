@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
+import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -86,6 +87,9 @@ export function GastoForm({
   const [state, formAction] = useFormState(action, initialGastoState);
   const [empresaId, setEmpresaId] = useState<string>(
     defaults?.empresa_id ?? "",
+  );
+  const [proveedorIdSel, setProveedorIdSel] = useState<string>(
+    defaults?.proveedor_id ?? "",
   );
 
   useEffect(() => {
@@ -169,22 +173,23 @@ export function GastoForm({
             />
           </div>
           <div>
-            <Label htmlFor="proveedor_id" className="text-sm">
-              Proveedor (catálogo)
-            </Label>
-            <select
-              id="proveedor_id"
-              name="proveedor_id"
-              defaultValue={defaults?.proveedor_id ?? ""}
-              className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">— Sin vincular —</option>
-              {proveedores.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.razon_social} ({p.rfc})
-                </option>
-              ))}
-            </select>
+            <Label className="text-sm">Proveedor (catálogo)</Label>
+            <div className="mt-1">
+              <ProveedorPicker
+                proveedores={proveedores.map((p) => ({
+                  id: p.id,
+                  razon_social: p.razon_social,
+                  rfc: p.rfc,
+                  nombre_comercial:
+                    (p as { nombre_comercial?: string | null })
+                      .nombre_comercial ?? null,
+                }))}
+                value={proveedorIdSel}
+                onChange={setProveedorIdSel}
+                empresaId={empresaId || null}
+                required={false}
+              />
+            </div>
           </div>
           <div className="col-span-2">
             <Label htmlFor="proveedor_nombre" className="text-sm">

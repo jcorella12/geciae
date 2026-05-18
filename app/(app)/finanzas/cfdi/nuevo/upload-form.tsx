@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
+import { ClientePicker } from "@/components/shared/cliente-picker";
+import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CentroOpcion } from "@/lib/centros/listar";
@@ -71,6 +73,8 @@ export function UploadCfdiForm({
   const [xmlFile, setXmlFile] = useState<File | null>(null);
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [empresaId, setEmpresaId] = useState<string>("");
+  const [proveedorIdSel, setProveedorIdSel] = useState<string>("");
+  const [clienteIdSel, setClienteIdSel] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -111,6 +115,19 @@ export function UploadCfdiForm({
     (c) =>
       (c.rfc ?? "").toUpperCase() === (rfcContraparte ?? "").toUpperCase(),
   );
+
+  // Auto-seleccionar proveedor/cliente cuando hay match RFC y el user no
+  // ha tocado el picker todavía.
+  useEffect(() => {
+    if (proveedorMatch && !proveedorIdSel) {
+      setProveedorIdSel(proveedorMatch.id);
+    }
+  }, [proveedorMatch, proveedorIdSel]);
+  useEffect(() => {
+    if (clienteMatch && !clienteIdSel) {
+      setClienteIdSel(clienteMatch.id);
+    }
+  }, [clienteMatch, clienteIdSel]);
 
   // OC/OT sugeridos por empresa + monto similar
   const ocsSugeridas = parsed && empresaId
@@ -400,23 +417,22 @@ export function UploadCfdiForm({
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {!esEmitido && (
                   <div className="space-y-1">
-                    <Label htmlFor="proveedor_id" className="text-xs">
-                      Proveedor
-                    </Label>
-                    <select
-                      id="proveedor_id"
-                      name="proveedor_id"
-                      defaultValue={proveedorMatch?.id ?? ""}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">— Sin vincular —</option>
-                      {proveedores.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {p.razon_social} ({p.rfc})
-                        </option>
-                      ))}
-                    </select>
-                    {proveedorMatch && (
+                    <Label className="text-xs">Proveedor</Label>
+                    <ProveedorPicker
+                      proveedores={proveedores.map((p) => ({
+                        id: p.id,
+                        razon_social: p.razon_social,
+                        rfc: p.rfc,
+                        nombre_comercial:
+                          (p as { nombre_comercial?: string | null })
+                            .nombre_comercial ?? null,
+                      }))}
+                      value={proveedorIdSel}
+                      onChange={setProveedorIdSel}
+                      empresaId={empresaId || null}
+                      required={false}
+                    />
+                    {proveedorMatch && proveedorIdSel === proveedorMatch.id && (
                       <p className="text-[10px] text-emerald-700">
                         ✓ Auto-detectado por RFC
                       </p>
@@ -425,23 +441,22 @@ export function UploadCfdiForm({
                 )}
                 {esEmitido && (
                   <div className="space-y-1">
-                    <Label htmlFor="cliente_id" className="text-xs">
-                      Cliente
-                    </Label>
-                    <select
-                      id="cliente_id"
-                      name="cliente_id"
-                      defaultValue={clienteMatch?.id ?? ""}
-                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    >
-                      <option value="">— Sin vincular —</option>
-                      {clientes.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.razon_social} {c.rfc ? `(${c.rfc})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {clienteMatch && (
+                    <Label className="text-xs">Cliente</Label>
+                    <ClientePicker
+                      clientes={clientes.map((c) => ({
+                        id: c.id,
+                        razon_social: c.razon_social,
+                        rfc: c.rfc,
+                        nombre_comercial:
+                          (c as { nombre_comercial?: string | null })
+                            .nombre_comercial ?? null,
+                      }))}
+                      value={clienteIdSel}
+                      onChange={setClienteIdSel}
+                      empresaId={empresaId || null}
+                      required={false}
+                    />
+                    {clienteMatch && clienteIdSel === clienteMatch.id && (
                       <p className="text-[10px] text-emerald-700">
                         ✓ Auto-detectado por RFC
                       </p>

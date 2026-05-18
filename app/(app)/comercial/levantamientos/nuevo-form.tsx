@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { ClientePicker } from "@/components/shared/cliente-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -43,6 +44,7 @@ export function NuevoLevantamientoForm({
   );
   const [open, setOpen] = useState(false);
   const [empresaId, setEmpresaId] = useState<string>(empresas[0]?.id ?? "");
+  const [clienteIdSel, setClienteIdSel] = useState<string>("");
 
   const clientesEmpresa = clientes.filter(() => true); // clientes son globales
   const oportunidadesEmpresa = oportunidades.filter(
@@ -101,20 +103,22 @@ export function NuevoLevantamientoForm({
           </select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="cliente_id">Cliente (opcional)</Label>
-          <select
-            id="cliente_id"
-            name="cliente_id"
-            defaultValue=""
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">— sin asignar —</option>
-            {clientesEmpresa.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.razon_social}
-              </option>
-            ))}
-          </select>
+          <Label>Cliente (opcional)</Label>
+          <ClientePicker
+            clientes={clientesEmpresa.map((c) => ({
+              id: c.id,
+              razon_social: c.razon_social,
+              rfc:
+                (c as { rfc?: string | null }).rfc ?? null,
+              nombre_comercial:
+                (c as { nombre_comercial?: string | null })
+                  .nombre_comercial ?? null,
+            }))}
+            value={clienteIdSel}
+            onChange={setClienteIdSel}
+            empresaId={empresaId || null}
+            required={false}
+          />
         </div>
       </div>
 
