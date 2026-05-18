@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { EmpleadoPicker } from "@/components/shared/empleado-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,9 +84,18 @@ export function VehiculoForm({
   const [empresaSel, setEmpresaSel] = useState<string>(
     defaults?.empresa_id ?? "",
   );
-  const empleadosFiltrados = empresaSel
-    ? empleados.filter((e) => e.empresa_id === empresaSel)
-    : empleados;
+  const [empleadoIdSel, setEmpleadoIdSel] = useState<string>(
+    defaults?.empleado_id ?? "",
+  );
+  // Si cambia la empresa y el empleado seleccionado no pertenece a esa
+  // empresa, limpiar la selección (consistencia con la regla del form).
+  useEffect(() => {
+    if (!empresaSel) return;
+    const sel = empleados.find((e) => e.id === empleadoIdSel);
+    if (sel && sel.empresa_id !== empresaSel) {
+      setEmpleadoIdSel("");
+    }
+  }, [empresaSel, empleadoIdSel, empleados]);
 
   useEffect(() => {
     if (state.ok && state.id) {
@@ -408,27 +418,29 @@ export function VehiculoForm({
           y captura el empleado en cada carga.
         </p>
         <div className="mt-3">
-          <Label htmlFor="empleado_id" className="text-sm">
-            Empleado asignado
-          </Label>
-          <select
-            id="empleado_id"
-            name="empleado_id"
-            defaultValue={defaults?.empleado_id ?? ""}
-            disabled={!empresaSel}
-            className="mt-1 h-9 w-full rounded-md border border-input bg-background px-3 text-sm disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <option value="">— Sin asignar —</option>
-            {empleadosFiltrados.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.nombre_completo}
-                {e.puesto ? ` · ${e.puesto}` : ""}
-              </option>
-            ))}
-          </select>
-          {!empresaSel && (
+          <Label className="text-sm">Empleado asignado</Label>
+          {empresaSel ? (
+            <div className="mt-1">
+              <EmpleadoPicker
+                empleados={empleados.map((e) => ({
+                  id: e.id,
+                  nombre_completo: e.nombre_completo,
+                  numero_empleado:
+                    (e as { numero_empleado?: string }).numero_empleado ??
+                    "",
+                  puesto: e.puesto ?? null,
+                  empresa_id: e.empresa_id,
+                }))}
+                value={empleadoIdSel}
+                onChange={setEmpleadoIdSel}
+                empresaId={empresaSel}
+                filtroEmpresaId={empresaSel}
+                required={false}
+              />
+            </div>
+          ) : (
             <p className="mt-1 text-[11.5px] text-amber-700">
-              Selecciona primero la empresa para ver sus empleados.
+              Selecciona primero la empresa para asignar empleado.
             </p>
           )}
         </div>

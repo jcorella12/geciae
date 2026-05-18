@@ -222,3 +222,105 @@ export async function toggleActivoEmpleado(
   revalidatePath("/personas");
   return { ok: true, error: null };
 }
+
+/**
+ * S3-T3 — Creación rápida de empleado desde formularios externos
+ * (asignación de vehículo, captura de viático, etc.).
+ *
+ * Solo requiere nombre + puesto + empresa + fecha_ingreso (default = hoy).
+ * Se autogenera numero_empleado (siguiente disponible en la empresa).
+ * CURP se marca con placeholder `PEND-{uuid}` que el usuario completa
+ * después en la ficha del empleado.
+ */
+export async function crearEmpleadoRapido(input: {
+  nombre_completo: string;
+  puesto: string;
+  empresa_id: string;
+  fecha_ingreso?: string | null;
+  categoria?: "planta" | "por_obra" | "repse";
+  email_personal?: string | null;
+}): Promise<{
+  ok: boolean;
+  error: string | null;
+  empleado?: {
+    id: string;
+    nombre_completo: string;
+    numero_empleado: string;
+    puesto: string;
+    empresa_id: string;
+  };
+}> {
+  const nombre = input.nombre_completo?.trim() ?? "";
+  const puesto = input.puesto?.trim() ?? "";
+  if (nombre.length < 3) {
+    return { ok: false, error: "Nombre demasiado corto." };
+  }
+  if (puesto.length < 2) {
+    return { ok: false, error: "Falta el puesto." };
+  }
+
+  const v = await obtenerVinculos();
+  if (!puedeGestionarEmpleadosEn(v, input.empresa_id)) {
+    return {
+      ok: false,
+      error: "Sin permiso para crear empleados en esta empresa.",
+    };
+  }
+
+  const supabase = createClient();
+
+  // Generar siguiente numero_empleado: MAX(numero_empleado::int)+1 para la
+  // empresa. Si no son numéricos (ej. "EMP-001"), arrancar de 1.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: ultimos } = await (supabase as any)
+    .from("empleados")
+    .select("numero_empleado")
+    .eq("empresa_id", input.empresa_id)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  let proximoNum = 1;
+  for (const u of (ultimos ?? []) as Array<{ numero_empleado: string }>) {
+    const match = String(u.numero_empleado).match(/(\d+)\s*$/);
+    if (match) {
+      const n = parseInt(match[1], 10);
+      if (n >= proximoNum) proximoNum = n + 1;
+    }
+  }
+  const numeroEmpleado = String(proximoNum).padStart(4, "0");
+
+  const fechaIngreso =
+    input.fecha_ingreso ?? new Date().toISOString().slice(0, 10);
+
+  // CURP placeholder único. El usuario debe completarlo después.
+  const curpPlaceholder = `PEND-${crypto.randomUUID().slice(0, 14).toUpperCase()}`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: nuevo, error } = await (supabase as any)
+    .from("empleados")
+    .insert({
+      empresa_id: input.empresa_id,
+      numero_empleado: numeroEmpleado,
+      nombre_completo: nombre,
+      puesto,
+      categoria: input.categoria ?? "planta",
+      fecha_ingreso: fechaIngreso,
+      curp: curpPlaceholder,
+      email_personal: input.email_personal?.trim() || null,
+      activo: true,
+      observaciones:
+        "Creado vía quick-create. Completar CURP, RFC, NSS y demás datos en su ficha.",
+    })
+    .select("id, nombre_completo, numero_empleado, puesto, empresa_id")
+    .single();
+
+  if (error || !nuevo) {
+    return {
+      ok: false,
+      error: error?.message ?? "Error al crear empleado.",
+    };
+  }
+
+  revalidatePath("/personas");
+  return { ok: true, error: null, empleado: nuevo };
+}

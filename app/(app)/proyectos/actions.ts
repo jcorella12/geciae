@@ -178,3 +178,91 @@ export async function sugerirCodigoProyecto(
   const next = (count ?? 0) + 1;
   return `${empresaCodigo}-${year}-${String(next).padStart(3, "0")}`;
 }
+
+/**
+ * S3-T3 — Creación rápida de proyecto desde formularios externos
+ * (asignación de OC, viático, ticket, etc.) cuando el proyecto no existe.
+ *
+ * Solo requiere: nombre + empresa_id + cliente_id. El código se autogenera
+ * con `sugerirCodigoProyecto`. El estado arranca como "cotizacion" — el
+ * PM puede mover al estado real desde la ficha del proyecto.
+ */
+export async function crearProyectoRapido(input: {
+  nombre: string;
+  empresa_id: string;
+  cliente_id: string;
+  codigo?: string;
+  tipo?: string | null;
+}): Promise<{
+  ok: boolean;
+  error: string | null;
+  proyecto?: {
+    id: string;
+    codigo: string;
+    nombre: string;
+    empresa_id: string;
+    cliente_id: string;
+  };
+}> {
+  const nombre = input.nombre?.trim() ?? "";
+  if (nombre.length < 3) {
+    return { ok: false, error: "Nombre demasiado corto." };
+  }
+
+  const v = await obtenerVinculos();
+  if (!puedeGestionarProyectosEn(v, input.empresa_id)) {
+    return {
+      ok: false,
+      error: "Sin permiso para crear proyectos en esta empresa.",
+    };
+  }
+
+  const supabase = createClient();
+
+  // Resolver código: si no vino, autogenerar usando el código de la empresa.
+  let codigo = input.codigo?.trim() ?? "";
+  if (!codigo) {
+    const { data: emp } = await supabase
+      .from("empresas")
+      .select("codigo")
+      .eq("id", input.empresa_id)
+      .maybeSingle();
+    if (!emp) {
+      return { ok: false, error: "Empresa no encontrada." };
+    }
+    codigo = await sugerirCodigoProyecto(emp.codigo);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: nuevo, error } = await (supabase as any)
+    .from("proyectos")
+    .insert({
+      empresa_id: input.empresa_id,
+      cliente_id: input.cliente_id,
+      codigo,
+      nombre,
+      tipo: (input.tipo || "otro") as never,
+      estado: "cotizacion",
+      marca_visible_id: input.empresa_id,
+      semaforo: "verde",
+      activo: true,
+    })
+    .select("id, codigo, nombre, empresa_id, cliente_id")
+    .single();
+
+  if (error || !nuevo) {
+    if (error?.message?.includes("duplicate")) {
+      return {
+        ok: false,
+        error: `Ya existe un proyecto con código ${codigo} en esta empresa.`,
+      };
+    }
+    return {
+      ok: false,
+      error: error?.message ?? "Error al crear proyecto.",
+    };
+  }
+
+  revalidatePath("/proyectos");
+  return { ok: true, error: null, proyecto: nuevo };
+}
