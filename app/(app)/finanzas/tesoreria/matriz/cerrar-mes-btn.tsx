@@ -5,6 +5,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 
 import { cerrarInteresesMes } from "../prestamos/actions";
 
@@ -26,12 +27,14 @@ export function CerrarMesBtn({ anio, mes }: { anio: number; mes: number }) {
     start(async () => {
       const r = await cerrarInteresesMes(anio, mes);
       if (!r.ok) {
-        alert(`Error: ${r.error}`);
+        notify({ message: r.error ?? "Error", variant: "error" });
         return;
       }
-      alert(
-        `✓ ${r.count} par(es) de empresas cerrados. Snapshot guardado en cierres_intereses_mensuales.`,
-      );
+      notify({
+        message: `${r.count} par(es) de empresas cerrados. Snapshot guardado.`,
+        variant: "success",
+        title: "Cierre completo",
+      });
     });
   }
 

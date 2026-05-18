@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import type { EstadoPrestamo } from "@/lib/prestamos/state";
 
 import {
@@ -46,7 +47,7 @@ export function PrestamoActions({
     if (!(await confirm("¿Aprobar este préstamo?"))) return;
     startTransition(async () => {
       const r = await aprobarPrestamo(prestamoId);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 
@@ -56,7 +57,7 @@ export function PrestamoActions({
         prestamoId,
         comprobante.trim() || null,
       );
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else setShowEjecutar(false);
     });
   }
@@ -68,7 +69,7 @@ export function PrestamoActions({
       return;
     startTransition(async () => {
       const r = await confirmarRecepcionPrestamo(prestamoId);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 
@@ -76,7 +77,7 @@ export function PrestamoActions({
     if (!motivoCancel.trim()) return;
     startTransition(async () => {
       const r = await cancelarPrestamo(prestamoId, motivoCancel.trim());
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else {
         setShowCancelar(false);
         setMotivoCancel("");
@@ -87,7 +88,7 @@ export function PrestamoActions({
   function pagar(formData: FormData) {
     startTransition(async () => {
       const r = await registrarPagoPrestamo(prestamoId, formData);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else setShowPago(false);
     });
   }

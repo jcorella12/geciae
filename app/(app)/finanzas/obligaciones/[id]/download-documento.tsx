@@ -5,6 +5,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 
 import {
   eliminarAcuse,
@@ -35,7 +36,7 @@ export function DownloadDocumento({
   const onDownload = async () => {
     const url = await getDownloadUrlObligacion(path);
     if (url) window.open(url, "_blank");
-    else alert("No se pudo generar URL de descarga.");
+    else notify({ message: "No se pudo generar URL de descarga.", variant: "error" });
   };
 
   const onEliminar = async () => {
@@ -51,7 +52,7 @@ export function DownloadDocumento({
     startTransition(async () => {
       const fn = kind === "acuse" ? eliminarAcuse : eliminarComprobante;
       const res = await fn(obligacionId);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   };
 

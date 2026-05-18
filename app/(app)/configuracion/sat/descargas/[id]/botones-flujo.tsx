@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { promptInput } from "@/components/ui/prompt-input";
 import type { DescargaSat, EstadoDescargaSat } from "@/lib/sat/state";
 
 import {
@@ -69,11 +70,15 @@ export function BotonesFlujo({ descarga }: { descarga: DescargaSat }) {
     });
   }
 
-  function cancelar() {
-    const motivo = window.prompt(
-      "Motivo de cancelación (mínimo 10 caracteres):",
-    );
-    if (!motivo || motivo.length < 10) return;
+  async function cancelar() {
+    const motivo = await promptInput({
+      title: "Cancelar descarga SAT",
+      message: "Indica el motivo de cancelación (mínimo 10 caracteres).",
+      label: "Motivo",
+      minLength: 10,
+      multiline: true,
+    });
+    if (!motivo) return;
     setError(null);
     startTransition(async () => {
       const r = await cancelarDescarga(descarga.id, motivo);

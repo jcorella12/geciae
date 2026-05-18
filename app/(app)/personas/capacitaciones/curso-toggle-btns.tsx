@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 
 import { desactivarCurso, reactivarCurso } from "./actions";
 
@@ -18,7 +19,7 @@ export function CursoToggleBtns({
   function toggle() {
     startTransition(async () => {
       const r = activo ? await desactivarCurso(id) : await reactivarCurso(id);
-      if (!r.ok) alert(r.error ?? "Error");
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 

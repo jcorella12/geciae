@@ -4,6 +4,7 @@ import { Download } from "lucide-react";
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 
 /**
  * Botón genérico para exportar un endpoint a Excel.
@@ -25,7 +26,7 @@ export function BotonExportarExcel({
       try {
         const res = await fetch(endpoint, { credentials: "include" });
         if (!res.ok) {
-          alert(`Error: ${res.status}`);
+          notify({ message: `Error HTTP ${res.status}`, variant: "error" });
           return;
         }
         const blob = await res.blob();
@@ -36,7 +37,10 @@ export function BotonExportarExcel({
         a.click();
         URL.revokeObjectURL(url);
       } catch (e) {
-        alert(`Error al exportar: ${(e as Error).message}`);
+        notify({
+          message: `Error al exportar: ${(e as Error).message}`,
+          variant: "error",
+        });
       }
     });
   }

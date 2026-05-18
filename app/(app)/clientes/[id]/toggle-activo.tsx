@@ -4,6 +4,7 @@ import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { notify } from "@/components/ui/notify";
 
 import { toggleActivoCliente } from "../actions";
 
@@ -27,7 +28,7 @@ export function ToggleActivoButton({
       return;
     startTransition(async () => {
       const res = await toggleActivoCliente(clienteId, !activo);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   }
 

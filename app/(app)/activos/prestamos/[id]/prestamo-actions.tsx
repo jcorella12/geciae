@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { notify } from "@/components/ui/notify";
 
 import {
   aprobarPrestamo,
@@ -39,7 +40,7 @@ export function PrestamoActions({
   function handle(fn: () => Promise<{ ok: boolean; error: string | null }>) {
     startTransition(async () => {
       const r = await fn();
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else window.location.reload();
     });
   }

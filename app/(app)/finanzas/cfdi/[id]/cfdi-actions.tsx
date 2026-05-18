@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 
 import { cancelarCfdi, registrarPagoCfdi } from "../actions";
 
@@ -41,7 +42,7 @@ export function CfdiActions({
   function pagar(formData: FormData) {
     start(async () => {
       const r = await registrarPagoCfdi(cfdiId, formData);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else setShowPago(false);
     });
   }
@@ -53,7 +54,7 @@ export function CfdiActions({
         motivo,
         motivo === "01" ? uuidSust.trim() || undefined : undefined,
       );
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else setShowCancel(false);
     });
   }

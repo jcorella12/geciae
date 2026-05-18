@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { promptInput } from "@/components/ui/prompt-input";
 
 import {
   cancelarOT,
@@ -40,13 +41,14 @@ export function OTActionButtons(props: OTAccionesProps) {
     });
   }
 
-  function pedirMotivo(label: string): string | null {
-    const m = window.prompt(`Motivo de ${label} (mín 5 caracteres):`);
-    if (!m || m.trim().length < 5) {
-      alert("Motivo requerido (al menos 5 caracteres).");
-      return null;
-    }
-    return m.trim();
+  async function pedirMotivo(label: string): Promise<string | null> {
+    return await promptInput({
+      title: `Motivo de ${label}`,
+      message: `Indica el motivo de ${label} (mínimo 5 caracteres).`,
+      label: "Motivo",
+      minLength: 5,
+      multiline: true,
+    });
   }
 
   const esOrigen = props.empresasGestionables.includes(props.origenId);
@@ -156,8 +158,8 @@ export function OTActionButtons(props: OTAccionesProps) {
             <Button
               size="sm"
               variant="outline"
-              onClick={() => {
-                const motivo = pedirMotivo("cancelación");
+              onClick={async () => {
+                const motivo = await pedirMotivo("cancelación");
                 if (!motivo) return;
                 run(() => cancelarOT(props.ocId, motivo));
               }}

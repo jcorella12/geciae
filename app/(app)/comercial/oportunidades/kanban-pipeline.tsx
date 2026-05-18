@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
+import { notify } from "@/components/ui/notify";
 import {
   COLOR_ESTADO_OPORTUNIDAD,
   ETAPAS_PIPELINE,
@@ -85,7 +86,7 @@ export function KanbanPipeline({
         setItems((prev) =>
           prev.map((x) => (x.id === id ? { ...x, estado: op.estado } : x)),
         );
-        alert(result.error ?? "Error al mover");
+        notify({ message: result.error ?? "Error al mover", variant: "error" });
       }
     });
   };

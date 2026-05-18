@@ -7,6 +7,7 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import {
   ETIQUETA_KPI,
   initialExtraerKPIsState,
@@ -225,7 +226,7 @@ function FirmadosBlock({
       fd.set("efm_id", efmId);
       fd.set("firmados", firmados ? "false" : "true");
       const res = await marcarFirmados({ ok: false, error: null }, fd);
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   };
 

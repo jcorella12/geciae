@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 
 export function TiieSyncButton({ habilitado }: { habilitado: boolean }) {
   const [pending, start] = useTransition();
@@ -17,15 +18,19 @@ export function TiieSyncButton({ habilitado }: { habilitado: boolean }) {
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          alert(`Error: ${json.error ?? "desconocido"}`);
+          notify({
+            message: json.error ?? "Error desconocido",
+            variant: "error",
+          });
           return;
         }
-        alert(
-          `TIIE actualizada: ${json.fecha} → ${(Number(json.tasa) * 100).toFixed(4)}%`,
-        );
+        notify({
+          message: `TIIE actualizada: ${json.fecha} → ${(Number(json.tasa) * 100).toFixed(4)}%`,
+          variant: "success",
+        });
         window.location.reload();
       } catch (e) {
-        alert(`Error: ${(e as Error).message}`);
+        notify({ message: (e as Error).message, variant: "error" });
       }
     });
   }
@@ -54,13 +59,19 @@ export function TiieRangeForm({ habilitado }: { habilitado: boolean }) {
         });
         const json = await res.json();
         if (!res.ok || !json.ok) {
-          alert(`Error: ${json.error ?? "desconocido"}`);
+          notify({
+            message: json.error ?? "Error desconocido",
+            variant: "error",
+          });
           return;
         }
-        alert(`Sincronizadas ${json.insertados} fechas.`);
+        notify({
+          message: `Sincronizadas ${json.insertados} fechas.`,
+          variant: "success",
+        });
         window.location.reload();
       } catch (e) {
-        alert(`Error: ${(e as Error).message}`);
+        notify({ message: (e as Error).message, variant: "error" });
       }
     });
   }

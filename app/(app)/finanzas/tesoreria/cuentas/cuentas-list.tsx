@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { notify } from "@/components/ui/notify";
 import {
   Table,
   TableBody,
@@ -68,7 +69,7 @@ export function CuentasList({
     startTransition(async () => {
       const res = await actualizarSaldo(editId, v);
       if (!res.ok) {
-        alert(`Error: ${res.error}`);
+        notify({ message: res.error ?? "Error", variant: "error" });
         return;
       }
       setEditId(null);
@@ -78,7 +79,7 @@ export function CuentasList({
   function toggleActiva(c: Cuenta) {
     startTransition(async () => {
       const res = await toggleCuentaActiva(c.id, !(c.activa ?? false));
-      if (!res.ok) alert(`Error: ${res.error}`);
+      if (!res.ok) notify({ message: res.error ?? "Error", variant: "error" });
     });
   }
 

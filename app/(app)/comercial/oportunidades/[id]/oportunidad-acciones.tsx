@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { promptInput } from "@/components/ui/prompt-input";
 import {
   ETAPAS_PIPELINE,
   ETIQUETA_ESTADO_OPORTUNIDAD,
@@ -51,12 +52,15 @@ export function OportunidadAcciones({
     });
   }
 
-  function perder() {
-    const motivo = window.prompt("Motivo de pérdida (mín 3 caracteres):");
-    if (!motivo || motivo.trim().length < 3) {
-      if (motivo !== null) alert("Motivo requerido (mín 3 caracteres).");
-      return;
-    }
+  async function perder() {
+    const motivo = await promptInput({
+      title: "Marcar como perdida",
+      message: "Indica el motivo por el que se pierde esta oportunidad.",
+      label: "Motivo de pérdida",
+      minLength: 3,
+      multiline: true,
+    });
+    if (!motivo) return;
     setError(null);
     startTransition(async () => {
       const r = await cerrarOportunidadPerdida(oportunidadId, motivo);

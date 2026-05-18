@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
+import { notify } from "@/components/ui/notify";
 
 import { devengarInteresesHoy } from "../prestamos/actions";
 
@@ -13,10 +14,13 @@ export function DevengarBtn() {
     start(async () => {
       const r = await devengarInteresesHoy();
       if (!r.ok) {
-        alert(`Error: ${r.error}`);
+        notify({ message: r.error ?? "Error", variant: "error" });
         return;
       }
-      alert(`${r.count} préstamo(s) devengaron intereses del día.`);
+      notify({
+        message: `${r.count} préstamo(s) devengaron intereses del día.`,
+        variant: "success",
+      });
     });
   }
 

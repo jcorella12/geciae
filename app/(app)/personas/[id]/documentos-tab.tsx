@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 import {
   Table,
   TableBody,
@@ -71,7 +72,7 @@ export function DocumentosTab({
       return;
     start(async () => {
       const r = await eliminarDocumentoEmpleado(id);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 

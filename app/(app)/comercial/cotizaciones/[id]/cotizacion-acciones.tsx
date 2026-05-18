@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
+import { promptInput } from "@/components/ui/prompt-input";
 import type { EstadoCotizacion } from "@/lib/cotizaciones/state";
 
 import {
@@ -44,13 +45,14 @@ export function CotizacionAcciones({
     });
   }
 
-  function pedirMotivo(): string | null {
-    const m = window.prompt("Motivo de rechazo (mín 5 caracteres):");
-    if (!m || m.trim().length < 5) {
-      alert("Motivo requerido (al menos 5 caracteres).");
-      return null;
-    }
-    return m.trim();
+  async function pedirMotivo(): Promise<string | null> {
+    return await promptInput({
+      title: "Motivo de rechazo",
+      message: "Indica por qué se rechaza esta cotización.",
+      label: "Motivo de rechazo",
+      minLength: 5,
+      multiline: true,
+    });
   }
 
   return (
@@ -131,8 +133,8 @@ export function CotizacionAcciones({
             <Button
               size="sm"
               variant="destructive"
-              onClick={() => {
-                const motivo = pedirMotivo();
+              onClick={async () => {
+                const motivo = await pedirMotivo();
                 if (!motivo) return;
                 run(() => marcarRechazada(cotizacionId, motivo));
               }}

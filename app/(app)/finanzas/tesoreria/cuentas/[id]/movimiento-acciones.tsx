@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { confirm } from "@/components/ui/confirm";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
 
 import {
   conciliarConCFDI,
@@ -59,7 +60,7 @@ export function MovimientoAcciones({
         s.tipo === "cfdi"
           ? await conciliarConCFDI(movimientoId, s.match_id)
           : await conciliarConOC(movimientoId, s.match_id);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else setOpen(false);
     });
   }
@@ -68,14 +69,14 @@ export function MovimientoAcciones({
     if (!(await confirm("¿Desconciliar este movimiento?"))) return;
     start(async () => {
       const r = await desconciliar(movimientoId);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
     });
   }
 
   function marcarManual() {
     start(async () => {
       const r = await marcarConciliadoSinCFDI(movimientoId, notas);
-      if (!r.ok) alert(`Error: ${r.error}`);
+      if (!r.ok) notify({ message: r.error ?? "Error", variant: "error" });
       else {
         setShowManual(false);
         setNotas("");
