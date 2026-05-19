@@ -14,13 +14,19 @@ import { useRef, useState, useTransition, type DragEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { notify } from "@/components/ui/notify";
-import { matchCuentaPorNombre, type CuentaMin } from "@/lib/edoctas/auto-match";
+import {
+  matchCuenta,
+  matchCuentaPorNombre,
+  type ContentHints,
+  type CuentaMin,
+} from "@/lib/edoctas/auto-match";
 
 import {
   extraerSaldoEdocuentaIA,
   procesarExpFile,
   subirArchivoEdocta,
 } from "../[id]/actions";
+import { analizarArchivoEdocta } from "./actions";
 
 type Cuenta = CuentaMin & { empresa_id: string };
 
@@ -34,7 +40,16 @@ type FileSlot = {
   /** Pista de match auto (informativo). */
   pistaMatch: string;
   confianza: "alta" | "media" | "baja" | "ninguna";
-  status: "pending" | "uploading" | "uploaded" | "processing" | "done" | "error";
+  /** Pistas del contenido del archivo (después de análisis server-side). */
+  content?: ContentHints;
+  status:
+    | "pending"
+    | "analyzing"
+    | "uploading"
+    | "uploaded"
+    | "processing"
+    | "done"
+    | "error";
   estadoId?: string;
   message?: string;
 };
@@ -76,6 +91,7 @@ export function ImportEdoctasClient({ cuentas }: { cuentas: Cuenta[] }) {
   const [isPending, startTransition] = useTransition();
 
   function agregarArchivos(files: File[]) {
+    // 1. Crear slots con match inicial por NOMBRE (visible inmediato).
     const nuevos: FileSlot[] = files.map((f) => {
       const formato = detectarFormato(f.name);
       const match = matchCuentaPorNombre(f.name, cuentas);
@@ -87,10 +103,65 @@ export function ImportEdoctasClient({ cuentas }: { cuentas: Cuenta[] }) {
         cuentaId: match.cuentaId,
         pistaMatch: match.pista,
         confianza: match.confianza,
-        status: "pending",
+        status: formato === "desconocido" ? "pending" : "analyzing",
       };
     });
     setSlots((prev) => [...prev, ...nuevos]);
+
+    // 2. Analizar contenido server-side en paralelo (descarta nombre si el
+    //    contenido encuentra match mejor).
+    startTransition(async () => {
+      await Promise.all(
+        nuevos
+          .filter((s) => s.formato !== "desconocido")
+          .map(async (slot) => {
+            const fd = new FormData();
+            fd.append("file", slot.file);
+            try {
+              const r = await analizarArchivoEdocta(fd);
+              setSlots((prev) =>
+                prev.map((s) => {
+                  if (s.uid !== slot.uid) return s;
+                  if (!r.ok || !r.content) {
+                    // El análisis falló — dejamos el match por nombre.
+                    return {
+                      ...s,
+                      status: "pending",
+                      pistaMatch: r.hint || s.pistaMatch,
+                    };
+                  }
+                  // Re-match combinando nombre + contenido.
+                  const refinedMatch = matchCuenta(
+                    slot.filename,
+                    cuentas,
+                    r.content,
+                  );
+                  return {
+                    ...s,
+                    status: "pending",
+                    cuentaId: refinedMatch.cuentaId ?? s.cuentaId,
+                    confianza:
+                      refinedMatch.confianza === "ninguna"
+                        ? s.confianza
+                        : refinedMatch.confianza,
+                    pistaMatch:
+                      refinedMatch.cuentaId != null
+                        ? refinedMatch.pista
+                        : `${r.hint} · ${s.pistaMatch}`,
+                    content: r.content,
+                  };
+                }),
+              );
+            } catch {
+              setSlots((prev) =>
+                prev.map((s) =>
+                  s.uid === slot.uid ? { ...s, status: "pending" } : s,
+                ),
+              );
+            }
+          }),
+      );
+    });
   }
 
   function handleDrop(e: DragEvent) {
@@ -463,6 +534,11 @@ export function ImportEdoctasClient({ cuentas }: { cuentas: Cuenta[] }) {
                           </>
                         )}
                       </Button>
+                    )}
+                    {s.status === "analyzing" && (
+                      <span className="text-[11px] text-violet-700">
+                        Leyendo…
+                      </span>
                     )}
                     {(s.status === "uploading" || s.status === "processing") && (
                       <span className="text-[11px] text-violet-700">

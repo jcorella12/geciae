@@ -55,6 +55,10 @@ const nextConfig = {
       "@nodecfdi/sat-ws-descarga-masiva",
       "@nodecfdi/credentials",
       "yauzl-promise",
+      // pdf-parse usa pdfjs-dist con dependencias nativas / canvas; mantenerlo
+      // fuera del bundle de Next evita "ERR_REQUIRE_ESM" y bundle bloat.
+      "pdf-parse",
+      "pdfjs-dist",
     ],
   },
   env: {
