@@ -2,7 +2,10 @@
 
 import { useEffect } from "react";
 
+import { completarPaso } from "@/app/(app)/comercial/levantamientos/actions";
+import { crearViatico } from "@/app/(app)/personas/[id]/actions";
 import { registrarEventoBitacora } from "@/app/(app)/proyectos/[id]/bitacora/actions";
+import { crearReporte } from "@/app/(app)/proyectos/[id]/reportes/actions";
 import { registerHandler, type QueueEntry } from "@/lib/offline/queue";
 
 /**
@@ -29,6 +32,43 @@ type BitacoraPayload = {
   tarea_id?: string;
   es_critica: boolean;
   visible_cliente: boolean;
+};
+
+type ViaticoPayload = {
+  empleado_id: string;
+  empresa_id: string;
+  proyecto_id?: string;
+  fecha_gasto: string;
+  concepto: string;
+  categoria: string;
+  monto: string;
+  observaciones?: string;
+};
+
+type ReportePayload = {
+  proyecto_id: string;
+  modo: "manual";
+  tipo: string;
+  severidad: string;
+  titulo: string;
+  resumen?: string;
+  contenido?: string;
+  fecha_evento?: string;
+  fecha_reporte: string;
+  ubicacion?: string;
+  impacto?: string;
+  accion_correctiva?: string;
+  fecha_compromiso?: string;
+  responsable_seguimiento?: string;
+  tarea_id?: string;
+  visible_cliente: boolean;
+  estado: string;
+};
+
+type LevantamientoCompletarPasoPayload = {
+  levantamiento_id: string;
+  paso_numero: string;
+  observaciones: string;
 };
 
 function payloadToFormData(payload: Record<string, unknown>): FormData {
@@ -59,7 +99,45 @@ export function OfflineHandlers() {
       },
     );
 
-    // Agregar más handlers acá (viáticos, fotos, etc.)
+    // ----- Viáticos -----
+    // Nota: el ticket (File) NO se incluye en payload — el viático se crea
+    // sin foto del ticket cuando se sincroniza offline.
+    registerHandler<ViaticoPayload>(
+      "viaticos.create",
+      async (entry: QueueEntry<ViaticoPayload>) => {
+        const fd = payloadToFormData(entry.payload as Record<string, unknown>);
+        const r = await crearViatico(
+          { ok: false, viaticoId: null, error: null },
+          fd,
+        );
+        return { ok: !!r.ok, error: r.error ?? null };
+      },
+    );
+
+    // ----- Reportes (solo modo manual; modo PDF requiere conexión) -----
+    registerHandler<ReportePayload>(
+      "reporte.create",
+      async (entry: QueueEntry<ReportePayload>) => {
+        const fd = payloadToFormData(entry.payload as Record<string, unknown>);
+        const r = await crearReporte(
+          { ok: false, error: null, reporteId: null },
+          fd,
+        );
+        return { ok: !!r.ok, error: r.error ?? null };
+      },
+    );
+
+    // ----- Levantamientos: completar paso -----
+    registerHandler<LevantamientoCompletarPasoPayload>(
+      "levantamiento.completarPaso",
+      async (entry: QueueEntry<LevantamientoCompletarPasoPayload>) => {
+        const fd = payloadToFormData(entry.payload as Record<string, unknown>);
+        const r = await completarPaso({ ok: false, error: null }, fd);
+        return { ok: !!r.ok, error: r.error ?? null };
+      },
+    );
+
+    // Agregar más handlers acá (fotos, etc.)
   }, []);
 
   return null;
