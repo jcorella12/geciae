@@ -1,6 +1,6 @@
 "use client";
 
-import { Layers } from "lucide-react";
+import { ArrowDownAZ, Layers, TrendingDown, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 
@@ -20,19 +20,55 @@ const codigoBgSoft: Record<string, string> = {
   LIMSON: "border-limson/30 text-limson hover:bg-limson/10",
 };
 
+type Orden = "empresa" | "banco" | "saldo_desc" | "saldo_asc";
+
+const ORDENES: Array<{
+  value: Orden;
+  label: string;
+  icon: typeof Layers;
+  title: string;
+}> = [
+  {
+    value: "empresa",
+    label: "Empresa",
+    icon: Layers,
+    title: "Ordenar por empresa (default; útil para revisar por compañía)",
+  },
+  {
+    value: "saldo_desc",
+    label: "Saldo ↓",
+    icon: TrendingDown,
+    title: "Mayor saldo primero (útil para ver dónde está el dinero)",
+  },
+  {
+    value: "saldo_asc",
+    label: "Saldo ↑",
+    icon: TrendingUp,
+    title: "Menor saldo primero (útil para detectar cuentas que requieren fondeo)",
+  },
+  {
+    value: "banco",
+    label: "Banco",
+    icon: ArrowDownAZ,
+    title: "Alfabético por banco",
+  },
+];
+
 /**
- * Chips de filtro por empresa + toggle "Agrupar por empresa" para la lista
- * de cuentas bancarias. Estado en URL (searchParams) para que sea
- * compartible y respete back/forward del navegador.
+ * Chips de filtro por empresa + toggle "Agrupar por empresa" + selector de
+ * orden para la lista de cuentas bancarias. Estado en URL (searchParams) para
+ * que sea compartible y respete back/forward del navegador.
  */
 export function CuentasFilters({
   empresas,
   empresaFiltro,
   agrupar,
+  orden,
 }: {
   empresas: Array<{ codigo: string; nombre: string }>;
   empresaFiltro: string;
   agrupar: boolean;
+  orden: Orden;
 }) {
   const sp = useSearchParams();
 
@@ -49,6 +85,7 @@ export function CuentasFilters({
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
+      {/* Filtro por empresa */}
       <Link
         href={hrefWith({ empresa: null })}
         className={cn(
@@ -83,11 +120,12 @@ export function CuentasFilters({
         );
       })}
 
-      {/* Separador visual */}
+      {/* Separador */}
       <span aria-hidden className="mx-1 h-5 w-px bg-divider" />
 
+      {/* Toggle agrupar */}
       <Link
-        href={hrefWith({ agrupar: agrupar ? null : "1" })}
+        href={hrefWith({ agrupar: agrupar ? "0" : null })}
         className={cn(
           "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[12px] font-medium transition-colors",
           agrupar
@@ -95,10 +133,44 @@ export function CuentasFilters({
             : "border-border bg-card text-ink-2 hover:bg-bg-2",
         )}
         aria-pressed={agrupar}
+        title={
+          agrupar
+            ? "Quitar agrupado (lista plana)"
+            : "Agrupar por empresa con header"
+        }
       >
         <Layers className="h-3.5 w-3.5" />
-        Agrupar por empresa
+        Agrupar
       </Link>
+
+      {/* Separador */}
+      <span aria-hidden className="mx-1 h-5 w-px bg-divider" />
+
+      {/* Selector de orden */}
+      <span className="text-[11px] text-ink-3">Orden:</span>
+      {ORDENES.map((o) => {
+        const Icon = o.icon;
+        const active = orden === o.value;
+        return (
+          <Link
+            key={o.value}
+            href={hrefWith({
+              orden: o.value === "empresa" ? null : o.value,
+            })}
+            title={o.title}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-colors",
+              active
+                ? "border-ink-1 bg-ink-1 text-white"
+                : "border-border bg-card text-ink-2 hover:bg-bg-2",
+            )}
+            aria-pressed={active}
+          >
+            <Icon className="h-3 w-3" />
+            {o.label}
+          </Link>
+        );
+      })}
     </div>
   );
 }
