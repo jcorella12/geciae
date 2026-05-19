@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { AppSidebar } from "@/components/shared/app-sidebar";
 import { BottomNav } from "@/components/shared/bottom-nav";
 import { MobileSidebarDrawer } from "@/components/shared/mobile-sidebar-drawer";
+import { OfflineHandlers } from "@/components/shared/offline-handlers";
 import { PageviewTracker } from "@/components/shared/pageview-tracker";
 import { PeekProvider } from "@/components/shared/peek-provider";
 import { VersionBadge } from "@/components/shared/version-badge";
@@ -126,6 +127,7 @@ export default async function AppLayout({
       </MobileSidebarDrawer>
       <BottomNav />
       <VersionBadge />
+      <OfflineHandlers />
     </PeekProvider>
   );
 }

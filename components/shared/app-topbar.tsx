@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { DensityToggle } from "@/components/shared/density-toggle";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { OfflineIndicator } from "@/components/shared/offline-indicator";
 import { SearchTrigger } from "@/components/shared/search-trigger";
 import { SugerirMejoraButton } from "@/components/shared/sugerir-mejora-button";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
@@ -144,6 +145,8 @@ export async function AppTopbar({ email, initials }: Props) {
       <div className="hidden md:block">
         <SugerirMejoraButton />
       </div>
+
+      <OfflineIndicator />
 
       <NotificationBell />
 
