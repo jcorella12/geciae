@@ -1,5 +1,7 @@
+import { Upload } from "lucide-react";
 import Link from "next/link";
 
+import { Button } from "@/components/ui/button";
 import {
   esCEO,
   esRolEn,
@@ -20,7 +22,8 @@ const fmtMxnShort = new Intl.NumberFormat("es-MX", {
 
 type SearchParams = {
   empresa?: string; // codigo de empresa, "all" o ausente = todas
-  agrupar?: string; // "1" o "0"
+  agrupar?: string; // "1" (default) o "0"
+  orden?: string; // "empresa" (default) | "banco" | "saldo_desc" | "saldo_asc"
 };
 
 export default async function TesoreriaCuentasPage({
@@ -43,7 +46,15 @@ export default async function TesoreriaCuentasPage({
     : todasIds.filter((id) => esRolEn(vinculos, id, "director"));
 
   const empresaFiltro = (searchParams?.empresa ?? "all").toLowerCase();
-  const agrupar = searchParams?.agrupar === "1";
+  // Default: agrupado por empresa (el listado por banco mezcla empresas y mete ruido).
+  const agrupar = searchParams?.agrupar !== "0";
+  const ordenRaw = searchParams?.orden;
+  const orden: "empresa" | "banco" | "saldo_desc" | "saldo_asc" =
+    ordenRaw === "banco" ||
+    ordenRaw === "saldo_desc" ||
+    ordenRaw === "saldo_asc"
+      ? ordenRaw
+      : "empresa";
 
   const [{ data: empresas }, { data: cuentas }] = await Promise.all([
     supabase
@@ -55,8 +66,7 @@ export default async function TesoreriaCuentasPage({
       .from("bancos_cuentas")
       .select(
         "id, empresa_id, banco, numero_cuenta, clabe, alias, tipo, saldo_actual, fecha_actualizacion_saldo, activa, empresas(codigo)",
-      )
-      .order("banco"),
+      ),
   ]);
 
   const empresasGestionablesObj = (empresas ?? []).filter((e) =>
@@ -76,18 +86,36 @@ export default async function TesoreriaCuentasPage({
       );
     }
   }
-  if (agrupar) {
-    // Ordena por empresa code (asc) y luego por banco
-    const codigoPorId = new Map(
-      (empresas ?? []).map((e) => [e.id, e.codigo] as const),
-    );
-    cuentasFiltradas = [...cuentasFiltradas].sort((a, b) => {
+  // Aplicar orden — dentro de cada grupo (si agrupar) o globalmente.
+  const codigoPorId = new Map(
+    (empresas ?? []).map((e) => [e.id, e.codigo] as const),
+  );
+  // Para "saldo": activa neto (positivo) primero. Crédito es pasivo (negativo).
+  const saldoNeto = (c: (typeof cuentasFiltradas)[number]) => {
+    const v = Number(c.saldo_actual ?? 0);
+    return c.tipo === "credito" ? -v : v;
+  };
+  const cmpDentroGrupo = (
+    a: (typeof cuentasFiltradas)[number],
+    b: (typeof cuentasFiltradas)[number],
+  ) => {
+    if (orden === "saldo_desc") return saldoNeto(b) - saldoNeto(a);
+    if (orden === "saldo_asc") return saldoNeto(a) - saldoNeto(b);
+    if (orden === "banco") return a.banco.localeCompare(b.banco);
+    // "empresa": dentro del grupo (mismo empresa_id) ordena por saldo desc
+    // — el grupo lo da el agrupado o el order global por empresa.
+    return saldoNeto(b) - saldoNeto(a);
+  };
+  cuentasFiltradas = [...cuentasFiltradas].sort((a, b) => {
+    // Cuando agrupar=1, siempre primero por empresa para mantener bloques.
+    // Cuando agrupar=0 y orden="empresa", igual.
+    if (agrupar || orden === "empresa") {
       const ca = codigoPorId.get(a.empresa_id) ?? "";
       const cb = codigoPorId.get(b.empresa_id) ?? "";
       if (ca !== cb) return ca.localeCompare(cb);
-      return a.banco.localeCompare(b.banco);
-    });
-  }
+    }
+    return cmpDentroGrupo(a, b);
+  });
 
   // KPIs respetan el filtro
   const totalCuentas = cuentasFiltradas.length;
@@ -100,20 +128,30 @@ export default async function TesoreriaCuentasPage({
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8">
-      <div className="mb-6">
-        <Link
-          href="/finanzas/tesoreria"
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← Tesorería
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold leading-tight">
-          Cuentas bancarias
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Saldos manuales por ahora. La integración con Belvo (sincronización
-          automática) llega en Fase 3.
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <Link
+            href="/finanzas/tesoreria"
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
+            ← Tesorería
+          </Link>
+          <h1 className="mt-2 text-2xl font-semibold leading-tight">
+            Cuentas bancarias
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Saldos manuales por ahora. La integración con Belvo (sincronización
+            automática) llega en Fase 3.
+          </p>
+        </div>
+        {empresasGestionablesObj.length > 0 && (
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/finanzas/tesoreria/cuentas/importar">
+              <Upload className="h-4 w-4" />
+              Importar estados de cuenta
+            </Link>
+          </Button>
+        )}
       </div>
 
       {/* Filtros */}
@@ -124,6 +162,7 @@ export default async function TesoreriaCuentasPage({
         }))}
         empresaFiltro={empresaFiltro}
         agrupar={agrupar}
+        orden={orden}
       />
 
       {/* KPIs */}
@@ -148,13 +187,18 @@ export default async function TesoreriaCuentasPage({
         </div>
         <div className="rounded-md border border-border bg-card px-4 py-3 sm:block hidden">
           <p className="text-[10.5px] uppercase tracking-wider text-ink-3">
-            Filtro
+            Vista
           </p>
           <p className="mt-0.5 text-sm font-medium">
             {empresaFiltro === "all"
               ? "Todas las empresas"
               : empresaFiltro.toUpperCase()}
             {agrupar && " · agrupado"}
+            {" · "}
+            {orden === "empresa" && "por empresa"}
+            {orden === "banco" && "por banco"}
+            {orden === "saldo_desc" && "saldo ↓"}
+            {orden === "saldo_asc" && "saldo ↑"}
           </p>
         </div>
       </div>
