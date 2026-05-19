@@ -1,12 +1,15 @@
 "use client";
 
-import { FileText, FileUp } from "lucide-react";
+import { CloudOff, FileText, FileUp } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { notify } from "@/components/ui/notify";
+import { useOnline } from "@/lib/hooks/use-online";
+import { enqueue } from "@/lib/offline/queue";
 import {
   ETIQUETA_SEVERIDAD,
   ETIQUETA_TIPO_REPORTE,
@@ -52,6 +55,8 @@ export function ReporteForm({
     PLANTILLA_CONTENIDO.incidente ?? "",
   );
   const [pdfNombre, setPdfNombre] = useState<string | null>(null);
+  const online = useOnline();
+  const [offlineError, setOfflineError] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.ok) {
@@ -83,6 +88,61 @@ export function ReporteForm({
   return (
     <form
       ref={formRef}
+      onSubmit={async (e) => {
+        if (online) return; // dejar pasar al action={formAction}
+        e.preventDefault();
+        setOfflineError(null);
+        if (modo === "pdf") {
+          setOfflineError(
+            "El modo 'Subir PDF' requiere conexión. Cambia a 'Manual' para guardar offline.",
+          );
+          return;
+        }
+        const form = e.currentTarget;
+        const fd = new FormData(form);
+        const payload = {
+          proyecto_id: proyectoId,
+          modo: "manual",
+          tipo: (fd.get("tipo") as string) || "otro",
+          severidad: (fd.get("severidad") as string) || "info",
+          titulo: (fd.get("titulo") as string)?.trim() || "",
+          resumen: (fd.get("resumen") as string)?.trim() || "",
+          contenido: (fd.get("contenido") as string)?.trim() || "",
+          fecha_evento: (fd.get("fecha_evento") as string) || "",
+          fecha_reporte: (fd.get("fecha_reporte") as string) || hoy,
+          ubicacion: (fd.get("ubicacion") as string) || "",
+          impacto: (fd.get("impacto") as string) || "",
+          accion_correctiva: (fd.get("accion_correctiva") as string) || "",
+          fecha_compromiso: (fd.get("fecha_compromiso") as string) || "",
+          responsable_seguimiento:
+            (fd.get("responsable_seguimiento") as string) || "",
+          tarea_id: (fd.get("tarea_id") as string) || "",
+          visible_cliente: fd.get("visible_cliente") === "on",
+          estado: (fd.get("estado") as string) || "borrador",
+        };
+        if (!payload.titulo) {
+          setOfflineError("Título requerido");
+          return;
+        }
+        try {
+          await enqueue(
+            "reporte.create",
+            payload,
+            `Reporte · ${payload.titulo.slice(0, 50)}`,
+          );
+          notify({
+            message: "Reporte guardado offline. Se enviará al volver la red.",
+            variant: "success",
+          });
+          form.reset();
+          setPdfNombre(null);
+          onCreated?.();
+        } catch (err) {
+          setOfflineError(
+            `No se pudo guardar offline: ${(err as Error).message}`,
+          );
+        }
+      }}
       action={formAction}
       encType="multipart/form-data"
       className="rounded-lg border border-border bg-card p-5 shadow-sm"
@@ -414,22 +474,35 @@ export function ReporteForm({
         </div>
       </div>
 
-      {state.error && (
-        <p className="mb-2 text-[11px] text-destructive">{state.error}</p>
+      {(state.error || offlineError) && (
+        <p className="mb-2 text-[11px] text-destructive">
+          {offlineError ?? state.error}
+        </p>
+      )}
+
+      {!online && (
+        <p className="mb-2 inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11.5px] text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+          <CloudOff className="h-3 w-3" />
+          Sin conexión — se guardará localmente. Modo PDF no disponible offline.
+        </p>
       )}
 
       <div className="flex justify-end gap-2 border-t border-divider pt-3">
-        <SubmitBtn />
+        <SubmitBtn offline={!online} />
       </div>
     </form>
   );
 }
 
-function SubmitBtn() {
+function SubmitBtn({ offline }: { offline?: boolean }) {
   const { pending } = useFormStatus();
   return (
     <Button type="submit" size="sm" disabled={pending}>
-      {pending ? "Guardando…" : "Guardar reporte"}
+      {pending
+        ? "Guardando…"
+        : offline
+          ? "Guardar offline"
+          : "Guardar reporte"}
     </Button>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Receipt, Sparkles } from "lucide-react";
+import { CloudOff, Plus, Receipt, Sparkles } from "lucide-react";
 import { useRef, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { notify } from "@/components/ui/notify";
 import { promptInput } from "@/components/ui/prompt-input";
 import { Stat } from "@/components/ui/stat";
+import { useOnline } from "@/lib/hooks/use-online";
+import { enqueue } from "@/lib/offline/queue";
 import {
   Table,
   TableBody,
@@ -98,6 +100,8 @@ export function ViaticosTab({
     confidence: number;
     detectado: string[];
   } | null>(null);
+  const online = useOnline();
+  const [offlineError, setOfflineError] = useState<string | null>(null);
 
   function escanearTicket(file: File) {
     if (!file) return;
@@ -217,6 +221,54 @@ export function ViaticosTab({
       {showForm && (
         <form
           ref={formRef}
+          onSubmit={async (e) => {
+            if (online) return; // dejar pasar al action={formAction}
+            e.preventDefault();
+            setOfflineError(null);
+            const form = e.currentTarget;
+            const fd = new FormData(form);
+            const payload = {
+              empleado_id: empleadoId,
+              empresa_id: empresaId,
+              proyecto_id: (fd.get("proyecto_id") as string) || "",
+              fecha_gasto: (fd.get("fecha_gasto") as string) || "",
+              concepto: (fd.get("concepto") as string) || "",
+              categoria: (fd.get("categoria") as string) || "",
+              monto: (fd.get("monto") as string) || "",
+              observaciones: (fd.get("observaciones") as string) || "",
+              // Nota: el ticket (File) NO se encola — el viático se crea sin
+              // foto del ticket; el usuario puede subirla después online.
+            };
+            if (
+              !payload.fecha_gasto ||
+              !payload.concepto ||
+              !payload.categoria ||
+              !payload.monto
+            ) {
+              setOfflineError(
+                "Faltan campos requeridos (fecha, concepto, categoría, monto).",
+              );
+              return;
+            }
+            try {
+              await enqueue(
+                "viaticos.create",
+                payload,
+                `Viático · ${payload.concepto.slice(0, 40)} · $${payload.monto}`,
+              );
+              notify({
+                message:
+                  "Guardado offline. Se sincronizará al volver la red. (El ticket no se envía offline — súbelo después.)",
+                variant: "success",
+              });
+              form.reset();
+              setShowForm(false);
+            } catch (err) {
+              setOfflineError(
+                `No se pudo guardar offline: ${(err as Error).message}`,
+              );
+            }
+          }}
           action={(fd) => {
             formAction(fd);
             setShowForm(false);
@@ -351,13 +403,20 @@ export function ViaticosTab({
             </div>
           </div>
 
-          {state.error && (
+          {(state.error || offlineError) && (
             <p className="mt-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {state.error}
+              {offlineError ?? state.error}
+            </p>
+          )}
+          {!online && (
+            <p className="mt-3 inline-flex items-center gap-1.5 rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-[11.5px] text-amber-900 dark:border-amber-700 dark:bg-amber-900/30 dark:text-amber-200">
+              <CloudOff className="h-3 w-3" />
+              Sin conexión — se guardará localmente. El ticket no se envía
+              offline; súbelo después.
             </p>
           )}
           <div className="mt-4 flex gap-2">
-            <SubmitBtn label="Capturar" />
+            <SubmitBtn label={online ? "Capturar" : "Guardar offline"} />
             <Button
               type="button"
               variant="outline"
