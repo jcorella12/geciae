@@ -22,7 +22,7 @@ export default async function ImportarEdoctasPage() {
   // Empresas donde el usuario gestiona tesorería.
   const { data: empresas } = await supabase
     .from("empresas")
-    .select("id, codigo, razon_social")
+    .select("id, codigo, razon_social, rfc")
     .eq("activa", true)
     .order("codigo");
 
@@ -42,6 +42,11 @@ export default async function ImportarEdoctasPage() {
     .in("empresa_id", empresaIds)
     .order("banco");
 
+  // Mapa empresa_id → rfc para que el matcher pueda usar RFC del PDF.
+  const rfcPorEmpresa = new Map(
+    (empresas ?? []).map((e) => [e.id, (e as { rfc?: string | null }).rfc ?? null] as const),
+  );
+
   const cuentasMin = (cuentas ?? [])
     .filter((c) => c.activa !== false)
     .map((c) => ({
@@ -52,6 +57,7 @@ export default async function ImportarEdoctasPage() {
       clabe: c.clabe,
       alias: c.alias,
       empresa_codigo: (c.empresas as { codigo: string } | null)?.codigo ?? null,
+      empresa_rfc: rfcPorEmpresa.get(c.empresa_id) ?? null,
     }));
 
   return (
@@ -67,9 +73,10 @@ export default async function ImportarEdoctasPage() {
           Importar estados de cuenta
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Arrastra varios archivos a la vez. El sistema intenta detectar la
-          cuenta a partir del nombre del archivo (BBVA, número de cuenta,
-          últimos dígitos). Si no detecta, asigna manualmente.
+          Arrastra varios archivos a la vez. El sistema lee el contenido (RFC
+          y número de cuenta del PDF, palabras clave de la empresa en .exp) y
+          detecta automáticamente la cuenta destino. Si no detecta, asigna
+          manualmente.
         </p>
       </div>
 
