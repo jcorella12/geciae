@@ -15,6 +15,7 @@ import {
   tipoCfdiDb,
   type CfdiParsed,
 } from "@/lib/cfdi/parser";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 import type {
@@ -415,10 +416,11 @@ export async function importarZipCfdi(
   _prev: ImportarZipState,
   formData: FormData,
 ): Promise<ImportarZipState> {
-  const supabase = createClient();
+  // 1) Cliente regular SOLO para validar sesión (lee JWT del usuario).
+  const supabaseAuth = createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await supabaseAuth.auth.getUser();
   if (!user) {
     return {
       ok: false,
@@ -438,6 +440,13 @@ export async function importarZipCfdi(
     };
   }
 
+  // 2) Cliente admin para reads/writes DESPUÉS de validar sesión y vínculos.
+  // El gate de permisos por empresa se hace en código TS (gateRegistrar),
+  // no por RLS — esto es defensivo contra storage policies que no quedaron
+  // aplicadas al migrar de proyecto Supabase y evita pelearse con RLS para
+  // un flujo batch donde ya validamos quién es el usuario.
+  const supabaseAdmin = createAdminClient();
+
   const zipFile = formData.get("zip") as File | null;
   if (!zipFile || zipFile.size === 0) {
     return {
@@ -456,12 +465,14 @@ export async function importarZipCfdi(
     };
   }
 
-  // 1. Catálogos para auto-detección
+  // 3) Catálogos para auto-detección — admin client garantiza ver todos los
+  // proveedores/clientes para el matching por RFC (sin importar a qué
+  // empresas está vinculado el usuario).
   const [{ data: empresasData }, { data: proveedoresData }, { data: clientesData }] =
     await Promise.all([
-      supabase.from("empresas").select("id, codigo, rfc"),
-      supabase.from("proveedores").select("id, rfc"),
-      supabase.from("clientes").select("id, rfc"),
+      supabaseAdmin.from("empresas").select("id, codigo, rfc"),
+      supabaseAdmin.from("proveedores").select("id, rfc"),
+      supabaseAdmin.from("clientes").select("id, rfc"),
     ]);
 
   const empresas: EmpresaRow[] = (empresasData ?? []) as EmpresaRow[];
@@ -555,7 +566,7 @@ export async function importarZipCfdi(
         filename,
         xmlBytes,
         pdfBytes,
-        supabase,
+        supabase: supabaseAdmin,
         userId: user.id,
         vinculos,
         empresas,
