@@ -46,7 +46,10 @@ const nextConfig = {
   reactStrictMode: true,
   experimental: {
     serverActions: {
-      bodySizeLimit: "10mb", // CFDIs, INE/CSF escaneadas, etc.
+      // 100mb cubre ZIPs mensuales del SAT (típico 20-50mb con cientos de
+      // CFDIs). El handler `importarZipCfdi` valida 100mb también para
+      // mantener el error friendly antes del 413 de Next.
+      bodySizeLimit: "100mb",
     },
     // Sprint 8 — @nodecfdi/sat-ws-descarga-masiva v2 es ESM-only y se carga
     // dinámicamente desde server actions. Excluirlo del bundling de Next

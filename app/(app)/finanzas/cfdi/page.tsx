@@ -1,4 +1,4 @@
-import { ArrowDownToLine, ArrowUpFromLine, Plus } from "lucide-react";
+import { ArrowDownToLine, ArrowUpFromLine, FileArchive, Plus } from "lucide-react";
 import { cookies } from "next/headers";
 import Link from "next/link";
 
@@ -340,6 +340,12 @@ export default async function CfdiListPage({
           )}
           <ExportCsvButton tipo="cfdi" desde={desde} hasta={hasta} />
           <ExportContpaqiButton empresas={empresas ?? []} />
+          <Link href="/finanzas/cfdi/bulk-zip">
+            <Button variant="outline">
+              <FileArchive className="h-4 w-4" />
+              Cargar ZIP
+            </Button>
+          </Link>
           <Link href="/finanzas/cfdi/nuevo">
             <Button>
               <Plus className="h-4 w-4" />
