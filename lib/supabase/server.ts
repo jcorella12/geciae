@@ -10,9 +10,12 @@ import type { Database } from "@/types/database.types";
 export function createClient() {
   const cookieStore = cookies();
 
+  // .trim() defensivo — Vercel a veces guarda whitespace al inicio cuando
+  // el valor se pega desde un copy/paste y eso rompe inviteUserByEmail y
+  // otras llamadas que arman URLs absolutas.
   return createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_URL!.trim(),
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!.trim(),
     {
       cookies: {
         get(name: string) {

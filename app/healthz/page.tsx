@@ -19,13 +19,20 @@ export default async function HealthzPage() {
   // -------------------------------------------------------------------
   // 1. Env vars críticas
   // -------------------------------------------------------------------
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  const service = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-  const satKey = process.env.SAT_FIEL_ENCRYPTION_KEY;
-  const anthropic = process.env.ANTHROPIC_API_KEY;
-  const banxico = process.env.BANXICO_TOKEN;
+  const urlRaw = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const url = urlRaw?.trim() ?? "";
+  const tieneWhitespaceUrl = urlRaw != null && urlRaw !== urlRaw.trim();
+  const anonRaw = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const anon = anonRaw?.trim();
+  const tieneWhitespaceAnon = anonRaw != null && anonRaw !== anonRaw.trim();
+  const serviceRaw = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const service = serviceRaw?.trim();
+  const tieneWhitespaceService =
+    serviceRaw != null && serviceRaw !== serviceRaw.trim();
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
+  const satKey = process.env.SAT_FIEL_ENCRYPTION_KEY?.trim();
+  const anthropic = process.env.ANTHROPIC_API_KEY?.trim();
+  const banxico = process.env.BANXICO_TOKEN?.trim();
 
   // Extraer project ref del URL (la parte antes de .supabase.co)
   const projectRef = url
@@ -34,28 +41,41 @@ export default async function HealthzPage() {
 
   const PROJECT_REF_ESPERADO = "dtmcqjtqykbkapzebbik";
 
+  let urlDetail: string;
+  if (!urlRaw) {
+    urlDetail = "FALTA — agrégala en Vercel Settings → Environment Variables";
+  } else if (tieneWhitespaceUrl) {
+    urlDetail = `⚠ ${url} — pero el valor en Vercel tiene WHITESPACE al inicio/final. Edítala en Vercel y re-escribe el valor manualmente (no pegar). El código hace .trim() defensivo pero arréglalo en Vercel.`;
+  } else if (projectRef !== PROJECT_REF_ESPERADO) {
+    urlDetail = `${url} ⚠ apunta al proyecto "${projectRef}", esperado "${PROJECT_REF_ESPERADO}"`;
+  } else {
+    urlDetail = `${url} ✓ proyecto correcto`;
+  }
+
   checks.push({
     label: "NEXT_PUBLIC_SUPABASE_URL",
-    ok: !!url && projectRef === PROJECT_REF_ESPERADO,
-    detail: url
-      ? `${url}${projectRef === PROJECT_REF_ESPERADO ? " ✓ proyecto correcto" : ` ⚠ apunta a "${projectRef}", esperado "${PROJECT_REF_ESPERADO}"`}`
-      : "FALTA — agrégala en Vercel Settings → Environment Variables",
+    ok: !!urlRaw && !tieneWhitespaceUrl && projectRef === PROJECT_REF_ESPERADO,
+    detail: urlDetail,
   });
 
   checks.push({
     label: "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-    ok: !!anon,
-    detail: anon
-      ? `presente (longitud ${anon.length})`
-      : "FALTA — agrégala en Vercel",
+    ok: !!anon && !tieneWhitespaceAnon,
+    detail: !anon
+      ? "FALTA — agrégala en Vercel"
+      : tieneWhitespaceAnon
+        ? `⚠ presente pero con whitespace al inicio/final (longitud raw ${anonRaw?.length}, trim ${anon.length})`
+        : `presente (longitud ${anon.length})`,
   });
 
   checks.push({
     label: "SUPABASE_SERVICE_ROLE_KEY",
-    ok: !!service,
-    detail: service
-      ? `presente (longitud ${service.length})`
-      : "FALTA en Production — sin esto falla invitar usuarios y otras acciones admin",
+    ok: !!service && !tieneWhitespaceService,
+    detail: !service
+      ? "FALTA en Production — sin esto falla invitar usuarios y otras acciones admin"
+      : tieneWhitespaceService
+        ? `⚠ presente pero con whitespace al inicio/final (longitud raw ${serviceRaw?.length}, trim ${service.length})`
+        : `presente (longitud ${service.length})`,
   });
 
   checks.push({
