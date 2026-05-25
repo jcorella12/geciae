@@ -142,6 +142,8 @@ export default async function HealthzPage() {
   // -------------------------------------------------------------------
   let adminOk = false;
   let adminDetail = "";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let admin: any = null;
   if (!url || !service) {
     adminDetail = "skipped — faltan env vars";
   } else {
@@ -149,7 +151,7 @@ export default async function HealthzPage() {
       const { createClient: createSupabaseClient } = await import(
         "@supabase/supabase-js"
       );
-      const admin = createSupabaseClient(url, service, {
+      admin = createSupabaseClient(url, service, {
         auth: { autoRefreshToken: false, persistSession: false },
       });
       const { error } = await admin.auth.admin.listUsers({ perPage: 1 });
@@ -168,6 +170,45 @@ export default async function HealthzPage() {
     ok: adminOk,
     detail: adminDetail,
   });
+
+  // -------------------------------------------------------------------
+  // 4. Tablas críticas — verifica que existen y son accesibles con admin
+  // -------------------------------------------------------------------
+  if (admin && adminOk) {
+    const tablasCriticas = [
+      "usuarios_empresas",
+      "empresas",
+      "clientes",
+      "proveedores",
+      "vehiculos",
+      "bancos_cuentas",
+      "ordenes_compra",
+      "cfdi",
+      "proyectos",
+      "empleados",
+      "inventario_items",
+    ];
+    for (const tabla of tablasCriticas) {
+      try {
+        const { error } = await admin
+          .from(tabla)
+          .select("*", { count: "exact", head: true });
+        checks.push({
+          label: `Tabla "${tabla}"`,
+          ok: !error,
+          detail: error
+            ? `✗ ${error.message}${error.code ? ` (code: ${error.code})` : ""}`
+            : "✓ accesible",
+        });
+      } catch (e) {
+        checks.push({
+          label: `Tabla "${tabla}"`,
+          ok: false,
+          detail: `✗ excepción: ${(e as Error).message}`,
+        });
+      }
+    }
+  }
 
   // -------------------------------------------------------------------
   // 4. Resumen
