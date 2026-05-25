@@ -6,10 +6,8 @@ import { useFormState, useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-import {
-  initialRecepcionState,
-  registrarRecepcion,
-} from "./actions";
+import { registrarRecepcion } from "./actions";
+import { initialRecepcionState } from "./state";
 
 export type ConceptoLinea = {
   id: string;

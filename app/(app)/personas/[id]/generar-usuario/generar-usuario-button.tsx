@@ -8,10 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  generarUsuarioParaEmpleado,
-  initialGenerarUsuarioState,
-} from "./actions";
+import { generarUsuarioParaEmpleado } from "./actions";
+import { initialGenerarUsuarioState } from "./state";
 
 const ATRIBUTOS_OPCIONALES = [
   { value: "rh", label: "RH (acceso a nómina de todo el grupo)" },

@@ -8,11 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import {
-  actualizarAlmacen,
-  crearAlmacen,
-  initialAlmacenState,
-} from "./actions";
+import { actualizarAlmacen, crearAlmacen } from "./actions";
+import { initialAlmacenState } from "./state";
 
 type Empresa = {
   id: string;

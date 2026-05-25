@@ -11,6 +11,8 @@ import {
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import type { AlmacenState } from "./state";
+
 const TIPOS = ["principal", "obra", "virtual_cuadrilla", "otro"] as const;
 
 const AlmacenSchema = z
@@ -78,14 +80,6 @@ const AlmacenSchema = z
       });
     }
   });
-
-export type AlmacenState = {
-  ok: boolean;
-  id: string | null;
-  error: string | null;
-};
-
-const initialState: AlmacenState = { ok: false, id: null, error: null };
 
 async function gateAlmacen(
   empresaId: string | null,
@@ -257,4 +251,5 @@ export async function crearAlmacenYRedirigir(
   return res;
 }
 
-export { initialState as initialAlmacenState };
+// initialAlmacenState ahora se exporta desde ./state — no se puede re-exportar
+// desde un archivo "use server" porque es un objeto, no una función async.

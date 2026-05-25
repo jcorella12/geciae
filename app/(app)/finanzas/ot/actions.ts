@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import {
-  empresasDondeCreaOC,
   obtenerVinculos,
   puedeAprobarOT,
   puedeCrearOCEn,
@@ -550,5 +549,7 @@ export async function cancelarOT(
   return { ok: true, error: null };
 }
 
-// Mantener referencia para otros bloques
-export { empresasDondeCreaOC };
+// Nota: NO re-exportar `empresasDondeCreaOC` aquí. Archivos con "use server"
+// SOLO pueden exportar funciones async (Next.js rompe en runtime de prod con
+// "A 'use server' file can only export async functions, found object").
+// Los consumidores (pages/components) importan directo de @/lib/auth/permisos.

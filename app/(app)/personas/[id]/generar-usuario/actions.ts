@@ -10,6 +10,8 @@ import {
 } from "@/lib/auth/permisos";
 import { createAdminClient } from "@/lib/supabase/admin";
 
+import type { GenerarUsuarioState } from "./state";
+
 const ROLES = ["empleado", "operativo", "director"] as const;
 const ATRIBUTOS_VALIDOS = [
   "aprobador_financiero",
@@ -28,18 +30,6 @@ const Schema = z.object({
   rol: z.enum(ROLES).default("empleado"),
   atributos: z.array(z.enum(ATRIBUTOS_VALIDOS)).default([]),
 });
-
-export type GenerarUsuarioState = {
-  ok: boolean;
-  error: string | null;
-  message: string | null;
-};
-
-export const initialGenerarUsuarioState: GenerarUsuarioState = {
-  ok: false,
-  error: null,
-  message: null,
-};
 
 /**
  * Genera (o vincula) una cuenta de usuario para un empleado existente.

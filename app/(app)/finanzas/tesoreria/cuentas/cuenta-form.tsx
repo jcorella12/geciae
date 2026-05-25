@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { crearCuenta, initialCuentaState } from "./actions";
+import { crearCuenta } from "./actions";
+import { initialCuentaState } from "./state";
 
 const empresaCodigoColor: Record<string, string> = {
   PSE: "bg-pse",

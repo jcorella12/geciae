@@ -5,15 +5,7 @@ import { revalidatePath } from "next/cache";
 import { obtenerVinculos, puedeCrearOCEn } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
-export type RecepcionState = {
-  ok: boolean;
-  error: string | null;
-};
-
-export const initialRecepcionState: RecepcionState = {
-  ok: false,
-  error: null,
-};
+import type { RecepcionState } from "./state";
 
 type ConceptoRecepcion = {
   id: string;

@@ -11,6 +11,8 @@ import {
 } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import type { CuentaState } from "./state";
+
 const CuentaSchema = z.object({
   empresa_id: z.string().uuid(),
   banco: z.string().trim().min(2).max(60),
@@ -36,13 +38,6 @@ const CuentaSchema = z.object({
     .transform((v) => (v ? v : null)),
   saldo_inicial: z.coerce.number().default(0),
 });
-
-export type CuentaState = {
-  ok: boolean;
-  error: string | null;
-};
-
-export const initialCuentaState: CuentaState = { ok: false, error: null };
 
 function gateBancos(
   vinculos: Awaited<ReturnType<typeof obtenerVinculos>>,
