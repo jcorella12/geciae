@@ -69,7 +69,12 @@ const VehiculoSchema = z.object({
     .transform((v) => (v ? v : null)),
   marca: z.string().trim().min(2).max(100),
   modelo: z.string().trim().min(1).max(100),
-  anio: z.coerce.number().int().min(1980).max(2100).optional(),
+  // Form HTML manda "" cuando está vacío; z.coerce.number() lo vuelve 0 y
+  // 0 < 1980 falla. preprocess colapsa "" → undefined antes del coerce.
+  anio: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(1980).max(2100).optional(),
+  ),
   color: z
     .string()
     .trim()

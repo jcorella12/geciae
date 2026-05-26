@@ -37,6 +37,16 @@ const optDate = z
   .or(z.literal(""))
   .transform((v) => (v ? v : null));
 
+// Number opcional: el form HTML manda "" cuando el campo está vacío y
+// z.coerce.number() lo convierte a 0, lo cual falla validaciones como
+// .min(1950). Usamos preprocess para colapsar "" / null a undefined ANTES
+// de aplicar el validador, así .optional() funciona correctamente.
+const optNum = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    schema.optional(),
+  );
+
 export const CrearActivoSchema = z.object({
   codigo: z.string().trim().min(2).max(40).transform((v) => v.toUpperCase()),
   nombre: z.string().trim().min(2).max(200),
@@ -45,7 +55,7 @@ export const CrearActivoSchema = z.object({
   marca: optStr(100),
   modelo: optStr(100),
   numero_serie: optStr(100),
-  anio_fabricacion: z.coerce.number().int().min(1950).max(2100).optional(),
+  anio_fabricacion: optNum(z.coerce.number().int().min(1950).max(2100)),
   capacidad: optStr(100),
   empresa_propietaria_id: z.string().uuid(),
   fecha_adquisicion: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -61,7 +71,7 @@ export const CrearActivoSchema = z.object({
   unidad_uso: z.enum(UNIDADES).default("hora"),
   uso_estimado_anual: z.coerce.number().positive().default(200),
   margen_administracion_pct: z.coerce.number().min(0).max(100).default(12),
-  tarifa_manual: z.coerce.number().nonnegative().optional(),
+  tarifa_manual: optNum(z.coerce.number().nonnegative()),
   estado: z.enum(ESTADOS).default("disponible"),
   ubicacion_actual_empresa_id: z
     .string()
@@ -71,7 +81,7 @@ export const CrearActivoSchema = z.object({
     .transform((v) => (v ? v : null)),
   ubicacion_actual_descripcion: optStr(500),
   requiere_calibracion: z.coerce.boolean().default(false),
-  frecuencia_calibracion_meses: z.coerce.number().int().positive().optional(),
+  frecuencia_calibracion_meses: optNum(z.coerce.number().int().positive()),
   fecha_ultima_calibracion: optDate,
   laboratorio_calibracion: optStr(200),
   requiere_mantenimiento_preventivo: z.coerce.boolean().default(true),
@@ -79,7 +89,7 @@ export const CrearActivoSchema = z.object({
   fecha_ultimo_mantenimiento: optDate,
   numero_poliza_seguro: optStr(100),
   vigencia_seguro_hasta: optDate,
-  costo_anual_seguro: z.coerce.number().nonnegative().optional(),
+  costo_anual_seguro: optNum(z.coerce.number().nonnegative()),
   observaciones: optStr(2000),
 });
 
@@ -92,7 +102,7 @@ export const ActualizarActivoSchema = CrearActivoSchema.partial().extend({
 export const AgregarCostoAnualSchema = z.object({
   activo_id: z.string().uuid(),
   anio: z.coerce.number().int().min(2020).max(2100),
-  depreciacion: z.coerce.number().nonnegative().optional(),
+  depreciacion: optNum(z.coerce.number().nonnegative()),
   mantenimiento: z.coerce.number().nonnegative().default(0),
   calibraciones: z.coerce.number().nonnegative().default(0),
   seguro: z.coerce.number().nonnegative().default(0),
@@ -104,14 +114,14 @@ export const AgregarCostoAnualSchema = z.object({
 export const RegistrarMantenimientoSchema = z.object({
   activo_id: z.string().uuid(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  monto: z.coerce.number().nonnegative().optional(),
+  monto: optNum(z.coerce.number().nonnegative()),
   observaciones: optStr(2000),
 });
 
 export const RegistrarCalibracionSchema = z.object({
   activo_id: z.string().uuid(),
   fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  monto: z.coerce.number().nonnegative().optional(),
+  monto: optNum(z.coerce.number().nonnegative()),
   laboratorio: optStr(200),
   observaciones: optStr(2000),
 });
