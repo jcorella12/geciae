@@ -213,20 +213,12 @@ export function parseCfdiXml(xml: string): CfdiParsed {
   //   Complemento > pago20:Pagos > pago20:Pago > pago20:DoctoRelacionado
   const tipoComp = getAttr(comp, "TipoDeComprobante") ?? "I";
   const pagos: CfdiPagoParsed[] = [];
-  let totalPagos = 0;
   if (tipoComp === "P" && complemento) {
     const pagosRoot = pickNs(complemento, ["pago20:Pagos", "Pagos"]);
     if (pagosRoot) {
-      const totalesNode = pickNs(pagosRoot, [
-        "pago20:Totales",
-        "Totales",
-      ]);
-      if (totalesNode) {
-        totalPagos = num(
-          getAttr(totalesNode, "MontoTotalPagos"),
-          0,
-        );
-      }
+      // Nota: <pago20:Totales MontoTotalPagos="..."> existe pero NO se
+      // usa para poblar `cfdi.total` — los complementos de pago deben
+      // tener total=0 (los montos reales viven en cfdi_pagos.monto).
       const pagoNodeRaw = pickNs(pagosRoot, ["pago20:Pago", "Pago"]);
       const listaPagos = Array.isArray(pagoNodeRaw)
         ? (pagoNodeRaw as Record<string, unknown>[])
@@ -272,11 +264,17 @@ export function parseCfdiXml(xml: string): CfdiParsed {
     }
   }
 
-  // Para complementos de pago, el `total` del Comprobante es 0 pero el
-  // total real viene de Pagos.Totales.MontoTotalPagos. Lo usamos para
-  // que la fila en `cfdi` refleje el monto correcto del complemento.
+  // Para complementos de pago, el SAT emite el Comprobante con Total=0
+  // intencionalmente — el monto real del pago se queda solo en los
+  // registros `cfdi_pagos.monto` (extraídos en pagos[] arriba).
+  // Nota: una versión previa hacía `total = MontoTotalPagos` para tipo P
+  // creyendo que era el monto correcto, pero eso duplica con cfdi_pagos
+  // y hace que vistas como cfdi_kpis_filtrados sobrecuenten al sumar
+  // SUM(total) (incluían el complemento + la factura original). Ahora
+  // respetamos el formato SAT: complemento de pago contribuye 0 al
+  // total/subtotal/iva del CFDI.
   const totalRoot = num(getAttr(comp, "Total"), 0);
-  const totalEffective = tipoComp === "P" ? totalPagos : totalRoot;
+  const totalEffective = tipoComp === "P" ? 0 : totalRoot;
 
   return {
     version: getAttr(comp, "Version") ?? "4.0",
@@ -295,11 +293,13 @@ export function parseCfdiXml(xml: string): CfdiParsed {
     forma_pago: getAttr(comp, "FormaPago"),
     moneda: getAttr(comp, "Moneda") ?? "MXN",
     tipo_cambio: num(getAttr(comp, "TipoCambio"), 1),
-    subtotal: num(getAttr(comp, "SubTotal"), 0),
-    descuento: num(getAttr(comp, "Descuento"), 0),
-    iva_trasladado: ivaTrasladado,
-    iva_retenido: ivaRetenido,
-    isr_retenido: isrRetenido,
+    subtotal:
+      tipoComp === "P" ? 0 : num(getAttr(comp, "SubTotal"), 0),
+    descuento:
+      tipoComp === "P" ? 0 : num(getAttr(comp, "Descuento"), 0),
+    iva_trasladado: tipoComp === "P" ? 0 : ivaTrasladado,
+    iva_retenido: tipoComp === "P" ? 0 : ivaRetenido,
+    isr_retenido: tipoComp === "P" ? 0 : isrRetenido,
     total: totalEffective,
     conceptos,
     pagos,
