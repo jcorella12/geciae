@@ -301,6 +301,25 @@ def procesar(pdf_path):
     if isinstance(deleted, list):
         print(f'  Borrados {len(deleted)} previos')
 
+    # Calcular saldo_resultante running por movimiento.
+    # El PDF de BBVA trae movs ya ordenados por fecha (mismo orden que parseamos).
+    # Partimos del saldo_inicial del PDF y sumamos abono / restamos |cargo|.
+    # Al final hacemos sanity check vs saldo_final del PDF — si no encadena
+    # avisamos pero no abortamos (puede ser que el PDF tenga decimales raros).
+    saldo_run = meta['saldo_inicial']
+    for m in movimientos:
+        if m['tipo'] == 'abono':
+            saldo_run += m['monto']
+        else:
+            saldo_run -= abs(m['monto'])
+        m['saldo_resultante'] = round(saldo_run, 2)
+    diff_saldo = saldo_run - meta['saldo_final']
+    if abs(diff_saldo) > 0.5:
+        print(
+            f'  ⚠ Saldo running ${saldo_run:,.2f} ≠ saldo_final del PDF '
+            f'${meta["saldo_final"]:,.2f}  (diff ${diff_saldo:+,.2f})'
+        )
+
     rows = [{**m, 'cuenta_id': cuenta_id} for m in movimientos]
     inserted = 0
     for i in range(0, len(rows), 50):

@@ -62,17 +62,60 @@ async function recalcularSaldosDesde(
   desdeFecha: string,
 ): Promise<{ ok: boolean; error: string | null }> {
   const supabase = createClient();
-  // Obtener saldo inicial: último movimiento ANTES de `desdeFecha`.
+
+  // Obtener saldo inicial — en orden de preferencia:
+  //   1. Último movimiento ANTES de `desdeFecha` con saldo_resultante > 0
+  //      (movimiento que ya tiene un saldo válido encadenado).
+  //   2. saldo_final del último estado de cuenta cuyo periodo termina antes
+  //      de `desdeFecha` (típicamente el PDF mensual con saldo inicial/final).
+  //   3. saldo_inicial del PRIMER estado de cuenta si `desdeFecha` cae antes
+  //      de cualquier EC cargado.
+  //   4. 0 si no hay ninguna referencia (cuenta nueva sin EC).
+  //
+  // Esto evita el bug histórico donde recalc partía de 0 cuando los movs
+  // previos tenían saldo_resultante = 0 (movs importados desde PDF que no
+  // calculaban saldo_resultante al insertar).
+  let saldo = 0;
   const { data: anterior } = await supabase
     .from("bancos_movimientos")
     .select("saldo_resultante")
     .eq("cuenta_id", cuentaId)
     .lt("fecha", desdeFecha)
+    .gt("saldo_resultante", 0)
     .order("fecha", { ascending: false })
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  let saldo = Number(anterior?.saldo_resultante ?? 0);
+  if (anterior?.saldo_resultante != null) {
+    saldo = Number(anterior.saldo_resultante);
+  } else {
+    // Fallback al último estado de cuenta con periodo_fin < desdeFecha
+    const { data: ecPrev } = await supabase
+      .from("estados_cuenta_bancarios")
+      .select("saldo_final")
+      .eq("cuenta_id", cuentaId)
+      .lt("periodo_fin", desdeFecha)
+      .gt("saldo_final", 0)
+      .order("periodo_fin", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (ecPrev?.saldo_final != null) {
+      saldo = Number(ecPrev.saldo_final);
+    } else {
+      // Fallback al saldo_inicial del primer EC (si los movimientos a
+      // recalcular caen DENTRO del primer periodo cargado).
+      const { data: ecFirst } = await supabase
+        .from("estados_cuenta_bancarios")
+        .select("saldo_inicial")
+        .eq("cuenta_id", cuentaId)
+        .order("periodo_inicio", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (ecFirst?.saldo_inicial != null) {
+        saldo = Number(ecFirst.saldo_inicial);
+      }
+    }
+  }
 
   // Movimientos a recalcular: los de fecha >= desdeFecha en orden cronológico
   const { data: movs } = await supabase
@@ -92,6 +135,29 @@ async function recalcularSaldosDesde(
       .eq("id", m.id);
     if (error) return { ok: false, error: error.message };
   }
+
+  // Actualizar bancos_cuentas.saldo_actual al saldo del movimiento más
+  // reciente de la cuenta. Ojo: no usamos `saldo` (que es running del
+  // recálculo) porque pueden existir movs más nuevos que NO entraron en
+  // este batch (raro pero posible con backdated inserts).
+  const { data: ultimoMov } = await supabase
+    .from("bancos_movimientos")
+    .select("saldo_resultante, fecha")
+    .eq("cuenta_id", cuentaId)
+    .order("fecha", { ascending: false })
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (ultimoMov?.saldo_resultante != null) {
+    await supabase
+      .from("bancos_cuentas")
+      .update({
+        saldo_actual: Number(ultimoMov.saldo_resultante),
+        fecha_actualizacion_saldo: `${ultimoMov.fecha}T23:59:59Z`,
+      })
+      .eq("id", cuentaId);
+  }
+
   return { ok: true, error: null };
 }
 
