@@ -285,13 +285,12 @@ export default async function GastosRecurrentesPage({
                       {CATEGORIA_LABEL[cat] ?? cat}
                     </TableCell>
                     <TableCell>
-                      {/* Detalle/edición de gasto recurrente pendiente (la
-                          action actualizarGastoRecurrente existe, falta la
-                          pantalla). Antes esto enlazaba a
-                          /finanzas/gastos-recurrentes/[id] que daba 404. */}
-                      <span className="font-medium">
+                      <Link
+                        href={`/finanzas/gastos-recurrentes/${g.id}`}
+                        className="font-medium hover:text-brand hover:underline"
+                      >
                         {g.descripcion as string}
-                      </span>
+                      </Link>
                       {Boolean(g.identificador) && (
                         <p className="font-mono text-[10px] text-ink-3">
                           {g.identificador as string}

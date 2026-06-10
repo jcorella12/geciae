@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +47,7 @@ type Empresa = {
 
 export function InvitarForm({ empresas }: { empresas: Empresa[] }) {
   const [state, formAction] = useFormState(invitarUsuario, initialState);
+  const [esAprobador, setEsAprobador] = useState(false);
 
   return (
     <form
@@ -141,15 +144,32 @@ export function InvitarForm({ empresas }: { empresas: Empresa[] }) {
                 name="atributos"
                 value={a.value}
                 className="h-4 w-4"
+                onChange={
+                  a.value === "aprobador_financiero"
+                    ? (e) => setEsAprobador(e.target.checked)
+                    : undefined
+                }
               />
               <span className="truncate">{a.label}</span>
             </label>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground">
-          Umbrales de aprobador_financiero se configuran en una pantalla
-          posterior (TODO Sprint 1C).
-        </p>
+        {esAprobador && (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs dark:border-amber-800 dark:bg-amber-950">
+            <p className="font-medium">Aprobador financiero seleccionado</p>
+            <p className="mt-0.5 text-muted-foreground">
+              Por defecto podrá aprobar sin límite de monto. Para fijar
+              umbrales por empresa (OC, OT, préstamos), configúralos en{" "}
+              <Link
+                href="/configuracion/umbrales"
+                className="font-medium text-primary hover:underline"
+              >
+                Configuración · Umbrales
+              </Link>{" "}
+              después de enviar la invitación.
+            </p>
+          </div>
+        )}
       </fieldset>
 
       {state.error && (

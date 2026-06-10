@@ -12,13 +12,23 @@ import {
 import { obtenerVinculos } from "@/lib/auth/permisos";
 import { createClient } from "@/lib/supabase/server";
 
+import { BotonFacturar, GenerarConsolidado } from "./cobros-acciones";
+
 export const dynamic = "force-dynamic";
 
 const fmtMxn = new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 });
 
 export default async function CobrosPage() {
   const supabase = createClient();
-  await obtenerVinculos();
+  const vinculos = await obtenerVinculos();
+  const empresasIds = Array.from(new Set(vinculos.map((v) => v.empresa_id)));
+
+  const { data: empresas } = await supabase
+    .from("empresas")
+    .select("id, codigo, razon_social, nombre_comercial")
+    .in("id", empresasIds)
+    .eq("activa", true)
+    .order("codigo");
 
   const { data: pendientes } = (await supabase
     .from("v_prestamos_pendientes_facturar" as never)
@@ -70,9 +80,7 @@ export default async function CobrosPage() {
             Préstamos devueltos pendientes de facturar y CFDI consolidados mensuales por empresa.
           </p>
         </div>
-        {/* TODO: cuando exista el flujo de cierre mensual, restaurar este botón.
-             Removido 2026-05-15 — apuntaba a /activos/cobros/cierre-mensual
-             que nunca se construyó. */}
+        <GenerarConsolidado empresas={empresas ?? []} />
       </div>
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -96,6 +104,7 @@ export default async function CobrosPage() {
                 <TableHead>De → A</TableHead>
                 <TableHead>Devolución</TableHead>
                 <TableHead align="right">Costo</TableHead>
+                <TableHead align="right">Acción</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -118,6 +127,9 @@ export default async function CobrosPage() {
                   </TableCell>
                   <TableCell align="right" mono className="text-xs">
                     {fmtMxn.format(Number(p.costo_total ?? 0))}
+                  </TableCell>
+                  <TableCell align="right" className="relative z-10">
+                    <BotonFacturar prestamoId={p.id} />
                   </TableCell>
                 </TableRow>
               ))}

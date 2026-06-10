@@ -45,10 +45,9 @@ export default async function ActivoDetallePage({ params }: { params: { id: stri
     .maybeSingle()) as unknown as { data: ActivoEnriquecido | null };
   if (!a) notFound();
 
-  // Lógica de permisos de edición — preservada (prefijo _) para cuando se
-  // cree la pantalla /activos/compartidos/[id]/editar en la fase de
-  // simplificación de UX. La server action actualizarActivo ya existe.
-  const _puedeEditar =
+  // ¿Puede editar este activo? CEO, director o contralor de la empresa
+  // propietaria. Habilita el enlace a /activos/compartidos/[id]/editar.
+  const puedeEditar =
     esCEO(v) ||
     esRolEn(v, a.empresa_propietaria_id, ["director"]) ||
     v.some(
@@ -239,10 +238,17 @@ export default async function ActivoDetallePage({ params }: { params: { id: stri
         </section>
       )}
 
-      {/* Edición de activos compartidos: la pantalla de edición está pendiente
-          (la server action actualizarActivo ya existe, falta el form). Se
-          habilitará en la fase de simplificación de UX. Antes había aquí un
-          enlace a /activos/compartidos/[id]/editar que daba 404. */}
+      {puedeEditar && (
+        <p className="text-[11px] text-ink-3">
+          Editar:{" "}
+          <Link
+            className="text-brand hover:underline"
+            href={`/activos/compartidos/${a.id}/editar`}
+          >
+            Modificar datos
+          </Link>
+        </p>
+      )}
     </div>
   );
 }
