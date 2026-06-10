@@ -14,16 +14,16 @@ import { VersionBadge } from "@/components/shared/version-badge";
 export const dynamic = "force-dynamic";
 import { AppTopbar } from "@/components/shared/app-topbar";
 import {
-  esCEO,
   obtenerVinculosConEmpresa,
   puedeAccederConfiguracion,
-  puedeGestionarClientes,
-  puedeGestionarProveedores,
   puedeRestablecerContrasenas,
-  tieneAtributo,
   type Vinculo,
 } from "@/lib/auth/permisos";
 import type { NavCaps } from "@/components/shared/app-sidebar";
+import {
+  rolSimplificado,
+  visibleParaRol,
+} from "@/lib/auth/roles-simplificados";
 import {
   EMPRESA_COOKIE,
   VISTA_CONSOLIDADA,
@@ -75,46 +75,24 @@ export default async function AppLayout({
   );
   const puedeAjustesGerenciales = Boolean(puedeAjustesData);
 
-  // Capacidades de navegación — qué SECCIONES del sidebar ve el usuario.
-  // Filosofía conservadora: lo operativo-personal (Mi día, Calendario,
-  // Proyectos, Solicitudes, Campo, Tickets, Ayuda) es UNIVERSAL y no se
-  // calcula aquí; solo gateamos lo gerencial/administrativo. Cuando hay
-  // duda, mostramos (el RLS de cada página protege la acción real).
-  // Un empleado de obra sin atributos verá un menú corto; los roles y
-  // atributos van desbloqueando secciones.
+  // Capacidades de navegación — deny-list de 3 roles (sprint ROLES, fase 1).
+  // Filosofía: todos usan casi todo; solo se OCULTA una lista corta. El rol
+  // se deriva en runtime de los vínculos viejos + atributos (rolSimplificado),
+  // así funciona sin migrar el enum de la BD todavía.
+  //   - finanzas (OC/OT/CFDI/tesorería/gastos/cumplimiento/grupo): oculto para
+  //     operativo (ve solo lo suyo a nivel de página).
+  //   - todo lo demás (Dashboard, Reportes, comercial, proyectos, inventario,
+  //     activos, proveedores, personas): visible para los 3. Los datos
+  //     sensibles de personas (salarios) se ocultan a nivel de página.
   const v: Vinculo[] = vinculosLite;
-  const esGerencial =
-    esCEO(v) ||
-    v.some((x) => x.rol === "director") ||
-    tieneAtributo(v, "tesorero_corporativo") ||
-    tieneAtributo(v, "contralor") ||
-    tieneAtributo(v, "aprobador_financiero");
+  const rolSimp = rolSimplificado(v);
   const navCaps: NavCaps = {
-    // Dashboard ejecutivo + Reportes: visión de negocio → roles gerenciales.
-    gerencial: esGerencial,
-    // Comercial (clientes, pipeline, cotizaciones, servicios): quien gestiona
-    // clientes o es vendedor.
-    comercial: puedeGestionarClientes(v) || tieneAtributo(v, "vendedor"),
-    // Proveedores: quien los gestiona (ceo/director/operativo).
-    proveedores: puedeGestionarProveedores(v),
-    // Finanzas (OC, OT, CFDI, tesorería, gastos, cumplimiento): roles
-    // financieros u operativos que generan compras.
-    finanzas:
-      esGerencial ||
-      v.some((x) => x.rol === "operativo") ||
-      tieneAtributo(v, "auditor_interno"),
-    // Personas (gestión de empleados/nómina/capacitación): ceo, director, rh.
-    personas:
-      esCEO(v) ||
-      v.some((x) => x.rol === "director") ||
-      tieneAtributo(v, "rh") ||
-      tieneAtributo(v, "contralor"),
-    // Inventario y Activos: operación física → ceo/director/operativo o
-    // supervisor de cuadrilla / almacén.
-    inventarioActivos:
-      esCEO(v) ||
-      v.some((x) => x.rol === "director" || x.rol === "operativo") ||
-      tieneAtributo(v, "supervisor_cuadrilla"),
+    gerencial: true,
+    comercial: true,
+    proveedores: true,
+    finanzas: visibleParaRol(rolSimp, "finanzas"),
+    personas: true,
+    inventarioActivos: true,
   };
 
   // Datos del user-card en sidebar
