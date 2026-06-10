@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { cookies } from "next/headers";
+import Link from "next/link";
 
 import { DashboardToolbar } from "@/components/dashboard-v2/dashboard-toolbar";
 import { WidgetGrid } from "@/components/dashboard-v2/widget-grid";
@@ -30,10 +31,11 @@ export default async function DashboardV2() {
   // Resolver empresa activa (para widgets que usan empresaId)
   const cookieValue = cookies().get(EMPRESA_COOKIE)?.value ?? null;
   const empresasUsuario = Array.from(new Set(v.map((x) => x.empresa_id)));
+  const puedeConsolidado = puedeVerConsolidado(v);
   const filtro = resolverEmpresasFiltro({
     cookieValue,
     empresasUsuario,
-    puedeConsolidado: puedeVerConsolidado(v),
+    puedeConsolidado,
   });
   const empresaActiva =
     filtro.activaId === VISTA_CONSOLIDADA ? null : (filtro.activaId ?? null);
@@ -42,14 +44,27 @@ export default async function DashboardV2() {
 
   return (
     <div className="mx-auto w-full max-w-[1480px] px-8 py-7">
-      <header className="mb-6">
-        <p className="lbl-mini">Inicio</p>
-        <h1 className="mt-1.5 text-[28px] font-semibold leading-tight">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-[13px] text-ink-3">
-          Personaliza los widgets que más te sirven. Compacto deja solo lo crítico.
-        </p>
+      <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="lbl-mini">Inicio</p>
+          <h1 className="mt-1.5 text-[28px] font-semibold leading-tight">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-[13px] text-ink-3">
+            Personaliza los widgets que más te sirven. Compacto deja solo lo crítico.
+          </p>
+        </div>
+        {/* Acceso a la vista consolidada del grupo (4 empresas a vista de
+            pájaro). Antes vivía en el dashboard V1; se conserva aquí para no
+            perder la vista al migrar a V2. Solo CEO / tesorero corporativo. */}
+        {puedeConsolidado && (
+          <Link
+            href="/dashboard/pajaro"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-border bg-card px-3 py-1.5 text-[12.5px] font-medium hover:bg-bg-2"
+          >
+            🦅 Vista pájaro · grupo
+          </Link>
+        )}
       </header>
 
       <DashboardToolbar

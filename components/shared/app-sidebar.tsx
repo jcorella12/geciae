@@ -44,11 +44,39 @@ import { toggleSidebar } from "@/lib/preferences/sidebar";
 import { cn } from "@/lib/utils";
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>;
+
+/**
+ * Capacidades de navegación — qué secciones del menú ve el usuario según su
+ * rol/atributos. Se calculan en el layout (server) y se pasan acá. Los items
+ * sin `cap` declarado son UNIVERSALES (siempre visibles). Cuando hay duda,
+ * un item se deja universal: el RLS de cada página protege la acción real.
+ */
+export type NavCaps = {
+  /** Dashboard ejecutivo + Reportes (visión de negocio). */
+  gerencial: boolean;
+  /** Clientes, pipeline, cotizaciones, servicios. */
+  comercial: boolean;
+  /** Proveedores. */
+  proveedores: boolean;
+  /** OC, OT, CFDI, tesorería, gastos recurrentes, cumplimiento. */
+  finanzas: boolean;
+  /** Gestión de personas (empleados, nómina, capacitación). */
+  personas: boolean;
+  /** Inventario y activos. */
+  inventarioActivos: boolean;
+  /** Módulo de calidad. */
+  calidad: boolean;
+};
+
+type CapKey = keyof NavCaps;
+
 type NavItem = {
   href: string;
   label: string;
   icon: Icon;
   count?: number;
+  /** Si se define, el item solo aparece cuando navCaps[cap] === true. */
+  cap?: CapKey;
 };
 type NavGroup = {
   label: string;
@@ -59,6 +87,8 @@ type Props = {
   puedeVerConfiguracion: boolean;
   /** CEO + atributo contralor + atributo tesorero_corporativo. */
   puedeVerAjustesGerenciales?: boolean;
+  /** Capacidades de navegación por rol. Si se omite, se muestra todo. */
+  navCaps?: NavCaps;
   empresas: EmpresaResumen[];
   activaId: string | null;
   puedeConsolidado: boolean;
@@ -74,6 +104,7 @@ type Props = {
 export function AppSidebar({
   puedeVerConfiguracion,
   puedeVerAjustesGerenciales = false,
+  navCaps,
   empresas,
   activaId,
   puedeConsolidado,
@@ -81,6 +112,18 @@ export function AppSidebar({
   user,
 }: Props) {
   const pathname = usePathname();
+
+  // Si no llegan capacidades (uso del componente sin la prop), se muestra
+  // todo — política fail-open para no esconder navegación por accidente.
+  const caps: NavCaps = navCaps ?? {
+    gerencial: true,
+    comercial: true,
+    proveedores: true,
+    finanzas: true,
+    personas: true,
+    inventarioActivos: true,
+    calidad: true,
+  };
   const [isPending, startTransition] = useTransition();
   const onToggle = () => {
     startTransition(() => {
@@ -103,27 +146,39 @@ export function AppSidebar({
     label: "PRINCIPAL",
     items: [
       { href: "/mi-dia", label: "Mi día", icon: Sun },
-      { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+      {
+        href: "/dashboard",
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        cap: "gerencial",
+      },
       { href: "/calendario", label: "Calendario", icon: CalendarDays },
-      { href: "/reportes", label: "Reportes", icon: BarChart3 },
+      { href: "/reportes", label: "Reportes", icon: BarChart3, cap: "gerencial" },
     ],
   };
 
   const comercial: NavGroup = {
     label: "COMERCIAL",
     items: [
-      { href: "/clientes", label: "Clientes", icon: Users },
+      { href: "/clientes", label: "Clientes", icon: Users, cap: "comercial" },
       {
         href: "/comercial/oportunidades",
         label: "Pipeline",
         icon: TrendingUp,
+        cap: "comercial",
       },
       {
         href: "/comercial/cotizaciones",
         label: "Cotizaciones",
         icon: FileSignature,
+        cap: "comercial",
       },
-      { href: "/finanzas/servicios", label: "Servicios", icon: FileText },
+      {
+        href: "/finanzas/servicios",
+        label: "Servicios",
+        icon: FileText,
+        cap: "comercial",
+      },
     ],
   };
 
@@ -133,17 +188,32 @@ export function AppSidebar({
       { href: "/proyectos", label: "Proyectos", icon: Briefcase },
       { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
       { href: "/campo", label: "Captura campo", icon: Smartphone },
-      { href: "/calidad", label: "Calidad", icon: CheckSquare },
+      { href: "/calidad", label: "Calidad", icon: CheckSquare, cap: "calidad" },
     ],
   };
 
   const recursos: NavGroup = {
     label: "RECURSOS",
     items: [
-      { href: "/personas", label: "Personas", icon: Users2 },
-      { href: "/finanzas/proveedores", label: "Proveedores", icon: Truck },
-      { href: "/activos", label: "Activos", icon: Wrench },
-      { href: "/inventario", label: "Inventario", icon: Package },
+      { href: "/personas", label: "Personas", icon: Users2, cap: "personas" },
+      {
+        href: "/finanzas/proveedores",
+        label: "Proveedores",
+        icon: Truck,
+        cap: "proveedores",
+      },
+      {
+        href: "/activos",
+        label: "Activos",
+        icon: Wrench,
+        cap: "inventarioActivos",
+      },
+      {
+        href: "/inventario",
+        label: "Inventario",
+        icon: Package,
+        cap: "inventarioActivos",
+      },
       { href: "/soporte/tickets", label: "Tickets soporte", icon: LifeBuoy },
     ],
   };
@@ -151,20 +221,42 @@ export function AppSidebar({
   const finanzas: NavGroup = {
     label: "FINANZAS",
     items: [
-      { href: "/finanzas", label: "Inicio finanzas", icon: LayoutGrid },
-      { href: "/finanzas/oc", label: "Compras (OC)", icon: ShoppingCart },
-      { href: "/finanzas/ot", label: "OT inter-co", icon: ClipboardList },
-      { href: "/finanzas/cfdi", label: "CFDI", icon: Receipt },
-      { href: "/finanzas/tesoreria", label: "Tesorería", icon: Wallet },
+      {
+        href: "/finanzas",
+        label: "Inicio finanzas",
+        icon: LayoutGrid,
+        cap: "finanzas",
+      },
+      {
+        href: "/finanzas/oc",
+        label: "Compras (OC)",
+        icon: ShoppingCart,
+        cap: "finanzas",
+      },
+      {
+        href: "/finanzas/ot",
+        label: "OT inter-co",
+        icon: ClipboardList,
+        cap: "finanzas",
+      },
+      { href: "/finanzas/cfdi", label: "CFDI", icon: Receipt, cap: "finanzas" },
+      {
+        href: "/finanzas/tesoreria",
+        label: "Tesorería",
+        icon: Wallet,
+        cap: "finanzas",
+      },
       {
         href: "/finanzas/gastos-recurrentes",
         label: "Gastos recurrentes",
         icon: RefreshCw,
+        cap: "finanzas",
       },
       {
         href: "/finanzas/cumplimiento",
         label: "Cumplimiento fiscal",
         icon: ShieldCheck,
+        cap: "finanzas",
       },
       // Módulos restringidos (Sprint S/EF) — solo CEO + contralor + tesorero
       ...(puedeVerAjustesGerenciales
@@ -214,7 +306,13 @@ export function AppSidebar({
     { href: "/ayuda", label: "Ayuda", icon: HelpCircle },
   ];
 
-  const grupos = [principal, comercial, proyectos, recursos, finanzas];
+  // Filtrar items por capacidad y descartar grupos que queden vacíos.
+  const grupos = [principal, comercial, proyectos, recursos, finanzas]
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((it) => it.cap === undefined || caps[it.cap]),
+    }))
+    .filter((g) => g.items.length > 0);
 
   return (
     <aside
