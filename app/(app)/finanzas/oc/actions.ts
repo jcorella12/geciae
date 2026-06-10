@@ -10,6 +10,7 @@ import {
 } from "@/lib/auth/permisos";
 import {
   calcularTotalesOC,
+  conceptosEfectivos,
   OCFormSchema,
   type OCFormData,
 } from "@/lib/oc/schemas";
@@ -26,7 +27,9 @@ function parseFormData(formData: FormData): unknown {
       conceptos = [];
     }
   }
+  const modo = formData.get("modo") === "detallado" ? "detallado" : "rapido";
   return {
+    modo,
     empresa_id: formData.get("empresa_id"),
     proveedor_id: formData.get("proveedor_id"),
     proyecto_id: formData.get("proyecto_id") || undefined,
@@ -38,8 +41,38 @@ function parseFormData(formData: FormData): unknown {
     descuento: formData.get("descuento") || 0,
     retenciones: formData.get("retenciones") || 0,
     centro_id: formData.get("centro_id") || undefined,
+    // Modo rápido
+    descripcion_general: formData.get("descripcion_general") || undefined,
+    total_directo: formData.get("total_directo") || undefined,
+    iva_incluido: formData.get("iva_incluido") === "false" ? "false" : "true",
     conceptos,
   };
+}
+
+/**
+ * Sube el documento de respaldo (cotización/factura) al bucket `cotizaciones`
+ * y devuelve el path. Best-effort: si falla, la OC se crea igual sin adjunto.
+ */
+async function subirDocumentoOC(
+  supabase: ReturnType<typeof createClient>,
+  formData: FormData,
+  empresaId: string,
+  numero: string,
+): Promise<string | null> {
+  const file = formData.get("documento");
+  if (!(file instanceof File) || file.size === 0) return null;
+  if (file.size > 10 * 1024 * 1024) return null; // 10 MB máx
+  const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+  const ext = extMatch ? extMatch[1].toLowerCase() : "pdf";
+  const path = `oc/${empresaId}/${numero.replace(/[^\w-]/g, "_")}.${ext}`;
+  const { error } = await supabase.storage
+    .from("cotizaciones")
+    .upload(path, file, { upsert: true, contentType: file.type || undefined });
+  if (error) {
+    console.error(`[OC ${numero}] error subiendo documento:`, error.message);
+    return null;
+  }
+  return path;
 }
 
 async function generarNumeroOC(
@@ -109,10 +142,25 @@ export async function createOC(
     };
   }
 
-  const totales = calcularTotalesOC(d);
+  // Conceptos efectivos: en modo rápido es 1 concepto sintético del total;
+  // en detallado son los capturados. Los totales se calculan de ahí.
+  const conceptos = conceptosEfectivos(d);
+  const totales = calcularTotalesOC({
+    conceptos,
+    descuento: d.descuento,
+    retenciones: d.retenciones,
+  });
   const numero = await generarNumeroOC(supabase, d.empresa_id);
   const callerId = await getCallerId(supabase);
   if (!callerId) return { ok: false, error: "No autenticado." };
+
+  // Subir documento de respaldo (cotización/factura) si vino. Best-effort.
+  const docPath = await subirDocumentoOC(
+    supabase,
+    formData,
+    d.empresa_id,
+    numero,
+  );
 
   // Auto-aprobación: si el capturador tiene umbral suficiente, la OC arranca
   // ya aprobada (evita el round-trip de pasar por "pendiente_aprobacion").
@@ -139,6 +187,10 @@ export async function createOC(
       forma_pago: d.forma_pago,
       estado: autoAprobada ? "aprobada" : "borrador",
       comentarios: d.comentarios,
+      url_pdf: docPath,
+      archivos_adjuntos: docPath
+        ? [{ tipo: "documento_origen", path: docPath }]
+        : null,
       capturado_por: callerId,
       aprobado_por: autoAprobada ? callerId : null,
       fecha_aprobacion: autoAprobada ? ahora : null,
@@ -152,8 +204,8 @@ export async function createOC(
     return { ok: false, error: `Error al crear OC: ${ocErr?.message}` };
   }
 
-  // Insertar conceptos.
-  const conceptosRows = d.conceptos.map((c, i) => ({
+  // Insertar conceptos (efectivos: sintético en rápido, reales en detallado).
+  const conceptosRows = conceptos.map((c, i) => ({
     oc_id: ocNueva.id,
     orden: i + 1,
     descripcion: c.descripcion,

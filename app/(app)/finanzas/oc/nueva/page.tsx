@@ -79,8 +79,9 @@ export default async function NuevaOCPage({
         </Link>
         <h1 className="mt-2 text-2xl font-semibold leading-tight">Nueva OC</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Captura los conceptos. La OC arranca como <strong>borrador</strong>.
-          Cuando esté lista, la envías a aprobación.
+          Adjunta la cotización o factura y captura lo mínimo: proveedor y
+          total. La OC arranca como <strong>borrador</strong>. ¿Necesitas
+          desglosar ítem por ítem? Hay un modo detallado abajo.
         </p>
         {searchParams.solicitud_origen && (
           <div className="mt-3 rounded-md border border-blue-300 bg-blue-50 px-3 py-2 text-[12.5px] text-blue-900">

@@ -1,18 +1,15 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ChevronDown, Plus, Sparkles, Trash2, Upload } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CentroSelector } from "@/components/centros/centro-selector";
-import { DocumentExtractor } from "@/components/shared/document-extractor";
-import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { ProveedorPicker } from "@/components/shared/proveedor-picker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CentroOpcion } from "@/lib/centros/listar";
-import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
 import { calcularTotalesOC } from "@/lib/oc/schemas";
 import { initialOCState, TASA_IVA_DEFAULT } from "@/lib/oc/state";
 
@@ -29,13 +26,6 @@ const empresaCodigoColor: Record<string, string> = {
   LIMSON: "bg-limson",
 };
 
-const semaforoBadge: Record<string, string> = {
-  verde: "bg-success/15 text-success",
-  amarillo: "bg-warning/15 text-foreground",
-  rojo: "bg-destructive/15 text-destructive",
-  negro: "bg-foreground/10 text-foreground",
-};
-
 const fmtMxn = new Intl.NumberFormat("es-MX", {
   style: "currency",
   currency: "MXN",
@@ -47,14 +37,12 @@ type Empresa = {
   razon_social: string;
   nombre_comercial: string | null;
 };
-
 type Proveedor = {
   id: string;
   razon_social: string;
   rfc: string;
   semaforo: string | null;
 };
-
 type Proyecto = {
   id: string;
   codigo: string;
@@ -62,7 +50,6 @@ type Proyecto = {
   empresa_id: string;
   estado: string | null;
 };
-
 type ConceptoLocal = {
   key: string;
   descripcion: string;
@@ -102,28 +89,62 @@ export function OCForm({
   centroDefaultPorEmpresa?: Record<string, string | null>;
   defaultProyectoId?: string | null;
   defaultEmpresaId?: string;
-  /** Si la OC se crea desde una solicitud, su ID — se vincula post-creación. */
   solicitudOrigenId?: string | null;
 }) {
   const [state, formAction] = useFormState(createOC, initialOCState);
-  const [conceptos, setConceptos] = useState<ConceptoLocal[]>([
-    nuevoConcepto(),
-  ]);
+  const [modo, setModo] = useState<"rapido" | "detallado">("rapido");
+
   const [empresaId, setEmpresaId] = useState<string>(defaultEmpresaId ?? "");
   const [proveedorId, setProveedorId] = useState<string>("");
   const [proyectoId, setProyectoId] = useState<string>(defaultProyectoId ?? "");
+
+  // Modo rápido
+  const [descripcionGeneral, setDescripcionGeneral] = useState("");
+  const [totalDirecto, setTotalDirecto] = useState("");
+  const [ivaIncluido, setIvaIncluido] = useState(true);
+
+  // Documento adjunto (sirve para IA y como respaldo guardado)
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [iaMsg, setIaMsg] = useState<string | null>(null);
+  const [iaErr, setIaErr] = useState<string | null>(null);
+  const [leyendo, startLeer] = useTransition();
+
+  // Modo detallado
+  const [conceptos, setConceptos] = useState<ConceptoLocal[]>([nuevoConcepto()]);
   const [descuento, setDescuento] = useState("0");
   const [retenciones, setRetenciones] = useState("0");
   const [condicionesPago, setCondicionesPago] = useState("");
-  const [cotizacionInfo, setCotizacionInfo] =
-    useState<CotizacionDefaults | null>(null);
+
+  const proveedoresFiltrados = useMemo(
+    () =>
+      proveedores.filter(
+        (p) => p.semaforo !== "rojo" && p.semaforo !== "negro",
+      ),
+    [proveedores],
+  );
+  const proveedorSeleccionado = useMemo(
+    () => proveedores.find((p) => p.id === proveedorId) ?? null,
+    [proveedores, proveedorId],
+  );
+  const proyectosFiltrados = useMemo(
+    () => (empresaId ? proyectos.filter((p) => p.empresa_id === empresaId) : []),
+    [proyectos, empresaId],
+  );
 
   function aplicarCotizacion(d: CotizacionDefaults) {
-    setCotizacionInfo(d);
-    if (d.proveedor.id) {
-      setProveedorId(d.proveedor.id);
+    if (d.proveedor.id) setProveedorId(d.proveedor.id);
+    if (d.condiciones_pago) setCondicionesPago(d.condiciones_pago);
+    if (d.total_cotizacion != null) {
+      setTotalDirecto(String(d.total_cotizacion));
     }
+    // Resumen para la descripción general (modo rápido).
     if (d.conceptos.length > 0) {
+      const resumen = d.conceptos
+        .map((c) => c.descripcion)
+        .join(", ")
+        .slice(0, 200);
+      setDescripcionGeneral((prev) => prev || resumen);
+      // Si el usuario está en detallado, también precargamos la tabla.
       setConceptos(
         d.conceptos.map((c) => ({
           key: crypto.randomUUID(),
@@ -136,51 +157,51 @@ export function OCForm({
         })),
       );
     }
-    if (d.condiciones_pago) {
-      setCondicionesPago(d.condiciones_pago);
-    }
   }
 
-  const proyectosFiltrados = useMemo(
-    () => (empresaId ? proyectos.filter((p) => p.empresa_id === empresaId) : []),
-    [proyectos, empresaId],
-  );
-
-  useEffect(() => {
-    if (proyectoId && empresaId) {
-      const aun = proyectosFiltrados.some((p) => p.id === proyectoId);
-      if (!aun) setProyectoId("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [empresaId]);
-
-  // Solo proveedores en semáforo verde o amarillo — los rojos/negros
-  // bloquean la creación de OC por compliance. ProveedorPicker maneja
-  // su propia búsqueda interna.
-  const proveedoresFiltrados = useMemo(
-    () =>
-      proveedores.filter(
-        (p) => p.semaforo !== "rojo" && p.semaforo !== "negro",
-      ),
-    [proveedores],
-  );
-
-  const proveedorSeleccionado = useMemo(
-    () => proveedores.find((p) => p.id === proveedorId) ?? null,
-    [proveedores, proveedorId],
-  );
-
-  const totales = useMemo(() => {
-    return calcularTotalesOC({
-      conceptos: conceptos.map((c) => ({
-        cantidad: Number(c.cantidad) || 0,
-        precio_unitario: Number(c.precio_unitario) || 0,
-        iva_tasa: Number(c.iva_tasa) || 0,
-      })),
-      descuento: Number(descuento) || 0,
-      retenciones: Number(retenciones) || 0,
+  function leerConIA() {
+    if (!docFile) return;
+    setIaErr(null);
+    setIaMsg(null);
+    startLeer(async () => {
+      const fd = new FormData();
+      fd.append("archivo", docFile);
+      const res = await procesarCotizacionOC(fd);
+      if (!res.ok) {
+        setIaErr(res.error);
+        return;
+      }
+      aplicarCotizacion(res.defaults);
+      setIaMsg(
+        `Datos leídos (confianza ${Math.round(res.meta.confidence * 100)}%). Revisa total y proveedor.`,
+      );
     });
-  }, [conceptos, descuento, retenciones]);
+  }
+
+  const totalesDetallado = useMemo(
+    () =>
+      calcularTotalesOC({
+        conceptos: conceptos.map((c) => ({
+          cantidad: Number(c.cantidad) || 0,
+          precio_unitario: Number(c.precio_unitario) || 0,
+          iva_tasa: Number(c.iva_tasa) || 0,
+        })),
+        descuento: Number(descuento) || 0,
+        retenciones: Number(retenciones) || 0,
+      }),
+    [conceptos, descuento, retenciones],
+  );
+
+  const conceptosJson = JSON.stringify(
+    conceptos.map((c) => ({
+      descripcion: c.descripcion,
+      cantidad: Number(c.cantidad) || 0,
+      unidad_sat: c.unidad_sat,
+      precio_unitario: Number(c.precio_unitario) || 0,
+      iva_tasa: Number(c.iva_tasa) || 0,
+      clave_sat: c.clave_sat,
+    })),
+  );
 
   function actualizarConcepto<K extends keyof ConceptoLocal>(
     idx: number,
@@ -194,40 +215,6 @@ export function OCForm({
     });
   }
 
-  function eliminarConcepto(idx: number) {
-    setConceptos((prev) =>
-      prev.length > 1 ? prev.filter((_, i) => i !== idx) : prev,
-    );
-  }
-
-  // Serializar conceptos a JSON para el form post.
-  const conceptosJson = JSON.stringify(
-    conceptos.map((c) => ({
-      descripcion: c.descripcion,
-      cantidad: Number(c.cantidad) || 0,
-      unidad_sat: c.unidad_sat,
-      precio_unitario: Number(c.precio_unitario) || 0,
-      iva_tasa: Number(c.iva_tasa) || 0,
-      clave_sat: c.clave_sat,
-    })),
-  );
-
-  const formRef = useRef<HTMLFormElement>(null);
-  const formKey = `oc-form-${empresaId || "nueva"}`;
-  const { showBanner, onInput, applyDraft, discardDraft, clearDraft } =
-    useFormDraftDom<{ conceptos: ConceptoLocal[] }>(formRef, formKey, {
-      stateExtra: { conceptos },
-      onRestoreExtra: (extra) => {
-        if (extra?.conceptos && extra.conceptos.length > 0) {
-          setConceptos(extra.conceptos);
-        }
-      },
-    });
-
-  useEffect(() => {
-    if (state.ok) clearDraft();
-  }, [state.ok, clearDraft]);
-
   if (empresas.length === 0) {
     return (
       <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
@@ -239,102 +226,77 @@ export function OCForm({
     );
   }
 
-  if (proveedores.length === 0) {
-    return (
-      <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 text-sm">
-        <p className="font-medium">Sin proveedores registrados.</p>
-        <p className="mt-1 text-muted-foreground">
-          Da de alta proveedores en{" "}
-          <a className="underline" href="/finanzas/proveedores">
-            /finanzas/proveedores
-          </a>{" "}
-          antes de crear OC.
-        </p>
-      </div>
-    );
-  }
-
   const fieldErr = (k: string) => state.fieldErrors?.[k]?.[0];
+  const totalRapidoNum = Number(totalDirecto) || 0;
 
   return (
-    <>
-      {showBanner && (
-        <DraftRecoveryBanner
-          onRestore={applyDraft}
-          onDiscard={discardDraft}
-          label="Tienes un borrador sin guardar de esta OC (incluye conceptos). ¿Restaurarlo?"
-        />
-      )}
-      <form
-        ref={formRef}
-        action={formAction}
-        onInput={onInput}
-        onSubmit={() => clearDraft()}
-        className="space-y-6"
-      >
-      {/* Solicitud de origen (si la OC se crea desde una solicitud aprobada) */}
+    <form action={formAction} className="space-y-5">
       {solicitudOrigenId && (
-        <input
-          type="hidden"
-          name="solicitud_origen"
-          value={solicitudOrigenId}
-        />
+        <input type="hidden" name="solicitud_origen" value={solicitudOrigenId} />
       )}
-      {/* IA: cargar cotización */}
-      <DocumentExtractor
-        accept="image/jpeg,image/png,image/webp,application/pdf"
-        label="¿Tienes la cotización del proveedor?"
-        description="Súbela y la IA llena los conceptos, busca el proveedor por RFC y precarga condiciones de pago. Acepta cotizaciones, presupuestos o facturas en PDF/imagen."
-        onProcess={procesarCotizacionOC}
-        onExtracted={aplicarCotizacion}
+      <input type="hidden" name="modo" value={modo} />
+      <input type="hidden" name="proyecto_id" value={proyectoId} />
+      <input
+        type="hidden"
+        name="fecha_emision"
+        value={new Date().toISOString().slice(0, 10)}
       />
+      <input type="hidden" name="condiciones_pago" value={condicionesPago} />
 
-      {cotizacionInfo && (
-        <div className="rounded-md border border-info/30 bg-info/5 px-3 py-2 text-xs">
-          <p className="font-medium">Cotización cargada</p>
-          <ul className="mt-1 space-y-0.5 text-muted-foreground">
-            {cotizacionInfo.proveedor.rfc && (
-              <li>
-                Proveedor:{" "}
-                {cotizacionInfo.proveedor.razon_social ?? "(sin nombre)"} ·{" "}
-                <code className="font-mono">{cotizacionInfo.proveedor.rfc}</code>
-                {cotizacionInfo.proveedor.id ? (
-                  <span className="ml-1 text-success">✓ encontrado en catálogo</span>
-                ) : cotizacionInfo.proveedor.no_encontrado ? (
-                  <span className="ml-1 text-warning-foreground">
-                    ⚠ no está en catálogo —{" "}
-                    <a
-                      href="/finanzas/proveedores/nuevo"
-                      target="_blank"
-                      rel="noopener"
-                      className="underline"
-                    >
-                      crear proveedor
-                    </a>
-                  </span>
-                ) : null}
-              </li>
-            )}
-            <li>{cotizacionInfo.conceptos.length} concepto(s) extraído(s)</li>
-            {cotizacionInfo.total_cotizacion != null && (
-              <li>
-                Total cotización: {fmtMxn.format(cotizacionInfo.total_cotizacion)}{" "}
-                <span className="text-muted-foreground/80">
-                  (verifica que coincida con el total del form abajo)
-                </span>
-              </li>
-            )}
-          </ul>
+      {/* 1 · Documento (cotización / factura) */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Documento (cotización o factura)</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Adjunta el PDF, foto o XML. Queda como respaldo de la OC. Si quieres,
+          la IA lee el proveedor y el total por ti.
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-background px-3 py-2 text-sm hover:bg-secondary">
+            <Upload className="h-4 w-4 text-muted-foreground" />
+            <span className="truncate">
+              {docFile ? docFile.name : "Seleccionar archivo…"}
+            </span>
+            <input
+              type="file"
+              name="documento"
+              accept="image/jpeg,image/png,image/webp,application/pdf,text/xml,application/xml"
+              className="hidden"
+              onChange={(e) => {
+                setDocFile(e.target.files?.[0] ?? null);
+                setIaMsg(null);
+                setIaErr(null);
+              }}
+            />
+          </label>
+          {docFile && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={leerConIA}
+              disabled={leyendo}
+            >
+              <Sparkles className="h-4 w-4" />
+              {leyendo ? "Leyendo…" : "Leer con IA"}
+            </Button>
+          )}
         </div>
-      )}
+        {iaMsg && (
+          <p className="mt-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs">
+            {iaMsg}
+          </p>
+        )}
+        {iaErr && (
+          <p className="mt-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-1.5 text-xs text-destructive">
+            {iaErr}
+          </p>
+        )}
+      </section>
 
-      {/* Empresa solicitante */}
+      {/* 2 · Empresa */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Empresa solicitante</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Empresa del grupo que paga la OC.
-        </p>
-        <fieldset className="mt-4 grid grid-cols-2 gap-2">
+        <fieldset className="mt-3 grid grid-cols-2 gap-2">
           {empresas.map((e) => (
             <label
               key={e.id}
@@ -365,81 +327,14 @@ export function OCForm({
         )}
       </section>
 
-      {/* Centro de costo */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Centro de costo</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Centro al que se cargará el costo de esta OC. Si la empresa tiene
-          uno por defecto se sugiere automáticamente.
-        </p>
-        <div className="mt-3">
-          <CentroSelector
-            id="centro_id"
-            label="Centro"
-            empresaId={empresaId || undefined}
-            filtroTipo="costo"
-            defaultValue={
-              empresaId ? centroDefaultPorEmpresa[empresaId] ?? null : null
-            }
-            centros={centros}
-            warnVacio={Boolean(empresaId)}
-          />
-        </div>
-      </section>
-
-      {/* Proyecto */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">
-          Proyecto{" "}
-          <span className="text-sm font-normal text-muted-foreground">
-            (opcional)
-          </span>
-        </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Asocia esta OC a un proyecto activo de la empresa para contabilizar
-          el costo en su presupuesto.
-        </p>
-        <input type="hidden" name="proyecto_id" value={proyectoId} />
-        <div className="mt-3">
-          {!empresaId ? (
-            <p className="text-sm text-muted-foreground">
-              Selecciona empresa primero.
-            </p>
-          ) : proyectosFiltrados.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Sin proyectos activos en esta empresa.{" "}
-              <a className="underline" href="/proyectos/nuevo">
-                Crear uno
-              </a>
-              .
-            </p>
-          ) : (
-            <select
-              value={proyectoId}
-              onChange={(e) => setProyectoId(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            >
-              <option value="">Sin proyecto (gasto general)</option>
-              {proyectosFiltrados.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.codigo} — {p.nombre}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      </section>
-
-      {/* Proveedor — S3-T3: ProveedorPicker con quick-create inline */}
+      {/* 3 · Proveedor */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
         <h2 className="text-base font-semibold">Proveedor</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Solo se listan proveedores activos en semáforo verde o amarillo.
-          Los rojos/negros bloquean la creación de OC. Si el proveedor no
-          existe aún, créalo aquí mismo sin abandonar la OC.
+        <p className="mt-1 text-xs text-muted-foreground">
+          Solo proveedores en semáforo verde o amarillo. Si no existe, créalo
+          aquí mismo.
         </p>
-
-        <div className="mt-4 space-y-2">
+        <div className="mt-3 space-y-2">
           <ProveedorPicker
             proveedores={proveedoresFiltrados.map((p) => ({
               id: p.id,
@@ -452,24 +347,9 @@ export function OCForm({
             empresaId={empresaId || null}
           />
           {proveedorSeleccionado && (
-            <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-2 text-xs">
-              Seleccionado:{" "}
-              <strong>{proveedorSeleccionado.razon_social}</strong> ·{" "}
-              <span className="font-mono">{proveedorSeleccionado.rfc}</span>{" "}
-              ·{" "}
-              <span
-                className={`rounded-full px-2 py-0.5 ${
-                  semaforoBadge[proveedorSeleccionado.semaforo ?? "verde"] ??
-                  "bg-secondary"
-                }`}
-              >
-                semáforo {proveedorSeleccionado.semaforo ?? "verde"}
-              </span>
-              {proveedorSeleccionado.semaforo === "amarillo" && (
-                <span className="ml-2 text-warning-foreground">
-                  ⚠ Documentación próxima a vencer.
-                </span>
-              )}
+            <p className="rounded-md border border-primary/30 bg-primary/10 px-3 py-1.5 text-xs">
+              {proveedorSeleccionado.razon_social} ·{" "}
+              <span className="font-mono">{proveedorSeleccionado.rfc}</span>
             </p>
           )}
           {fieldErr("proveedor_id") && (
@@ -478,221 +358,178 @@ export function OCForm({
         </div>
       </section>
 
-      {/* Datos generales */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Datos generales</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="fecha_emision">Fecha de emisión</Label>
-            <Input
-              id="fecha_emision"
-              name="fecha_emision"
-              type="date"
-              required
-              defaultValue={new Date().toISOString().slice(0, 10)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="fecha_entrega_esperada">Fecha entrega esperada</Label>
-            <Input
-              id="fecha_entrega_esperada"
-              name="fecha_entrega_esperada"
-              type="date"
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="condiciones_pago">Condiciones de pago</Label>
-            <Input
-              id="condiciones_pago"
-              name="condiciones_pago"
-              placeholder="30 días"
-              value={condicionesPago}
-              onChange={(e) => setCondicionesPago(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="forma_pago">Forma de pago</Label>
-            <Input
-              id="forma_pago"
-              name="forma_pago"
-              placeholder="Transferencia"
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Conceptos */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold">Conceptos</h2>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() =>
-              setConceptos((prev) => [...prev, nuevoConcepto()])
-            }
-          >
-            <Plus className="h-4 w-4" /> Agregar
-          </Button>
-        </div>
-
-        <input type="hidden" name="conceptos" value={conceptosJson} />
-
-        <div className="mt-4 space-y-3">
-          {conceptos.map((c, i) => {
-            const importe =
-              (Number(c.cantidad) || 0) * (Number(c.precio_unitario) || 0);
-            return (
-              <div
-                key={c.key}
-                className="grid gap-2 rounded-md border border-border bg-background p-3 sm:grid-cols-12"
-              >
-                <div className="sm:col-span-5">
-                  <Label className="text-xs">
-                    Descripción <span className="text-destructive">*</span>
-                  </Label>
-                  <Input
-                    value={c.descripcion}
-                    onChange={(e) =>
-                      actualizarConcepto(i, "descripcion", e.target.value)
-                    }
-                    placeholder="Servicio o material"
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-1">
-                  <Label className="text-xs">Cant.</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={c.cantidad}
-                    onChange={(e) =>
-                      actualizarConcepto(i, "cantidad", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-1">
-                  <Label className="text-xs">Unidad</Label>
-                  <Input
-                    value={c.unidad_sat}
-                    onChange={(e) =>
-                      actualizarConcepto(i, "unidad_sat", e.target.value)
-                    }
-                    placeholder="PZA"
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <Label className="text-xs">Precio unit.</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={c.precio_unitario}
-                    onChange={(e) =>
-                      actualizarConcepto(i, "precio_unitario", e.target.value)
-                    }
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-1">
-                  <Label className="text-xs">IVA</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={c.iva_tasa}
-                    onChange={(e) =>
-                      actualizarConcepto(i, "iva_tasa", e.target.value)
-                    }
-                  />
-                </div>
-                <div className="flex items-end justify-between sm:col-span-2">
-                  <span className="text-xs text-muted-foreground">
-                    Importe<br />
-                    <span className="text-sm font-medium text-foreground">
-                      {fmtMxn.format(importe)}
-                    </span>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => eliminarConcepto(i)}
-                    disabled={conceptos.length === 1}
-                    className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
-                    aria-label="Eliminar concepto"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
+      {/* 4 · Qué se compra + total (modo rápido) / conceptos (detallado) */}
+      {modo === "rapido" ? (
+        <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+          <h2 className="text-base font-semibold">¿Qué se compra?</h2>
+          <div className="mt-3 space-y-3">
+            <div>
+              <Label htmlFor="descripcion_general" className="text-sm">
+                Descripción <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="descripcion_general"
+                name="descripcion_general"
+                value={descripcionGeneral}
+                onChange={(e) => setDescripcionGeneral(e.target.value)}
+                placeholder={
+                  docFile
+                    ? "Ej. Material eléctrico para obra"
+                    : "Sin documento: explica qué es y por qué (ej. Renta oficina mayo)"
+                }
+              />
+              {fieldErr("descripcion_general") && (
+                <p className="mt-1 text-xs text-destructive">
+                  {fieldErr("descripcion_general")}
+                </p>
+              )}
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <Label htmlFor="total_directo" className="text-sm">
+                  Total (MXN) <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="total_directo"
+                  name="total_directo"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={totalDirecto}
+                  onChange={(e) => setTotalDirecto(e.target.value)}
+                  placeholder="0.00"
+                />
+                {fieldErr("total_directo") && (
+                  <p className="mt-1 text-xs text-destructive">
+                    {fieldErr("total_directo")}
+                  </p>
+                )}
               </div>
-            );
-          })}
+              <div className="flex items-end pb-1">
+                <label className="flex cursor-pointer items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    name="iva_incluido"
+                    value="true"
+                    checked={ivaIncluido}
+                    onChange={(e) => setIvaIncluido(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  El total ya incluye IVA 16%
+                </label>
+                {/* Cuando NO está marcado, mandamos false explícito */}
+                {!ivaIncluido && (
+                  <input type="hidden" name="iva_incluido" value="false" />
+                )}
+              </div>
+            </div>
+            {totalRapidoNum > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {ivaIncluido
+                  ? `Subtotal ${fmtMxn.format(
+                      Math.round((totalRapidoNum / 1.16) * 100) / 100,
+                    )} + IVA · Total ${fmtMxn.format(totalRapidoNum)}`
+                  : `Subtotal ${fmtMxn.format(totalRapidoNum)} (sin IVA)`}
+              </p>
+            )}
+          </div>
+        </section>
+      ) : (
+        <ConceptosDetallado
+          conceptos={conceptos}
+          setConceptos={setConceptos}
+          actualizarConcepto={actualizarConcepto}
+          descuento={descuento}
+          setDescuento={setDescuento}
+          retenciones={retenciones}
+          setRetenciones={setRetenciones}
+          totales={totalesDetallado}
+          conceptosJson={conceptosJson}
+          fieldErr={fieldErr}
+        />
+      )}
+
+      {/* 5 · Imputación: proyecto + centro de costo (ambos opcionales) */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">¿A qué se carga?</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Si es de un proyecto, elígelo. Si no (oficina, nómina, gasto general),
+          usa un centro de costo. Puedes dejar ambos vacíos si aún no aplica.
+        </p>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label className="text-sm">Proyecto · opcional</Label>
+            {!empresaId ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Selecciona empresa primero.
+              </p>
+            ) : proyectosFiltrados.length === 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Sin proyectos activos en esta empresa.
+              </p>
+            ) : (
+              <select
+                value={proyectoId}
+                onChange={(e) => setProyectoId(e.target.value)}
+                className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">— Sin proyecto —</option>
+                {proyectosFiltrados.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.codigo} — {p.nombre}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+          <div>
+            <Label className="text-sm">Centro de costo · opcional</Label>
+            <div className="mt-1">
+              <CentroSelector
+                id="centro_id"
+                label=""
+                empresaId={empresaId || undefined}
+                filtroTipo="costo"
+                defaultValue={
+                  empresaId ? centroDefaultPorEmpresa[empresaId] ?? null : null
+                }
+                centros={centros}
+                warnVacio={false}
+              />
+            </div>
+          </div>
         </div>
-        {fieldErr("conceptos") && (
-          <p className="mt-2 text-xs text-destructive">{fieldErr("conceptos")}</p>
-        )}
       </section>
 
-      {/* Ajustes y totales */}
+      {/* 6 · Comentarios */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Ajustes y totales</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1">
-            <Label htmlFor="descuento">Descuento (MXN)</Label>
-            <Input
-              id="descuento"
-              name="descuento"
-              type="number"
-              min="0"
-              step="0.01"
-              value={descuento}
-              onChange={(e) => setDescuento(e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label htmlFor="retenciones">Retenciones (MXN)</Label>
-            <Input
-              id="retenciones"
-              name="retenciones"
-              type="number"
-              min="0"
-              step="0.01"
-              value={retenciones}
-              onChange={(e) => setRetenciones(e.target.value)}
-            />
-          </div>
-        </div>
-
-        <dl className="mt-6 space-y-1.5 text-sm">
-          <Row k="Subtotal" v={fmtMxn.format(totales.subtotal)} />
-          <Row k="Descuento" v={`- ${fmtMxn.format(totales.descuento)}`} />
-          <Row k="IVA" v={fmtMxn.format(totales.iva)} />
-          <Row k="Retenciones" v={`- ${fmtMxn.format(totales.retenciones)}`} />
-          <div className="my-2 border-t border-border" />
-          <Row
-            k={<strong>Total</strong>}
-            v={
-              <strong className="text-base">
-                {fmtMxn.format(totales.total)}
-              </strong>
-            }
-          />
-        </dl>
-      </section>
-
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <Label htmlFor="comentarios">Comentarios / observaciones</Label>
+        <Label htmlFor="comentarios" className="text-sm">
+          Comentarios · opcional
+        </Label>
         <textarea
           id="comentarios"
           name="comentarios"
-          rows={3}
+          rows={2}
           maxLength={2000}
           className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       </section>
+
+      {/* Toggle modo */}
+      <button
+        type="button"
+        onClick={() => setModo((m) => (m === "rapido" ? "detallado" : "rapido"))}
+        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+      >
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform ${
+            modo === "detallado" ? "rotate-180" : ""
+          }`}
+        />
+        {modo === "rapido"
+          ? "Desglosar por concepto (para recepción ítem por ítem)"
+          : "Volver a modo rápido (un solo total)"}
+      </button>
 
       {state.error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -702,7 +539,189 @@ export function OCForm({
 
       <SubmitButton />
     </form>
-    </>
+  );
+}
+
+function ConceptosDetallado({
+  conceptos,
+  setConceptos,
+  actualizarConcepto,
+  descuento,
+  setDescuento,
+  retenciones,
+  setRetenciones,
+  totales,
+  conceptosJson,
+  fieldErr,
+}: {
+  conceptos: ConceptoLocal[];
+  setConceptos: React.Dispatch<React.SetStateAction<ConceptoLocal[]>>;
+  actualizarConcepto: <K extends keyof ConceptoLocal>(
+    idx: number,
+    key: K,
+    value: ConceptoLocal[K],
+  ) => void;
+  descuento: string;
+  setDescuento: (v: string) => void;
+  retenciones: string;
+  setRetenciones: (v: string) => void;
+  totales: ReturnType<typeof calcularTotalesOC>;
+  conceptosJson: string;
+  fieldErr: (k: string) => string | undefined;
+}) {
+  return (
+    <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h2 className="text-base font-semibold">Conceptos</h2>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => setConceptos((prev) => [...prev, nuevoConcepto()])}
+        >
+          <Plus className="h-4 w-4" /> Agregar
+        </Button>
+      </div>
+      <input type="hidden" name="conceptos" value={conceptosJson} />
+      <div className="mt-4 space-y-3">
+        {conceptos.map((c, i) => {
+          const importe =
+            (Number(c.cantidad) || 0) * (Number(c.precio_unitario) || 0);
+          return (
+            <div
+              key={c.key}
+              className="grid gap-2 rounded-md border border-border bg-background p-3 sm:grid-cols-12"
+            >
+              <div className="sm:col-span-5">
+                <Label className="text-xs">
+                  Descripción <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  value={c.descripcion}
+                  onChange={(e) =>
+                    actualizarConcepto(i, "descripcion", e.target.value)
+                  }
+                  placeholder="Servicio o material"
+                />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Cant.</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={c.cantidad}
+                  onChange={(e) =>
+                    actualizarConcepto(i, "cantidad", e.target.value)
+                  }
+                />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">Unidad</Label>
+                <Input
+                  value={c.unidad_sat}
+                  onChange={(e) =>
+                    actualizarConcepto(i, "unidad_sat", e.target.value)
+                  }
+                  placeholder="PZA"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Precio unit.</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={c.precio_unitario}
+                  onChange={(e) =>
+                    actualizarConcepto(i, "precio_unitario", e.target.value)
+                  }
+                />
+              </div>
+              <div className="sm:col-span-1">
+                <Label className="text-xs">IVA</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={c.iva_tasa}
+                  onChange={(e) =>
+                    actualizarConcepto(i, "iva_tasa", e.target.value)
+                  }
+                />
+              </div>
+              <div className="flex items-end justify-between sm:col-span-2">
+                <span className="text-xs text-muted-foreground">
+                  Importe
+                  <br />
+                  <span className="text-sm font-medium text-foreground">
+                    {fmtMxn.format(importe)}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setConceptos((prev) =>
+                      prev.length > 1 ? prev.filter((_, j) => j !== i) : prev,
+                    )
+                  }
+                  disabled={conceptos.length === 1}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive disabled:opacity-30"
+                  aria-label="Eliminar concepto"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {fieldErr("conceptos") && (
+        <p className="mt-2 text-xs text-destructive">{fieldErr("conceptos")}</p>
+      )}
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label htmlFor="descuento" className="text-sm">
+            Descuento (MXN)
+          </Label>
+          <Input
+            id="descuento"
+            name="descuento"
+            type="number"
+            min="0"
+            step="0.01"
+            value={descuento}
+            onChange={(e) => setDescuento(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label htmlFor="retenciones" className="text-sm">
+            Retenciones (MXN)
+          </Label>
+          <Input
+            id="retenciones"
+            name="retenciones"
+            type="number"
+            min="0"
+            step="0.01"
+            value={retenciones}
+            onChange={(e) => setRetenciones(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <dl className="mt-5 space-y-1 text-sm">
+        <Row k="Subtotal" v={fmtMxn.format(totales.subtotal)} />
+        <Row k="IVA" v={fmtMxn.format(totales.iva)} />
+        <div className="my-1.5 border-t border-border" />
+        <Row
+          k={<strong>Total</strong>}
+          v={<strong>{fmtMxn.format(totales.total)}</strong>}
+        />
+      </dl>
+    </section>
   );
 }
 
