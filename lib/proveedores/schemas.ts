@@ -94,8 +94,20 @@ export const ProveedorFormSchema = z
       .optional()
       .or(z.literal(""))
       .transform((v) => (v ? v : null)),
-    regimen_fiscal: z.enum(codigosRegimen),
-    cp_fiscal: z.string().trim().regex(/^\d{5}$/, "CP debe ser 5 dígitos"),
+    // Opcionales en el alta (se completan en la ficha; rfc sí es required
+    // porque es NOT NULL en BD y es la identidad del proveedor).
+    regimen_fiscal: z
+      .enum(codigosRegimen)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    cp_fiscal: z
+      .string()
+      .trim()
+      .regex(/^\d{5}$/, "CP debe ser 5 dígitos")
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
     direccion_fiscal: DireccionSchema.optional(),
     representante_legal: z
       .string()

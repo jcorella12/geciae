@@ -129,21 +129,33 @@ export function ProveedorForm({ empresas, defaults, proveedorId }: Props) {
         onSubmit={() => clearDraft()}
         className="space-y-6"
       >
-      {/* Datos fiscales */}
+      {/* Alta express: identidad mínima */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Datos fiscales</h2>
+        <h2 className="text-base font-semibold">Datos del proveedor</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Lo mínimo para registrarlo. Régimen, CP, domicilio y banco van
+          abajo — se completan al subir su documentación.
+        </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Razón social" name="razon_social" required defaultValue={defaults?.razon_social} error={fieldErr("razon_social")} />
-          <Field label="Nombre comercial" name="nombre_comercial" defaultValue={defaults?.nombre_comercial ?? ""} />
           <Field label="RFC" name="rfc" required mono maxLength={13} defaultValue={defaults?.rfc} placeholder="ABC010101AB1" error={fieldErr("rfc")} />
-          <Field label="CURP (solo PF)" name="curp" mono maxLength={18} defaultValue={defaults?.curp ?? ""} error={fieldErr("curp")} />
+          <Field label="Nombre comercial · opcional" name="nombre_comercial" defaultValue={defaults?.nombre_comercial ?? ""} />
+        </div>
+      </section>
+
+      {/* Datos fiscales — opcional */}
+      <CollapsibleSection
+        title="Datos fiscales · opcional"
+        hint="Régimen, CP, CURP y representante legal. Se piden al facturar/recibir CFDI."
+        defaultOpen={Boolean(defaults?.regimen_fiscal || defaults?.cp_fiscal)}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <SelectField
             label="Régimen fiscal"
             name="regimen_fiscal"
-            required
             defaultValue={defaults?.regimen_fiscal ?? ""}
             options={[
-              { value: "", label: "Selecciona…", disabled: true },
+              { value: "", label: "Selecciona…" },
               ...REGIMENES_FISCALES.map((r) => ({
                 value: r.codigo,
                 label: `${r.codigo} — ${r.nombre}`,
@@ -151,11 +163,12 @@ export function ProveedorForm({ empresas, defaults, proveedorId }: Props) {
             ]}
             error={fieldErr("regimen_fiscal")}
           />
-          <Field label="CP fiscal" name="cp_fiscal" required maxLength={5} defaultValue={defaults?.cp_fiscal} error={fieldErr("cp_fiscal")} />
+          <Field label="CP fiscal" name="cp_fiscal" maxLength={5} defaultValue={defaults?.cp_fiscal} error={fieldErr("cp_fiscal")} />
+          <Field label="CURP (solo PF)" name="curp" mono maxLength={18} defaultValue={defaults?.curp ?? ""} error={fieldErr("curp")} />
           <Field label="Representante legal" name="representante_legal" defaultValue={defaults?.representante_legal ?? ""} />
           <Field label="RFC del representante" name="rfc_representante" mono maxLength={13} defaultValue={defaults?.rfc_representante ?? ""} />
         </div>
-      </section>
+      </CollapsibleSection>
 
       {/* Domicilio fiscal */}
       <CollapsibleSection
