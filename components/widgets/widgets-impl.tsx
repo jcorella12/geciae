@@ -182,7 +182,7 @@ export async function SolicitudesPendientes() {
     <ul className="space-y-1.5">
       {rows.map((s) => (
         <li key={s.id as string} className="flex items-center gap-2 text-[12px]">
-          <Link href={`/solicitudes/${s.id}`} className="flex-1 truncate hover:underline">
+          <Link href={`/proyectos/${s.proyecto_id}?tab=solicitudes&sol=${s.id}`} className="flex-1 truncate hover:underline">
             {s.titulo as string}
           </Link>
           <span className="font-mono text-[10px] text-ink-3">

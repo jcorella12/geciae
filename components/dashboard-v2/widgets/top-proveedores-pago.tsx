@@ -61,7 +61,7 @@ export async function TopProveedoresPago() {
           {top.map(([id, total], i) => (
             <li key={id}>
               <Link
-                href={`/proveedores/${id}`}
+                href={`/finanzas/proveedores/${id}`}
                 className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-bg-2"
               >
                 <span className="font-mono text-[10.5px] text-ink-3 tnum">

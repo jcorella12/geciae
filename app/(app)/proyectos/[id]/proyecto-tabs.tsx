@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/utils";
@@ -30,7 +31,17 @@ export function ProyectoTabs({
   tabs: TabConfig[];
   panels: Partial<Record<TabKey, ReactNode>>;
 }) {
-  const [active, setActive] = useState<TabKey>(tabs[0].key);
+  // Tab inicial: si la URL trae ?tab=<key> y ese tab existe y está listo,
+  // abrirlo directo. Permite que enlaces como /proyectos/X?tab=tareas o
+  // ?tab=solicitudes aterricen en el panel correcto (deep-linking desde
+  // widgets del dashboard). Cae al primer tab si el param es inválido.
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab") as TabKey | null;
+  const tabInicial =
+    tabParam && tabs.some((t) => t.key === tabParam && t.ready !== false)
+      ? tabParam
+      : tabs[0].key;
+  const [active, setActive] = useState<TabKey>(tabInicial);
 
   return (
     <>

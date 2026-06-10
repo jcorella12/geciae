@@ -64,7 +64,7 @@ export async function HeroMisTareas() {
           {tareas.slice(0, 3).map((t) => (
             <li key={t.id}>
               <Link
-                href={`/proyectos/${t.proyecto_id}/tareas`}
+                href={`/proyectos/${t.proyecto_id}?tab=tareas`}
                 className="flex items-center justify-between gap-2 rounded px-1.5 py-1 hover:bg-bg-2"
               >
                 <span className="line-clamp-1 text-[11px]">{t.titulo}</span>
