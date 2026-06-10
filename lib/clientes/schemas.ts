@@ -50,11 +50,17 @@ export const ClienteFormSchema = z
       .max(120)
       .optional()
       .transform((v) => (v ? v : null)),
+    // Datos fiscales OPCIONALES en el alta: un cliente puede crearse sin
+    // ellos (queda como "potencial"). Se exigen como candado al facturar.
+    // Si vienen, se valida su formato.
     rfc: z
       .string()
       .trim()
       .toUpperCase()
-      .regex(RFC_REGEX, "RFC con formato inválido (12 chars moral, 13 chars física)"),
+      .regex(RFC_REGEX, "RFC con formato inválido (12 chars moral, 13 chars física)")
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
     curp: z
       .string()
       .trim()
@@ -63,11 +69,18 @@ export const ClienteFormSchema = z
       .optional()
       .or(z.literal(""))
       .transform((v) => (v ? v : null)),
-    regimen_fiscal: z.enum(codigosRegimen),
+    regimen_fiscal: z
+      .enum(codigosRegimen)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
     cp_fiscal: z
       .string()
       .trim()
-      .regex(/^\d{5}$/, "CP debe ser 5 dígitos"),
+      .regex(/^\d{5}$/, "CP debe ser 5 dígitos")
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
     direccion_fiscal: DireccionSchema.optional(),
     email_facturacion: z
       .string()
@@ -95,12 +108,10 @@ export const ClienteFormSchema = z
     empresaIds: z.array(z.string().uuid()).default([]),
   })
   .superRefine((data, ctx) => {
-    // Si el RFC es persona física (13 chars) sugerimos CURP, pero no es required.
-    if (data.rfc.length === 13 && !data.curp) {
-      // No hard error — solo informativo. Mantén opcional.
-    }
-    // Si es persona moral (12 chars) y mandó CURP, error.
-    if (data.rfc.length === 12 && data.curp) {
+    // Validaciones de RFC solo si se capturó (en alta express puede venir
+    // vacío → cliente potencial).
+    // Persona moral (12 chars) con CURP → error (CURP solo aplica a física).
+    if (data.rfc && data.rfc.length === 12 && data.curp) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["curp"],

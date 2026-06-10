@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
 import { CollapsibleSection } from "@/components/shared/collapsible-section";
@@ -80,7 +80,6 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
       ): ReturnType<typeof updateCliente> => updateCliente(clienteId, prev, fd)
     : createCliente;
   const [state, formAction] = useFormState(action, initialClienteState);
-  const [rfc, setRfc] = useState(defaults?.rfc ?? "");
 
   const formRef = useRef<HTMLFormElement>(null);
   const formKey = `cliente-form-${clienteId ?? "nuevo"}`;
@@ -116,34 +115,52 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
         }}
         className="space-y-6"
       >
-      {/* Datos fiscales */}
+      {/* Alta express: identidad mínima del cliente */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Datos fiscales</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Información del CSF — obligatoria para emisión de CFDI.
+        <h2 className="text-base font-semibold">Datos del cliente</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Lo mínimo para registrarlo. Los datos fiscales (RFC, régimen, CP)
+          van abajo — se piden como candado al facturar. Sin RFC, el cliente
+          queda como <strong>potencial</strong>.
         </p>
-
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field
-            label="Razón social"
+            label="Razón social / nombre"
             name="razon_social"
             required
             defaultValue={defaults?.razon_social}
             error={fieldErr("razon_social")}
+            className="sm:col-span-2"
           />
           <Field
-            label="Nombre comercial"
+            label="Nombre comercial · opcional"
             name="nombre_comercial"
             defaultValue={defaults?.nombre_comercial ?? ""}
             error={fieldErr("nombre_comercial")}
           />
+          <SelectField
+            label="Tipo de cliente · opcional"
+            name="tipo"
+            defaultValue={defaults?.tipo ?? ""}
+            options={[
+              { value: "", label: "Sin clasificar" },
+              ...TIPOS_CLIENTE.map((t) => ({ value: t.value, label: t.label })),
+            ]}
+          />
+        </div>
+      </section>
+
+      {/* Datos fiscales — opcional, candado al facturar */}
+      <CollapsibleSection
+        title="Datos fiscales · opcional"
+        hint="RFC, régimen, CP y domicilio. Se exigen al emitir CFDI; sin ellos el cliente es potencial."
+        defaultOpen={Boolean(defaults?.rfc)}
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
           <Field
             label="RFC"
             name="rfc"
-            required
-            defaultValue={defaults?.rfc}
-            value={rfc}
-            onChange={(v) => setRfc(v.toUpperCase())}
+            defaultValue={defaults?.rfc ?? ""}
             placeholder="ABC010101AB1"
             mono
             maxLength={13}
@@ -161,11 +178,10 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
           <SelectField
             label="Régimen fiscal"
             name="regimen_fiscal"
-            required
             defaultValue={defaults?.regimen_fiscal ?? ""}
             error={fieldErr("regimen_fiscal")}
             options={[
-              { value: "", label: "Selecciona…", disabled: true },
+              { value: "", label: "Selecciona…" },
               ...REGIMENES_FISCALES.map((r) => ({
                 value: r.codigo,
                 label: `${r.codigo} — ${r.nombre}`,
@@ -175,21 +191,35 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
           <Field
             label="CP fiscal"
             name="cp_fiscal"
-            required
-            defaultValue={defaults?.cp_fiscal}
+            defaultValue={defaults?.cp_fiscal ?? ""}
             placeholder="83000"
             maxLength={5}
             error={fieldErr("cp_fiscal")}
           />
+          <Field
+            label="Correo de facturación"
+            name="email_facturacion"
+            type="email"
+            defaultValue={defaults?.email_facturacion ?? ""}
+            error={fieldErr("email_facturacion")}
+            placeholder="cuentas@cliente.com.mx"
+          />
+          <SelectField
+            label="Uso de CFDI por defecto"
+            name="uso_cfdi_default"
+            defaultValue={defaults?.uso_cfdi_default ?? ""}
+            options={[
+              { value: "", label: "Sin definir" },
+              ...USOS_CFDI.map((u) => ({
+                value: u.codigo,
+                label: `${u.codigo} — ${u.nombre}`,
+              })),
+            ]}
+          />
         </div>
-      </section>
-
-      {/* Domicilio fiscal */}
-      <CollapsibleSection
-        title="Domicilio fiscal"
-        hint="Opcional — la IA lo carga del CSF si lo subes."
-        defaultOpen={Boolean(direccion?.calle || direccion?.colonia)}
-      >
+        <p className="mb-2 mt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Domicilio fiscal
+        </p>
         <div className="grid gap-4 sm:grid-cols-3">
           <Field
             label="Calle"
@@ -234,44 +264,13 @@ export function ClienteForm({ empresas, defaults, clienteId }: Props) {
         </div>
       </CollapsibleSection>
 
-      {/* Facturación */}
+      {/* Comercial */}
       <CollapsibleSection
-        title="Facturación y comercial"
-        hint="Opcional — correo, uso CFDI, tipo de cliente, segmento, riesgo."
-        defaultOpen={Boolean(
-          defaults?.email_facturacion || defaults?.tipo || defaults?.segmento,
-        )}
+        title="Comercial · opcional"
+        hint="Segmento y riesgo para clasificación interna."
+        defaultOpen={Boolean(defaults?.segmento)}
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field
-            label="Correo de facturación"
-            name="email_facturacion"
-            type="email"
-            defaultValue={defaults?.email_facturacion ?? ""}
-            error={fieldErr("email_facturacion")}
-            placeholder="cuentas@cliente.com.mx"
-          />
-          <SelectField
-            label="Uso de CFDI por defecto"
-            name="uso_cfdi_default"
-            defaultValue={defaults?.uso_cfdi_default ?? ""}
-            options={[
-              { value: "", label: "Sin definir" },
-              ...USOS_CFDI.map((u) => ({
-                value: u.codigo,
-                label: `${u.codigo} — ${u.nombre}`,
-              })),
-            ]}
-          />
-          <SelectField
-            label="Tipo de cliente"
-            name="tipo"
-            defaultValue={defaults?.tipo ?? ""}
-            options={[
-              { value: "", label: "Sin clasificar" },
-              ...TIPOS_CLIENTE.map((t) => ({ value: t.value, label: t.label })),
-            ]}
-          />
           <Field
             label="Segmento"
             name="segmento"

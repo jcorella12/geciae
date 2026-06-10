@@ -65,7 +65,8 @@ export async function createCliente(
 
   const supabase = createClient();
 
-  // Insertar cliente.
+  // Insertar cliente. Sin RFC → cliente potencial (es_potencial=true), lo
+  // exige la constraint chk_cliente_rfc_potencial. Con RFC → formal.
   const { data: nuevo, error: insertErr } = await supabase
     .from("clientes")
     .insert({
@@ -83,7 +84,8 @@ export async function createCliente(
       riesgo: d.riesgo,
       observaciones: d.observaciones,
       activo: true,
-    })
+      es_potencial: !d.rfc,
+    } as never)
     .select("id")
     .single();
 
@@ -153,8 +155,9 @@ export async function updateCliente(
       segmento: d.segmento,
       riesgo: d.riesgo,
       observaciones: d.observaciones,
+      es_potencial: !d.rfc,
       updated_at: new Date().toISOString(),
-    })
+    } as never)
     .eq("id", clienteId);
 
   if (updateErr) {

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { CollapsibleSection } from "@/components/shared/collapsible-section";
 import { DraftRecoveryBanner } from "@/components/shared/draft-recovery-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,9 +183,13 @@ export function EmpleadoForm({
         )}
       </section>
 
-      {/* Datos personales */}
+      {/* Alta express: identidad mínima + datos laborales clave */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Datos personales</h2>
+        <h2 className="text-base font-semibold">Datos del empleado</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Lo mínimo para darlo de alta. RFC, NSS, domicilio, banco y demás
+          están abajo — se completan después (los pide nómina cuando toca).
+        </p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field
             label="Nombre completo"
@@ -204,157 +209,18 @@ export function EmpleadoForm({
             error={fieldErr("curp")}
           />
           <Field
-            label="RFC"
-            name="rfc"
-            mono
-            maxLength={13}
-            defaultValue={defaults?.rfc ?? ""}
-            error={fieldErr("rfc")}
-          />
-          <Field
-            label="NSS (IMSS)"
-            name="nss"
-            mono
-            maxLength={11}
-            defaultValue={defaults?.nss ?? ""}
-            placeholder="11 dígitos"
-            error={fieldErr("nss")}
-          />
-          <Field
-            label="Fecha de nacimiento"
-            name="fecha_nacimiento"
-            type="date"
-            defaultValue={defaults?.fecha_nacimiento ?? ""}
-          />
-          <SelectField
-            label="Género"
-            name="genero"
-            defaultValue={defaults?.genero ?? ""}
-            options={[
-              { value: "", label: "—" },
-              ...GENEROS.map((g) => ({ value: g.value, label: g.label })),
-            ]}
-          />
-          <SelectField
-            label="Estado civil"
-            name="estado_civil"
-            defaultValue={defaults?.estado_civil ?? ""}
-            options={[
-              { value: "", label: "—" },
-              ...ESTADOS_CIVILES.map((e) => ({
-                value: e.value,
-                label: e.label,
-              })),
-            ]}
-          />
-        </div>
-      </section>
-
-      {/* Contacto */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Contacto</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field
-            label="Correo personal"
-            name="email_personal"
-            type="email"
-            defaultValue={defaults?.email_personal ?? ""}
-            error={fieldErr("email_personal")}
-          />
-          <Field
-            label="Teléfono"
-            name="telefono"
-            defaultValue={defaults?.telefono ?? ""}
-          />
-          <Field
-            label="WhatsApp"
-            name="whatsapp"
-            defaultValue={defaults?.whatsapp ?? ""}
-          />
-        </div>
-      </section>
-
-      {/* Domicilio */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Domicilio</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field
-            label="Calle"
-            name="dom_calle"
-            defaultValue={dom?.calle ?? ""}
-            className="sm:col-span-2"
-          />
-          <Field
-            label="Número ext."
-            name="dom_numero_exterior"
-            defaultValue={dom?.numero_exterior ?? ""}
-          />
-          <Field
-            label="Número int."
-            name="dom_numero_interior"
-            defaultValue={dom?.numero_interior ?? ""}
-          />
-          <Field
-            label="Colonia"
-            name="dom_colonia"
-            defaultValue={dom?.colonia ?? ""}
-          />
-          <Field
-            label="CP"
-            name="dom_cp"
-            maxLength={5}
-            defaultValue={dom?.cp ?? ""}
-          />
-          <Field
-            label="Municipio"
-            name="dom_municipio"
-            defaultValue={dom?.municipio ?? ""}
-          />
-          <SelectField
-            label="Estado"
-            name="dom_estado"
-            defaultValue={dom?.estado ?? "Sonora"}
-            options={[
-              { value: "", label: "Selecciona…" },
-              ...ESTADOS_MX.map((e) => ({ value: e, label: e })),
-            ]}
-          />
-        </div>
-      </section>
-
-      {/* Contacto de emergencia */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Contacto de emergencia</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <Field
-            label="Nombre"
-            name="emerg_nombre"
-            defaultValue={emerg?.nombre ?? ""}
-          />
-          <Field
-            label="Relación"
-            name="emerg_relacion"
-            defaultValue={emerg?.relacion ?? ""}
-            placeholder="Esposa, padre, hermano…"
-          />
-          <Field
-            label="Teléfono"
-            name="emerg_telefono"
-            defaultValue={emerg?.telefono ?? ""}
-          />
-        </div>
-      </section>
-
-      {/* Datos laborales */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Datos laborales</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field
             label="Número de empleado"
             name="numero_empleado"
             required
             defaultValue={defaults?.numero_empleado}
             error={fieldErr("numero_empleado")}
+          />
+          <Field
+            label="Puesto"
+            name="puesto"
+            required
+            defaultValue={defaults?.puesto}
+            error={fieldErr("puesto")}
           />
           <SelectField
             label="Categoría"
@@ -368,18 +234,6 @@ export function EmpleadoForm({
             error={fieldErr("categoria")}
           />
           <Field
-            label="Puesto"
-            name="puesto"
-            required
-            defaultValue={defaults?.puesto}
-            error={fieldErr("puesto")}
-          />
-          <Field
-            label="Área / departamento"
-            name="area"
-            defaultValue={defaults?.area ?? ""}
-          />
-          <Field
             label="Fecha de ingreso"
             name="fecha_ingreso"
             type="date"
@@ -388,7 +242,12 @@ export function EmpleadoForm({
             error={fieldErr("fecha_ingreso")}
           />
           <Field
-            label="Salario base mensual (MXN)"
+            label="Teléfono · opcional"
+            name="telefono"
+            defaultValue={defaults?.telefono ?? ""}
+          />
+          <Field
+            label="Salario base mensual (MXN) · opcional"
             name="salario_base"
             type="number"
             min="0"
@@ -403,37 +262,199 @@ export function EmpleadoForm({
         </div>
       </section>
 
-      {/* Cuenta bancaria */}
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Cuenta bancaria (nómina)</h2>
-        <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field
-            label="CLABE"
-            name="clabe"
-            mono
-            maxLength={18}
-            defaultValue={cuenta?.clabe ?? ""}
-            placeholder="18 dígitos"
-            error={fieldErr("clabe")}
-          />
-          <Field
-            label="Banco"
-            name="banco"
-            defaultValue={cuenta?.banco ?? ""}
-          />
-        </div>
-      </section>
+      {/* Más detalles: expediente — opcional, colapsado al crear */}
+      <CollapsibleSection
+        title="Más detalles · opcional"
+        hint="Identidad fiscal, domicilio, contacto, banco y emergencia. Se piden como candado en nómina cuando hagan falta (NSS, RFC, CLABE)."
+        defaultOpen={Boolean(empleadoId)}
+      >
+        <div className="space-y-5">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Identidad fiscal
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="RFC"
+                name="rfc"
+                mono
+                maxLength={13}
+                defaultValue={defaults?.rfc ?? ""}
+                error={fieldErr("rfc")}
+              />
+              <Field
+                label="NSS (IMSS)"
+                name="nss"
+                mono
+                maxLength={11}
+                defaultValue={defaults?.nss ?? ""}
+                placeholder="11 dígitos"
+                error={fieldErr("nss")}
+              />
+              <Field
+                label="Fecha de nacimiento"
+                name="fecha_nacimiento"
+                type="date"
+                defaultValue={defaults?.fecha_nacimiento ?? ""}
+              />
+              <SelectField
+                label="Género"
+                name="genero"
+                defaultValue={defaults?.genero ?? ""}
+                options={[
+                  { value: "", label: "—" },
+                  ...GENEROS.map((g) => ({ value: g.value, label: g.label })),
+                ]}
+              />
+              <SelectField
+                label="Estado civil"
+                name="estado_civil"
+                defaultValue={defaults?.estado_civil ?? ""}
+                options={[
+                  { value: "", label: "—" },
+                  ...ESTADOS_CIVILES.map((e) => ({
+                    value: e.value,
+                    label: e.label,
+                  })),
+                ]}
+              />
+              <Field
+                label="Área / departamento"
+                name="area"
+                defaultValue={defaults?.area ?? ""}
+              />
+            </div>
+          </div>
 
-      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
-        <h2 className="text-base font-semibold">Observaciones</h2>
-        <textarea
-          name="observaciones"
-          defaultValue={defaults?.observaciones ?? ""}
-          rows={4}
-          maxLength={2000}
-          className="mt-3 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        />
-      </section>
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Contacto
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field
+                label="Correo personal"
+                name="email_personal"
+                type="email"
+                defaultValue={defaults?.email_personal ?? ""}
+                error={fieldErr("email_personal")}
+              />
+              <Field
+                label="WhatsApp"
+                name="whatsapp"
+                defaultValue={defaults?.whatsapp ?? ""}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Domicilio
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field
+                label="Calle"
+                name="dom_calle"
+                defaultValue={dom?.calle ?? ""}
+                className="sm:col-span-2"
+              />
+              <Field
+                label="Número ext."
+                name="dom_numero_exterior"
+                defaultValue={dom?.numero_exterior ?? ""}
+              />
+              <Field
+                label="Número int."
+                name="dom_numero_interior"
+                defaultValue={dom?.numero_interior ?? ""}
+              />
+              <Field
+                label="Colonia"
+                name="dom_colonia"
+                defaultValue={dom?.colonia ?? ""}
+              />
+              <Field
+                label="CP"
+                name="dom_cp"
+                maxLength={5}
+                defaultValue={dom?.cp ?? ""}
+              />
+              <Field
+                label="Municipio"
+                name="dom_municipio"
+                defaultValue={dom?.municipio ?? ""}
+              />
+              <SelectField
+                label="Estado"
+                name="dom_estado"
+                defaultValue={dom?.estado ?? "Sonora"}
+                options={[
+                  { value: "", label: "Selecciona…" },
+                  ...ESTADOS_MX.map((e) => ({ value: e, label: e })),
+                ]}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Cuenta bancaria (nómina)
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="CLABE"
+                name="clabe"
+                mono
+                maxLength={18}
+                defaultValue={cuenta?.clabe ?? ""}
+                placeholder="18 dígitos"
+                error={fieldErr("clabe")}
+              />
+              <Field
+                label="Banco"
+                name="banco"
+                defaultValue={cuenta?.banco ?? ""}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Contacto de emergencia
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field
+                label="Nombre"
+                name="emerg_nombre"
+                defaultValue={emerg?.nombre ?? ""}
+              />
+              <Field
+                label="Relación"
+                name="emerg_relacion"
+                defaultValue={emerg?.relacion ?? ""}
+                placeholder="Esposa, padre, hermano…"
+              />
+              <Field
+                label="Teléfono"
+                name="emerg_telefono"
+                defaultValue={emerg?.telefono ?? ""}
+              />
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Observaciones
+            </p>
+            <textarea
+              name="observaciones"
+              defaultValue={defaults?.observaciones ?? ""}
+              rows={3}
+              maxLength={2000}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            />
+          </div>
+        </div>
+      </CollapsibleSection>
 
       {state.error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
