@@ -13,7 +13,7 @@ import {
   ESTADOS_MX,
   REGIMENES_FISCALES,
   USOS_CFDI,
-} from "@/lib/sat/catalogos";
+} from "@/lib/cfdi/catalogos-sat";
 import { TIPOS_CLIENTE, RIESGOS } from "@/lib/clientes/schemas";
 
 import {

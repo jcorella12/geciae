@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 
-import { REGIMENES_FISCALES, USOS_CFDI } from "@/lib/sat/catalogos";
+import { REGIMENES_FISCALES, USOS_CFDI } from "@/lib/cfdi/catalogos-sat";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";

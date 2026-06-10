@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { normalizeEstadoMx, RFC_REGEX } from "@/lib/sat/catalogos";
+import { normalizeEstadoMx, RFC_REGEX } from "@/lib/cfdi/catalogos-sat";
 
 import { extractFromDocument, type ExtractResult } from "../extract";
 

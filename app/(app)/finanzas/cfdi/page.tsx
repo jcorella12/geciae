@@ -13,8 +13,6 @@ import {
   TableRow,
   TableSurface,
 } from "@/components/ui/table";
-import { BotonBulkMesActual } from "@/app/(app)/configuracion/sat/boton-bulk-mes";
-import { BotonVerificarPendientes } from "@/app/(app)/configuracion/sat/boton-verificar-pendientes";
 import { ExportCsvButton } from "@/components/shared/export-csv-button";
 import { ExportContpaqiButton } from "./export-contpaqi-button";
 import { obtenerVinculos } from "@/lib/auth/permisos";
@@ -85,11 +83,6 @@ export default async function CfdiListPage({
     puedeConsolidado: puedeVerConsolidado(vinculos),
   });
 
-  // ¿El usuario puede disparar descargas SAT? (CEO + atributo contralor)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: puedeSat } = await (supabase as any).rpc(
-    "usuario_puede_gestionar_sat",
-  );
 
   const sp = searchParams ?? {};
   const q = (sp.q ?? "").trim();
@@ -332,12 +325,6 @@ export default async function CfdiListPage({
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          {puedeSat && (
-            <>
-              <BotonVerificarPendientes variant="outline" />
-              <BotonBulkMesActual variant="outline" />
-            </>
-          )}
           <ExportCsvButton tipo="cfdi" desde={desde} hasta={hasta} />
           <ExportContpaqiButton empresas={empresas ?? []} />
           <Link href="/finanzas/cfdi/bulk-zip">

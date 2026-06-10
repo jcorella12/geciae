@@ -18,7 +18,7 @@ import {
   type EmpleadoState,
 } from "@/lib/empleados/state";
 import { useFormDraftDom } from "@/lib/hooks/use-form-draft-dom";
-import { ESTADOS_MX } from "@/lib/sat/catalogos";
+import { ESTADOS_MX } from "@/lib/cfdi/catalogos-sat";
 
 import { createEmpleado, updateEmpleado } from "./actions";
 

@@ -6,10 +6,6 @@
   "installCommand": "npm install",
   "crons": [
     {
-      "path": "/api/cron/sat-verificar-pendientes",
-      "schedule": "0 */6 * * *"
-    },
-    {
       "path": "/api/cron/devengar-intereses",
       "schedule": "55 6 * * *"
     }

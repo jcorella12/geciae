@@ -9,7 +9,7 @@ import {
   SEMAFOROS,
   TIPOS_PROVEEDOR,
 } from "@/lib/proveedores/schemas";
-import { REGIMENES_FISCALES } from "@/lib/sat/catalogos";
+import { REGIMENES_FISCALES } from "@/lib/cfdi/catalogos-sat";
 import { createClient } from "@/lib/supabase/server";
 
 import { ToggleActivoProveedorButton } from "./toggle-activo";

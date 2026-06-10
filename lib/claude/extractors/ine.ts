@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { CURP_REGEX, normalizeEstadoMx } from "@/lib/sat/catalogos";
+import { CURP_REGEX, normalizeEstadoMx } from "@/lib/cfdi/catalogos-sat";
 
 import { extractFromDocument, type ExtractResult } from "../extract";
 

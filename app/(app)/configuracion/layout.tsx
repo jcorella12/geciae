@@ -7,7 +7,6 @@ import {
   puedeAccederConfiguracion,
   puedeRestablecerContrasenas,
 } from "@/lib/auth/permisos";
-import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 
 type Tab = { href: string; label: string };
@@ -41,11 +40,6 @@ export default async function ConfiguracionLayout({
   }
 
   // Tab SAT solo si CEO o contralor
-  const supabase = createClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: puedeSat } = await (supabase as any).rpc(
-    "usuario_puede_gestionar_sat",
-  );
 
   // CEO ve todas las tabs; contralor solo Usuarios (+ SAT si aplica).
   const esCeo = puedeAccederConfiguracion(vinculos);
@@ -54,7 +48,6 @@ export default async function ConfiguracionLayout({
       ? [TAB_USUARIOS]
       : []),
     ...(esCeo ? TABS_CEO : []),
-    ...(puedeSat ? [{ href: "/configuracion/sat", label: "SAT" }] : []),
   ];
 
   return (

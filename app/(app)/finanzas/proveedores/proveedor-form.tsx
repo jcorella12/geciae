@@ -18,7 +18,7 @@ import {
   initialProveedorState,
   type ProveedorState,
 } from "@/lib/proveedores/state";
-import { ESTADOS_MX, REGIMENES_FISCALES } from "@/lib/sat/catalogos";
+import { ESTADOS_MX, REGIMENES_FISCALES } from "@/lib/cfdi/catalogos-sat";
 
 import { createProveedor, updateProveedor } from "./actions";
 

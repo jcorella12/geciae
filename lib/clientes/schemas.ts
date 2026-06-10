@@ -6,7 +6,7 @@ import {
   REGIMENES_FISCALES,
   RFC_REGEX,
   USOS_CFDI,
-} from "@/lib/sat/catalogos";
+} from "@/lib/cfdi/catalogos-sat";
 
 const codigosRegimen = REGIMENES_FISCALES.map((r) => r.codigo) as [
   string,

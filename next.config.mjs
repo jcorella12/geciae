@@ -51,18 +51,11 @@ const nextConfig = {
       // mantener el error friendly antes del 413 de Next.
       bodySizeLimit: "100mb",
     },
-    // Sprint 8 — @nodecfdi/sat-ws-descarga-masiva v2 es ESM-only y se carga
-    // dinámicamente desde server actions. Excluirlo del bundling de Next
-    // evita errores ERR_REQUIRE_ESM en build.
-    serverComponentsExternalPackages: [
-      "@nodecfdi/sat-ws-descarga-masiva",
-      "@nodecfdi/credentials",
-      "yauzl-promise",
-      // pdf-parse usa pdfjs-dist con dependencias nativas / canvas; mantenerlo
-      // fuera del bundle de Next evita "ERR_REQUIRE_ESM" y bundle bloat.
-      "pdf-parse",
-      "pdfjs-dist",
-    ],
+    // pdf-parse usa pdfjs-dist con dependencias nativas / canvas; mantenerlo
+    // fuera del bundle de Next evita "ERR_REQUIRE_ESM" y bundle bloat.
+    // (@nodecfdi/* y yauzl-promise se retiraron con la descarga masiva SAT —
+    // sprint PODA-SAT, nunca devolvió facturas.)
+    serverComponentsExternalPackages: ["pdf-parse", "pdfjs-dist"],
   },
   env: {
     NEXT_PUBLIC_BUILD_SHA: sha,

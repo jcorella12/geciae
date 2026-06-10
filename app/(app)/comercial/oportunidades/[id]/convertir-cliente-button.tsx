@@ -5,7 +5,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { REGIMENES_FISCALES, RFC_REGEX } from "@/lib/sat/catalogos";
+import { REGIMENES_FISCALES, RFC_REGEX } from "@/lib/cfdi/catalogos-sat";
 
 import { convertirClienteAFormal } from "@/app/(app)/clientes/actions";
 
