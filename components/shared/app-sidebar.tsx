@@ -7,9 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
-  EyeOff,
   Inbox,
-  LayoutGrid,
   LifeBuoy,
   Lightbulb,
   Package,
@@ -21,7 +19,6 @@ import {
   Receipt,
   RefreshCw,
   Settings,
-  Shield,
   ShieldCheck,
   ShoppingCart,
   Sun,
@@ -153,13 +150,14 @@ export function AppSidebar({
     ],
   };
 
-  const comercial: NavGroup = {
-    label: "COMERCIAL",
+  const operacion: NavGroup = {
+    label: "OPERACIÓN",
     items: [
+      { href: "/proyectos", label: "Proyectos", icon: Briefcase },
       { href: "/clientes", label: "Clientes", icon: Users, cap: "comercial" },
       {
         href: "/comercial/oportunidades",
-        label: "Pipeline",
+        label: "Comercial",
         icon: TrendingUp,
         cap: "comercial",
       },
@@ -175,15 +173,8 @@ export function AppSidebar({
         icon: FileText,
         cap: "comercial",
       },
-    ],
-  };
-
-  const proyectos: NavGroup = {
-    label: "PROYECTOS",
-    items: [
-      { href: "/proyectos", label: "Proyectos", icon: Briefcase },
       { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
-      { href: "/campo", label: "Captura campo", icon: Smartphone },
+      { href: "/campo", label: "Parte de campo", icon: Smartphone },
     ],
   };
 
@@ -213,15 +204,9 @@ export function AppSidebar({
     ],
   };
 
-  const finanzas: NavGroup = {
-    label: "FINANZAS",
+  const dinero: NavGroup = {
+    label: "DINERO",
     items: [
-      {
-        href: "/finanzas",
-        label: "Inicio finanzas",
-        icon: LayoutGrid,
-        cap: "finanzas",
-      },
       {
         href: "/finanzas/oc",
         label: "Compras (OC)",
@@ -253,23 +238,15 @@ export function AppSidebar({
         icon: ShieldCheck,
         cap: "finanzas",
       },
-      // Módulos restringidos (Sprint S/EF) — solo CEO + contralor + tesorero
+      // Finanzas del grupo (estados gerenciales) es la vista financiera
+      // canónica. Ajustes gerenciales y vista-real salieron del nav (sprint
+      // PODA P2) — se acceden desde dentro de estados-gerenciales.
       ...(puedeVerAjustesGerenciales
         ? [
             {
               href: "/finanzas/estados-gerenciales",
-              label: "Estados gerenciales",
+              label: "Finanzas del grupo",
               icon: BarChart3,
-            },
-            {
-              href: "/finanzas/ajustes-gerenciales",
-              label: "Ajustes gerenciales",
-              icon: Shield,
-            },
-            {
-              href: "/finanzas/vista-real",
-              label: "Vista real",
-              icon: EyeOff,
             },
           ]
         : []),
@@ -302,7 +279,7 @@ export function AppSidebar({
   ];
 
   // Filtrar items por capacidad y descartar grupos que queden vacíos.
-  const grupos = [principal, comercial, proyectos, recursos, finanzas]
+  const grupos = [principal, operacion, recursos, dinero]
     .map((g) => ({
       ...g,
       items: g.items.filter((it) => it.cap === undefined || caps[it.cap]),
