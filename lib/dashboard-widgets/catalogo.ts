@@ -466,13 +466,41 @@ export function obtenerWidget(id: string): WidgetMetadata | undefined {
   return CATALOGO_WIDGETS.find((w) => w.id === id);
 }
 
+/**
+ * Curaduría del picker (sprint PODA P5): el catálogo creció a 30 widgets y
+ * satura el selector. Estos IDs se ocultan del picker — su código se conserva
+ * y los layouts que ya los usen siguen renderizándolos; solo dejan de
+ * ofrecerse para agregar. Para reactivar uno, quítalo de este set.
+ * Se conservan: todos los hero (dinero/riesgo/personales), posición
+ * consolidada, cashflow 30d, matriz inter-co, tesorería y los "mis_*".
+ */
+export const WIDGETS_OCULTOS_PICKER = new Set<string>([
+  "top_proyectos_margen",
+  "top_clientes_ingreso",
+  "top_proveedores_pago",
+  "obligaciones_proximas",
+  "mi_equipo_resumen",
+  "inventario_consolidado",
+  "arrendamientos_vehiculos",
+  "top_indirectos",
+  "panel_liquidez",
+  "panel_salud_proyectos",
+  "panel_pendientes",
+  "panel_ingresos_empresa",
+]);
+
 /** Filtra los widgets accesibles para un usuario según rol/atributos. */
 export function widgetsAccesibles(
   rol: RolBase,
   atributos: AtributoUsuario[],
+  opts?: { incluirOcultos?: boolean },
 ): WidgetMetadata[] {
   return CATALOGO_WIDGETS.filter((w) => {
     if (w.atributoRequerido && !atributos.includes(w.atributoRequerido)) {
+      return false;
+    }
+    // Curaduría del picker: esconder los no esenciales salvo que se pidan.
+    if (!opts?.incluirOcultos && WIDGETS_OCULTOS_PICKER.has(w.id)) {
       return false;
     }
     // El rol no es excluyente: cualquiera puede activar widgets de otros roles
