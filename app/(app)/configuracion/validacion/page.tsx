@@ -119,16 +119,8 @@ export default async function ValidacionPage() {
     detalle: `${docsCount ?? 0} docs registrados`,
   });
 
-  // ===== 6. SGC documentos =====
-  const { count: sgcCount } = await supabase
-    .from("sgc_documentos")
-    .select("id", { count: "exact", head: true });
-  checks.push({
-    nombre: "Documentos SGC",
-    descripcion: "Codificación FP/FO/MA/PO",
-    resultado: (sgcCount ?? 0) >= 8 ? "ok" : "warn",
-    detalle: `${sgcCount ?? 0} documentos SGC`,
-  });
+  // (Check de documentos SGC eliminado — módulo SGC/ISO salió del ERP,
+  //  sprint PODA 2026-06.)
 
   // ===== 7. Marca visible — proyectos con marca distinta =====
   const { data: proyectosCrossMarca } = await supabase

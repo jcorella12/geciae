@@ -17,7 +17,6 @@ import {
   esCEO,
   obtenerVinculosConEmpresa,
   puedeAccederConfiguracion,
-  puedeAccederCalidad,
   puedeGestionarClientes,
   puedeGestionarProveedores,
   puedeRestablecerContrasenas,
@@ -116,8 +115,6 @@ export default async function AppLayout({
       esCEO(v) ||
       v.some((x) => x.rol === "director" || x.rol === "operativo") ||
       tieneAtributo(v, "supervisor_cuadrilla"),
-    // Calidad: ceo, coordinador_calidad, auditor_interno.
-    calidad: puedeAccederCalidad(v),
   };
 
   // Datos del user-card en sidebar

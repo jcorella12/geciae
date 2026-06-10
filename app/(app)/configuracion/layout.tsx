@@ -19,7 +19,6 @@ const TAB_USUARIOS: Tab = {
 const TABS_CEO: Tab[] = [
   { href: "/configuracion/centros", label: "Centros" },
   { href: "/configuracion/umbrales", label: "Umbrales" },
-  { href: "/configuracion/sgc", label: "SGC" },
   { href: "/configuracion/ia", label: "IA" },
   { href: "/configuracion/validacion", label: "Validación" },
 ];

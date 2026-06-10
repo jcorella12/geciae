@@ -535,7 +535,7 @@ async function AlmacenistaWidgets({ empresasIds }: { empresasIds: string[] }) {
 }
 
 // ============================================================================
-// RRHH / Calidad
+// RRHH
 // ============================================================================
 async function RrhhWidgets({ empresasIds }: { empresasIds: string[] }) {
   const supabase = createClient();
@@ -554,7 +554,7 @@ async function RrhhWidgets({ empresasIds }: { empresasIds: string[] }) {
       <div className="mb-3 flex items-center gap-2">
         <CheckCircle2 className="h-4 w-4 text-emerald-700" />
         <h2 className="text-[13.5px] font-semibold">
-          Tu día en RRHH / Calidad
+          Tu día en RRHH
         </h2>
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
@@ -571,13 +571,6 @@ async function RrhhWidgets({ empresasIds }: { empresasIds: string[] }) {
         >
           <span className="text-2xl">📜</span>
           <span className="text-[11.5px] font-medium">REPSE</span>
-        </Link>
-        <Link
-          href="/calidad"
-          className="flex flex-col items-center gap-1.5 rounded-md border border-border bg-card p-3 hover:border-emerald-500"
-        >
-          <span className="text-2xl">✅</span>
-          <span className="text-[11.5px] font-medium">Calidad</span>
         </Link>
       </div>
 

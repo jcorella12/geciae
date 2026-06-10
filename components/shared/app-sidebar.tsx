@@ -4,7 +4,6 @@ import {
   BarChart3,
   Briefcase,
   CalendarDays,
-  CheckSquare,
   ChevronLeft,
   ChevronRight,
   ClipboardList,
@@ -64,8 +63,6 @@ export type NavCaps = {
   personas: boolean;
   /** Inventario y activos. */
   inventarioActivos: boolean;
-  /** Módulo de calidad. */
-  calidad: boolean;
 };
 
 type CapKey = keyof NavCaps;
@@ -122,7 +119,6 @@ export function AppSidebar({
     finanzas: true,
     personas: true,
     inventarioActivos: true,
-    calidad: true,
   };
   const [isPending, startTransition] = useTransition();
   const onToggle = () => {
@@ -188,7 +184,6 @@ export function AppSidebar({
       { href: "/proyectos", label: "Proyectos", icon: Briefcase },
       { href: "/solicitudes", label: "Solicitudes", icon: Inbox },
       { href: "/campo", label: "Captura campo", icon: Smartphone },
-      { href: "/calidad", label: "Calidad", icon: CheckSquare, cap: "calidad" },
     ],
   };
 

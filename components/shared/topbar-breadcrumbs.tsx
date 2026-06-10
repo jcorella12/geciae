@@ -22,7 +22,6 @@ const SLUG_LABELS: Record<string, string> = {
   proyectos: "Proyectos",
   clientes: "Clientes",
   personas: "Personas",
-  calidad: "Calidad",
   reportes: "Reportes",
   configuracion: "Configuración",
   ayuda: "Ayuda",

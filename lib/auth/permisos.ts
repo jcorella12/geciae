@@ -350,16 +350,8 @@ export function empresasDondeGestionaEmpleados(
     .map((v) => v.empresa_id);
 }
 
-/**
- * Acceso al espacio Calidad. Spec: CEO, coordinador_calidad, auditor_interno.
- */
-export function puedeAccederCalidad(vinculos: Vinculo[]): boolean {
-  return (
-    esCEO(vinculos) ||
-    tieneAtributo(vinculos, "coordinador_calidad") ||
-    tieneAtributo(vinculos, "auditor_interno")
-  );
-}
+/* puedeAccederCalidad eliminada — el módulo SGC/ISO salió del ERP (sprint
+   PODA, 2026-06). El SGC vivirá en app separada e integrará vía API. */
 
 /**
  * Acceso a tesorería transversal del grupo.
