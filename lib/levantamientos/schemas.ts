@@ -4,6 +4,17 @@ import { ESTADOS_LEVANTAMIENTO } from "./state";
 
 const idLev = z.string().uuid();
 
+// Number opcional: el form HTML manda "" cuando el campo está vacío y
+// z.coerce.number() lo convierte a 0, lo cual pasa silenciosamente
+// validaciones tipo .min(0) y guarda 0 en BD en lugar de null. Usamos
+// preprocess para colapsar "" / null a undefined ANTES del coerce, así
+// .optional() funciona correctamente.
+const optNum = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    schema.optional(),
+  );
+
 export const CrearLevantamientoSchema = z.object({
   empresa_id: z.string().uuid("Empresa inválida"),
   oportunidad_id: z
@@ -65,9 +76,9 @@ export const ActualizarLevantamientoSchema = z.object({
     .or(z.literal(""))
     .transform((v) => (v ? v : null))
     .nullable(),
-  horas_ingeniero: z.coerce.number().min(0).optional().nullable(),
-  viaticos: z.coerce.number().min(0).optional().nullable(),
-  kilometraje: z.coerce.number().min(0).optional().nullable(),
+  horas_ingeniero: optNum(z.coerce.number().min(0)).nullable(),
+  viaticos: optNum(z.coerce.number().min(0)).nullable(),
+  kilometraje: optNum(z.coerce.number().min(0)).nullable(),
   resultado_descripcion: z
     .string()
     .trim()

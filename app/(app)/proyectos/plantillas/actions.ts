@@ -97,7 +97,12 @@ const EtapaSchema = z.object({
     .transform((v) => (v ? v : null)),
   duracion_estimada_dias: z.coerce.number().int().nonnegative().optional().nullable(),
   hito_facturacion: z.coerce.boolean().default(false),
-  porcentaje_facturacion: z.coerce.number().min(0).max(100).optional().nullable(),
+  porcentaje_facturacion: z
+    .preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.coerce.number().min(0).max(100).optional(),
+    )
+    .nullable(),
 });
 
 export async function crearEtapa(

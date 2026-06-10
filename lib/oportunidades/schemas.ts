@@ -42,7 +42,10 @@ export const OportunidadFormSchema = z.object({
     .transform((v) => (v ? v : null)),
   estado: z.enum(ESTADOS).default("lead"),
   monto_estimado: z.coerce.number().nonnegative().optional(),
-  probabilidad: z.coerce.number().min(0).max(1).optional(),
+  probabilidad: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().min(0).max(1).optional(),
+  ),
   fuente: z
     .enum(FUENTES)
     .optional()

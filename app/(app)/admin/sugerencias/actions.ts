@@ -77,7 +77,10 @@ export async function crearSugerencia(
 const UpdateSchema = z.object({
   id: z.string().uuid(),
   estado: z.enum(ESTADOS as [string, ...string[]]).optional(),
-  prioridad: z.coerce.number().int().min(0).max(100).optional(),
+  prioridad: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().int().min(0).max(100).optional(),
+  ),
   notas_internas: z
     .string()
     .trim()

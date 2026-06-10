@@ -21,7 +21,10 @@ export const PresupuestoSchema = z.object({
   presupuesto_indirectos: z.coerce.number().nonnegative().default(0),
   presupuesto_otros: z.coerce.number().nonnegative().default(0),
   porcentaje_provision_garantia: z.coerce.number().min(0).max(30).default(3),
-  margen_objetivo_pct: z.coerce.number().min(0).max(100).optional(),
+  margen_objetivo_pct: z.preprocess(
+    (v) => (v === "" || v === null || v === undefined ? undefined : v),
+    z.coerce.number().min(0).max(100).optional(),
+  ),
   cotizacion_id: z
     .string()
     .uuid()

@@ -32,8 +32,18 @@ const TareaSchema = z.object({
   fecha_fin_planeada: z.string().optional().nullable(),
   porcentaje_avance: z.coerce.number().int().min(0).max(100).default(0),
   asignado_a: z.string().uuid().optional().nullable(),
-  horas_estimadas: z.coerce.number().min(0).optional().nullable(),
-  costo_estimado: z.coerce.number().min(0).optional().nullable(),
+  horas_estimadas: z
+    .preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.coerce.number().min(0).optional(),
+    )
+    .nullable(),
+  costo_estimado: z
+    .preprocess(
+      (v) => (v === "" || v === null || v === undefined ? undefined : v),
+      z.coerce.number().min(0).optional(),
+    )
+    .nullable(),
   parent_id: z.string().uuid().optional().nullable(),
   observaciones: z.string().optional().nullable(),
 });
