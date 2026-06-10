@@ -85,15 +85,17 @@ def main():
         print("\n[DRY-RUN] No se borró nada. Corre con --aplicar para borrar.")
         return
 
-    # 2. Borrar cada objeto del bucket (Storage API)
-    borrados = 0
-    for p in paths:
-        st, _ = req("DELETE", f"{url}/storage/v1/object/{BUCKET}/{p}", key)
-        if st in (200, 204):
-            borrados += 1
-            print(f"  ✓ borrado {p}")
-        else:
-            print(f"  ✗ error {p}: {st}")
+    # 2. Borrar los objetos del bucket en bulk (Storage API).
+    #    El DELETE de objeto único con Content-Type json falla ("Body cannot
+    #    be empty"); el endpoint bulk acepta {prefixes:[...]} y borra todos.
+    st, resp = req("DELETE", f"{url}/storage/v1/object/{BUCKET}", key, {"prefixes": paths})
+    if st in (200, 204) and isinstance(resp, list):
+        borrados = len(resp)
+        for o in resp:
+            print(f"  ✓ borrado {o.get('name')}")
+    else:
+        print(f"  ✗ error en borrado bulk: {st} {resp}")
+        borrados = 0
 
     print(f"\nBorrados {borrados}/{len(paths)} archivos.")
     print("Siguiente: vaciar la tabla y aplicar la migración drop_sat_descarga_masiva.")
