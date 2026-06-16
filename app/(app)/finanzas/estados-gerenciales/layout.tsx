@@ -23,6 +23,12 @@ export default async function EstadosGerencialesLayout({
   );
   if (!puedeVer) redirect("/finanzas");
 
+  // Vista Real (ajustes ocultos) es un tab extra solo para directivo.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: puedeVerVistaReal } = await (supabase as any).rpc(
+    "usuario_puede_ver_ajustes_gerenciales",
+  );
+
   return (
     <div>
       {/* Banner permanente */}
@@ -48,7 +54,7 @@ export default async function EstadosGerencialesLayout({
       </div>
 
       {/* Tabs */}
-      <TabsNav />
+      <TabsNav puedeVerVistaReal={!!puedeVerVistaReal} />
 
       {children}
     </div>

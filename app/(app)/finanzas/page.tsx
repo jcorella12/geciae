@@ -5,7 +5,6 @@ import {
   CalendarDays,
   ClipboardList,
   CreditCard,
-  EyeOff,
   FileBarChart,
   FileText,
   Receipt,
@@ -98,12 +97,7 @@ const modulosRestringidos = [
     desc: "Activos ocultos, pasivos no registrados y aportaciones no formalizadas. Capa interna paralela a la contabilidad fiscal.",
     icon: Shield,
   },
-  {
-    href: "/finanzas/vista-real",
-    label: "Vista real del grupo",
-    desc: "Patrimonio incluyendo ajustes gerenciales. Combina contabilidad fiscal con realidad económica.",
-    icon: EyeOff,
-  },
+  // Vista Real se consolidó como tab dentro de Estados Gerenciales (sprint PODA).
 ] as const;
 
 export default async function FinanzasIndexPage() {

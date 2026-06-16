@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 
+const BASE = "/finanzas/estados-gerenciales/vista-real";
+
 export function SelectorEmpresa({
   empresas,
   valor,
@@ -16,8 +18,8 @@ export function SelectorEmpresa({
       value={valor ?? ""}
       onChange={(e) => {
         const url = e.target.value
-          ? `/finanzas/vista-real?empresa_id=${e.target.value}`
-          : "/finanzas/vista-real";
+          ? `${BASE}?empresa_id=${e.target.value}`
+          : BASE;
         router.push(url);
       }}
       className="rounded-md border border-border bg-card px-3 py-1.5 text-[12.5px]"

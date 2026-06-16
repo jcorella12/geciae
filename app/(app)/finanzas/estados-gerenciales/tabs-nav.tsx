@@ -12,12 +12,24 @@ const TABS = [
   { href: "/finanzas/estados-gerenciales/flujo", label: "Flujo" },
 ];
 
-export function TabsNav() {
+// Tab de Vista Real (ajustes ocultos). Solo se muestra a quien puede ver
+// ajustes gerenciales (directivo); el page además lo guarda por URL directa.
+const TAB_VISTA_REAL = {
+  href: "/finanzas/estados-gerenciales/vista-real",
+  label: "Vista real",
+};
+
+export function TabsNav({
+  puedeVerVistaReal = false,
+}: {
+  puedeVerVistaReal?: boolean;
+}) {
   const pathname = usePathname();
+  const tabs = puedeVerVistaReal ? [...TABS, TAB_VISTA_REAL] : TABS;
   return (
     <nav className="border-b border-border bg-card">
       <div className="mx-auto flex max-w-[1480px] gap-1 px-6">
-        {TABS.map((t) => {
+        {tabs.map((t) => {
           const activo =
             t.href === "/finanzas/estados-gerenciales"
               ? pathname === t.href

@@ -167,7 +167,7 @@ export async function cambiarEstadoAjuste(
     await registrarAuditoria("actualizar", id, { nuevo_estado: estado });
     revalidatePath("/finanzas/ajustes-gerenciales");
     revalidatePath(`/finanzas/ajustes-gerenciales/${id}`);
-    revalidatePath("/finanzas/vista-real");
+    revalidatePath("/finanzas/estados-gerenciales/vista-real");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error" };
@@ -221,7 +221,7 @@ export async function actualizarAjuste(formData: FormData): Promise<ResultadoAcc
     await registrarAuditoria("actualizar", id, { motivo: motivo_cambio });
     revalidatePath(`/finanzas/ajustes-gerenciales/${id}`);
     revalidatePath("/finanzas/ajustes-gerenciales");
-    revalidatePath("/finanzas/vista-real");
+    revalidatePath("/finanzas/estados-gerenciales/vista-real");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error" };
@@ -252,7 +252,7 @@ export async function cancelarAjuste(
     await registrarAuditoria("cancelar", datos.id, { motivo: datos.motivo });
     revalidatePath("/finanzas/ajustes-gerenciales");
     revalidatePath(`/finanzas/ajustes-gerenciales/${datos.id}`);
-    revalidatePath("/finanzas/vista-real");
+    revalidatePath("/finanzas/estados-gerenciales/vista-real");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error" };
@@ -288,7 +288,7 @@ export async function regularizarAjuste(
     await registrarAuditoria("regularizar", datos.id, { ...datos });
     revalidatePath(`/finanzas/ajustes-gerenciales/${datos.id}`);
     revalidatePath("/finanzas/ajustes-gerenciales");
-    revalidatePath("/finanzas/vista-real");
+    revalidatePath("/finanzas/estados-gerenciales/vista-real");
     return { ok: true };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error" };
