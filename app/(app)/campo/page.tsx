@@ -3,8 +3,10 @@ import {
   Car,
   ClipboardList,
   Fuel,
+  Package,
   Plus,
   Smartphone,
+  UserCheck,
   Wrench,
 } from "lucide-react";
 import Link from "next/link";
@@ -54,6 +56,25 @@ export default async function CampoPage() {
         Acciones rápidas para usar desde el celular en sitio.
       </p>
 
+      {/* Acción principal: pasar asistencia de la cuadrilla */}
+      <Link
+        href="/campo/asistencia"
+        className="mb-3 flex items-center gap-3 rounded-lg border border-brand bg-brand-soft/40 p-4 shadow-xs transition hover:bg-brand-soft/70"
+      >
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+          <UserCheck className="h-6 w-6" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <span className="block text-[14px] font-semibold">
+            Pasar asistencia
+          </span>
+          <span className="block text-[11px] text-ink-3">
+            Marca quién vino hoy en tu proyecto
+          </span>
+        </div>
+        <Plus className="h-5 w-5 shrink-0 text-brand" />
+      </Link>
+
       {/* Acciones principales en grid 2x2 grandes */}
       <div className="mb-5 grid grid-cols-2 gap-3">
         <Link
@@ -79,24 +100,34 @@ export default async function CampoPage() {
           <span className="text-[10.5px] text-ink-3">Bitácora vehicular</span>
         </Link>
         <Link
-          href="/proyectos"
+          href="/campo/foto"
           className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 shadow-xs hover:border-brand"
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
             <Camera className="h-6 w-6 text-emerald-700" />
           </span>
           <span className="text-[13px] font-semibold">Foto / evidencia</span>
-          <span className="text-[10.5px] text-ink-3">A bitácora proyecto</span>
+          <span className="text-[10.5px] text-ink-3">Sube foto al proyecto</span>
         </Link>
         <Link
-          href="/soporte/tickets/nuevo"
+          href="/campo/ticket"
           className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 shadow-xs hover:border-brand"
         >
           <span className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
             <ClipboardList className="h-6 w-6 text-red-700" />
           </span>
           <span className="text-[13px] font-semibold">Reportar incidente</span>
-          <span className="text-[10.5px] text-ink-3">Ticket / problema</span>
+          <span className="text-[10.5px] text-ink-3">Ticket ligado a proyecto</span>
+        </Link>
+        <Link
+          href="/campo/material"
+          className="flex flex-col items-center gap-2 rounded-lg border border-border bg-card p-4 shadow-xs hover:border-brand"
+        >
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
+            <Package className="h-6 w-6 text-indigo-700" />
+          </span>
+          <span className="text-[13px] font-semibold">Material a obra</span>
+          <span className="text-[10.5px] text-ink-3">Salida de almacén</span>
         </Link>
       </div>
 
