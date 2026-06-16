@@ -82,7 +82,7 @@ Aparece en el portal del empleado como parte de su compensación total.
 
 ### 4. Capacitaciones
 
-**Ruta:** [Configuración → SGC → Capacitaciones](/configuracion/sgc) (si está implementado) o desde el módulo Calidad.
+**Ruta:** [Personas → Capacitaciones](/personas/capacitaciones).
 
 Cuando contratas un curso para varios empleados:
 
@@ -160,7 +160,7 @@ Vista consolidada de:
 
 ### Capacitación recibida
 
-[Configuración → SGC](/configuracion/sgc) o reportes específicos:
+[Personas → Capacitaciones](/personas/capacitaciones) o reportes específicos:
 - Horas de capacitación por empleado
 - Costo total invertido
 - Cursos próximos a vencer (ej. Trabajo en Alturas vence cada 2 años)

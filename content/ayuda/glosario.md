@@ -118,7 +118,7 @@ Flujo de efectivo: timeline de cuándo entra dinero (cobros) vs cuándo sale (pa
 **Customer Relationship Management**. Sección Comercial del sistema (oportunidades, cotizaciones, clientes).
 
 ### SGC
-**Sistema de Gestión de Calidad** (ISO 9001). Sección donde viven políticas, procedimientos, formatos del sistema.
+**Sistema de Gestión de Calidad** (ISO 9001). Vive en una aplicación separada; se integrará al ERP por API más adelante (no es una sección del ERP actual).
 
 ### Modo simple / avanzado
 Preferencia de UI por usuario. Modo simple es para empleados de campo (Mi Espacio con 4 botones grandes). Modo avanzado es para personal administrativo (Mi Día con widgets).
