@@ -39,6 +39,8 @@ export function rolSimplificado(vinculos: Vinculo[]): RolSimplificado {
     return "directivo";
   }
   if (
+    // Modelo nuevo (post-migración ROLES F2): el rol ya es autoritativo.
+    vinculos.some((v) => v.rol === "administrativo") ||
     tieneAtributo(vinculos, "aprobador_financiero") ||
     tieneAtributo(vinculos, "rh") ||
     // Un operativo "de oficina" (PM/vendedor con función de captura financiera)

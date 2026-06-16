@@ -12264,7 +12264,14 @@ export type Database = {
         | "admin_proyecto"
         | "cliente_contacto"
         | "observador"
-      rol_usuario: "ceo" | "director" | "operativo" | "empleado" | "cliente"
+      rol_usuario:
+        | "ceo"
+        | "director"
+        | "operativo"
+        | "empleado"
+        | "cliente"
+        | "directivo"
+        | "administrativo"
       severidad_no_conformidad: "observacion" | "menor" | "mayor"
       severidad_reporte: "info" | "baja" | "media" | "alta" | "critica"
       subtipo_centro:
@@ -12772,7 +12779,15 @@ export const Constants = {
         "cliente_contacto",
         "observador",
       ],
-      rol_usuario: ["ceo", "director", "operativo", "empleado", "cliente"],
+      rol_usuario: [
+        "ceo",
+        "director",
+        "operativo",
+        "empleado",
+        "cliente",
+        "directivo",
+        "administrativo",
+      ],
       severidad_no_conformidad: ["observacion", "menor", "mayor"],
       severidad_reporte: ["info", "baja", "media", "alta", "critica"],
       subtipo_centro: [

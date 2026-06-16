@@ -12,7 +12,12 @@ export type RolBase =
   | "director"
   | "operativo"
   | "empleado"
-  | "cliente";
+  | "cliente"
+  // Modelo de 3 roles (migración ROLES F2, 2026-07-08). Conviven con los
+  // viejos: directivo = ceo/director fusionados (override global); administrativo
+  // = operación + finanzas. Los helpers de abajo reconocen ambos modelos.
+  | "directivo"
+  | "administrativo";
 
 export type AtributoUsuario =
   | "aprobador_financiero"
@@ -94,7 +99,9 @@ export const obtenerVinculos = cache(async (): Promise<Vinculo[]> => {
 // ----------------------------------------------------------------------------
 
 export function esCEO(vinculos: Vinculo[]): boolean {
-  return vinculos.some((v) => v.rol === "ceo");
+  // "directivo" es el nuevo ceo-equivalente (override global). Espeja la RLS
+  // usuario_es_ceo() que reconoce ceo/director/directivo.
+  return vinculos.some((v) => v.rol === "ceo" || v.rol === "directivo");
 }
 
 export function esRolEn(
@@ -163,7 +170,7 @@ function puedeAprobarPorCampo(
   return vinculos.some((v) => {
     if (v.empresa_id !== empresaId) return false;
     // CEO: siempre puede aprobar (sin umbral).
-    if (v.rol === "ceo") return true;
+    if (v.rol === "ceo" || v.rol === "directivo") return true;
     // Resto: requiere atributo aprobador_financiero.
     if (!v.atributos.includes("aprobador_financiero")) return false;
     const umbral = umbralAprobador(v, campo);
@@ -192,7 +199,7 @@ export function puedeCrearOCEn(
   return vinculos.some(
     (v) =>
       v.empresa_id === empresaId &&
-      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+      (["ceo", "director", "operativo", "directivo", "administrativo"] as RolBase[]).includes(v.rol),
   );
 }
 
@@ -200,7 +207,7 @@ export function puedeCrearOCEn(
 export function empresasDondeCreaOC(vinculos: Vinculo[]): string[] {
   return vinculos
     .filter((v) =>
-      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+      (["ceo", "director", "operativo", "directivo", "administrativo"] as RolBase[]).includes(v.rol),
     )
     .map((v) => v.empresa_id);
 }
@@ -216,7 +223,7 @@ export function puedeGestionarProyectosEn(
   return vinculos.some(
     (v) =>
       v.empresa_id === empresaId &&
-      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+      (["ceo", "director", "operativo", "directivo", "administrativo"] as RolBase[]).includes(v.rol),
   );
 }
 
@@ -224,7 +231,7 @@ export function puedeGestionarProyectosEn(
 export function empresasDondeGestionaProyectos(vinculos: Vinculo[]): string[] {
   return vinculos
     .filter((v) =>
-      (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+      (["ceo", "director", "operativo", "directivo", "administrativo"] as RolBase[]).includes(v.rol),
     )
     .map((v) => v.empresa_id);
 }
@@ -285,7 +292,7 @@ export function puedeGestionarCatalogoCapacitaciones(
   return (
     esCEO(vinculos) ||
     tieneAtributo(vinculos, "rh") ||
-    vinculos.some((v) => v.rol === "director")
+    vinculos.some((v) => (v.rol === "director" || v.rol === "directivo"))
   );
 }
 
@@ -301,7 +308,9 @@ export function puedeAsignarCapacitacionEn(
   if (esCEO(vinculos)) return true;
   if (tieneAtributo(vinculos, "rh")) return true;
   return vinculos.some(
-    (v) => v.empresa_id === empleadoEmpresaId && v.rol === "director",
+    (v) =>
+      v.empresa_id === empleadoEmpresaId &&
+      (v.rol === "director" || v.rol === "directivo"),
   );
 }
 
@@ -311,7 +320,7 @@ export function puedeAsignarCapacitacionEn(
  */
 export function puedeGestionarClientes(vinculos: Vinculo[]): boolean {
   return vinculos.some((v) =>
-    (["ceo", "director", "operativo"] as RolBase[]).includes(v.rol),
+    (["ceo", "director", "operativo", "directivo", "administrativo"] as RolBase[]).includes(v.rol),
   );
 }
 
@@ -332,7 +341,7 @@ export function puedeGestionarEmpleadosEn(
   return vinculos.some(
     (v) =>
       v.empresa_id === empresaId &&
-      (["ceo", "director"] as RolBase[]).includes(v.rol),
+      (["ceo", "director", "directivo"] as RolBase[]).includes(v.rol),
   );
 }
 
@@ -346,7 +355,7 @@ export function empresasDondeGestionaEmpleados(
   vinculos: Vinculo[],
 ): string[] {
   return vinculos
-    .filter((v) => (["ceo", "director"] as RolBase[]).includes(v.rol))
+    .filter((v) => (["ceo", "director", "directivo"] as RolBase[]).includes(v.rol))
     .map((v) => v.empresa_id);
 }
 
@@ -370,7 +379,7 @@ export function puedeAccederCentros(vinculos: Vinculo[]): boolean {
     esCEO(vinculos) ||
     tieneAtributo(vinculos, "tesorero_corporativo") ||
     tieneAtributo(vinculos, "auditor_interno") ||
-    vinculos.some((v) => v.rol === "director")
+    vinculos.some((v) => (v.rol === "director" || v.rol === "directivo"))
   );
 }
 
@@ -384,7 +393,7 @@ export function puedeGestionarCentrosEn(
   return (
     esCEO(vinculos) ||
     tieneAtributo(vinculos, "tesorero_corporativo") ||
-    esRolEn(vinculos, empresaId, "director")
+    esRolEn(vinculos, empresaId, ["director", "directivo"])
   );
 }
 
@@ -396,7 +405,7 @@ export function empresasDondeGestionaCentros(vinculos: Vinculo[]): string[] {
     // CEO/tesorero ven todas: el caller decide cómo expandir esta lista
     return Array.from(new Set(vinculos.map((v) => v.empresa_id)));
   }
-  return vinculos.filter((v) => v.rol === "director").map((v) => v.empresa_id);
+  return vinculos.filter((v) => (v.rol === "director" || v.rol === "directivo")).map((v) => v.empresa_id);
 }
 
 /**
@@ -433,7 +442,8 @@ export function puedeVerNominaEmpleado(
   if (tieneAtributo(vinculos, "contralor")) return true;
   if (tieneAtributo(vinculos, "tesorero_corporativo")) return true;
   if (tieneAtributo(vinculos, "auditor_interno")) return true;
-  if (esRolEn(vinculos, opts.empleadoEmpresaId, ["director"])) return true;
+  if (esRolEn(vinculos, opts.empleadoEmpresaId, ["director", "directivo"]))
+    return true;
   return false;
 }
 
@@ -452,5 +462,5 @@ export function empresasConVisibilidadNomina(vinculos: Vinculo[]): string[] {
     return Array.from(new Set(vinculos.map((v) => v.empresa_id)));
   }
   // Director: solo de su empresa
-  return vinculos.filter((v) => v.rol === "director").map((v) => v.empresa_id);
+  return vinculos.filter((v) => (v.rol === "director" || v.rol === "directivo")).map((v) => v.empresa_id);
 }
