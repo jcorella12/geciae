@@ -22,7 +22,6 @@ const ATRIBUTOS_OPCIONALES = [
   { value: "aprobador_financiero", label: "Aprobador financiero" },
   { value: "vendedor", label: "Vendedor" },
   { value: "supervisor_cuadrilla", label: "Supervisor de cuadrilla" },
-  { value: "coordinador_calidad", label: "Coordinador de calidad" },
 ] as const;
 
 export function GenerarUsuarioButton({

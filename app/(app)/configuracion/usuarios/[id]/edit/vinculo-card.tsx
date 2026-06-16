@@ -24,7 +24,6 @@ const ROLES = [
 
 const ATRIBUTOS = [
   { value: "aprobador_financiero", label: "Aprobador financiero" },
-  { value: "coordinador_calidad", label: "Coordinador de calidad" },
   { value: "tesorero_corporativo", label: "Tesorero corporativo" },
   { value: "auditor_interno", label: "Auditor interno" },
   { value: "vendedor", label: "Vendedor" },

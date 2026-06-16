@@ -21,7 +21,6 @@ export type RolBase =
 
 export type AtributoUsuario =
   | "aprobador_financiero"
-  | "coordinador_calidad"
   | "tesorero_corporativo"
   | "auditor_interno"
   | "vendedor"

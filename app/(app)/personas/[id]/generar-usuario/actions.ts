@@ -15,7 +15,6 @@ import type { GenerarUsuarioState } from "./state";
 const ROLES = ["empleado", "operativo", "director"] as const;
 const ATRIBUTOS_VALIDOS = [
   "aprobador_financiero",
-  "coordinador_calidad",
   "tesorero_corporativo",
   "auditor_interno",
   "vendedor",

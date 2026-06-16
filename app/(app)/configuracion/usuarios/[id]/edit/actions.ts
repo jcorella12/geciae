@@ -9,7 +9,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 const ROLES = ["ceo", "director", "operativo", "empleado", "cliente"] as const;
 const ATRIBUTOS = [
   "aprobador_financiero",
-  "coordinador_calidad",
   "tesorero_corporativo",
   "auditor_interno",
   "vendedor",

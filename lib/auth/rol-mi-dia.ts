@@ -10,7 +10,7 @@ export type RolMiDia =
   | "residente"       // Empleado con supervisor_cuadrilla → residente obra
   | "admin"           // Empleado con tesorero_corporativo → administración
   | "almacenista"     // Operativo de inventario / supervisor → almacén
-  | "rrhh"            // Empleado con coordinador_calidad u otro de RRHH
+  | "rrhh"            // Empleado con atributo rh → recursos humanos
   | "empleado";       // default cualquier otro empleado
 
 export function detectarRolMiDia(vinculos: Vinculo[]): RolMiDia {
@@ -40,12 +40,8 @@ export function detectarRolMiDia(vinculos: Vinculo[]): RolMiDia {
     return "residente";
   }
 
-  // Coordinador de calidad → RRHH/calidad
-  if (
-    vinculos.some((v) =>
-      (v.atributos ?? []).includes("coordinador_calidad"),
-    )
-  ) {
+  // Atributo RH → recursos humanos
+  if (vinculos.some((v) => (v.atributos ?? []).includes("rh"))) {
     return "rrhh";
   }
 
