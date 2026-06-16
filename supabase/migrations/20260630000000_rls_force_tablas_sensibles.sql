@@ -29,30 +29,31 @@
 -- código siguen siendo la primera línea.
 -- ============================================================================
 
--- Tablas financieras críticas
-ALTER TABLE ajustes_gerenciales FORCE ROW LEVEL SECURITY;
-ALTER TABLE umbrales_aprobacion FORCE ROW LEVEL SECURITY;
-ALTER TABLE ordenes_compra FORCE ROW LEVEL SECURITY;
-ALTER TABLE ordenes_trabajo_inter_co FORCE ROW LEVEL SECURITY;
-ALTER TABLE cfdi FORCE ROW LEVEL SECURITY;
-ALTER TABLE cfdi_pagos FORCE ROW LEVEL SECURITY;
-
--- Tesorería + bancos
-ALTER TABLE bancos_cuentas FORCE ROW LEVEL SECURITY;
-ALTER TABLE bancos_movimientos FORCE ROW LEVEL SECURITY;
-ALTER TABLE prestamos_inter_co FORCE ROW LEVEL SECURITY;
-ALTER TABLE lineas_credito_inter_co FORCE ROW LEVEL SECURITY;
-ALTER TABLE prestamos_intereses FORCE ROW LEVEL SECURITY;
-
--- Nómina y datos personales sensibles
-ALTER TABLE empleados FORCE ROW LEVEL SECURITY;
-ALTER TABLE nomina_recibos FORCE ROW LEVEL SECURITY;
-ALTER TABLE finiquitos FORCE ROW LEVEL SECURITY;
-ALTER TABLE evaluaciones_desempeno FORCE ROW LEVEL SECURITY;
-
--- SAT: contraseñas FIEL encriptadas y descargas
-ALTER TABLE sat_credenciales FORCE ROW LEVEL SECURITY;
-ALTER TABLE sat_descargas FORCE ROW LEVEL SECURITY;
-
--- Audit / seguridad
-ALTER TABLE usuarios_empresas FORCE ROW LEVEL SECURITY;
+-- FORCE RLS solo en las tablas que existan. Guardado con to_regclass para
+-- idempotencia y robustez a la deriva: en este remoto algunas no existen
+-- (evaluaciones_desempeno nunca se creó; sat_credenciales/sat_descargas ya se
+-- borraron por fuera antes de esta migración).
+DO $$
+DECLARE
+  t TEXT;
+  tablas TEXT[] := ARRAY[
+    -- Financieras críticas
+    'ajustes_gerenciales','umbrales_aprobacion','ordenes_compra',
+    'ordenes_trabajo_inter_co','cfdi','cfdi_pagos',
+    -- Tesorería + bancos
+    'bancos_cuentas','bancos_movimientos','prestamos_inter_co',
+    'lineas_credito_inter_co','prestamos_intereses',
+    -- Nómina y datos personales sensibles
+    'empleados','nomina_recibos','finiquitos','evaluaciones_desempeno',
+    -- SAT (pueden ya no existir)
+    'sat_credenciales','sat_descargas',
+    -- Audit / seguridad
+    'usuarios_empresas'
+  ];
+BEGIN
+  FOREACH t IN ARRAY tablas LOOP
+    IF to_regclass('public.' || t) IS NOT NULL THEN
+      EXECUTE format('ALTER TABLE public.%I FORCE ROW LEVEL SECURITY', t);
+    END IF;
+  END LOOP;
+END $$;

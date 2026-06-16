@@ -98,14 +98,20 @@ GROUP BY empresa_origen_id, EXTRACT(YEAR FROM fecha_solicitud)
 ON CONFLICT (empresa_id, anio, tipo) DO UPDATE
   SET ultimo_numero = GREATEST(contadores_folio.ultimo_numero, EXCLUDED.ultimo_numero);
 
--- Constraint UNIQUE defensivo (segunda red).
-ALTER TABLE ordenes_compra
-  ADD CONSTRAINT ordenes_compra_empresa_numero_unico
-  UNIQUE (empresa_id, numero);
-
-ALTER TABLE ordenes_trabajo_inter_co
-  ADD CONSTRAINT ot_empresa_numero_unico
-  UNIQUE (empresa_origen_id, numero);
+-- Constraint UNIQUE defensivo (segunda red). Guardado con pg_constraint para
+-- idempotencia: el remoto está desincronizado (esta migración ya pudo correrse
+-- por fuera), así que debe poder re-aplicarse sin tronar si el constraint existe.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ordenes_compra_empresa_numero_unico') THEN
+    ALTER TABLE ordenes_compra
+      ADD CONSTRAINT ordenes_compra_empresa_numero_unico UNIQUE (empresa_id, numero);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ot_empresa_numero_unico') THEN
+    ALTER TABLE ordenes_trabajo_inter_co
+      ADD CONSTRAINT ot_empresa_numero_unico UNIQUE (empresa_origen_id, numero);
+  END IF;
+END $$;
 
 COMMENT ON FUNCTION siguiente_folio IS
   'Reserva atómicamente el siguiente folio de OC/OT para una empresa/año. '

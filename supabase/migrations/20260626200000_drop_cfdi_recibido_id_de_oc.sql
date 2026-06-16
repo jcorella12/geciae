@@ -17,11 +17,23 @@
 -- (típicamente ya lo tiene porque crearCfdi lo escribe en el insert).
 -- ============================================================================
 
-UPDATE cfdi c
-SET oc_id = oc.id
-FROM ordenes_compra oc
-WHERE oc.cfdi_recibido_id = c.id
-  AND c.oc_id IS NULL;
+-- Backfill guardado para idempotencia: el remoto pudo ya haber borrado la
+-- columna por fuera, en cuyo caso el UPDATE referenciaría una columna
+-- inexistente y tronaría. Solo corre si la columna sigue presente.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'ordenes_compra'
+      AND column_name = 'cfdi_recibido_id'
+  ) THEN
+    UPDATE cfdi c
+    SET oc_id = oc.id
+    FROM ordenes_compra oc
+    WHERE oc.cfdi_recibido_id = c.id
+      AND c.oc_id IS NULL;
+  END IF;
+END $$;
 
 ALTER TABLE ordenes_compra
   DROP COLUMN IF EXISTS cfdi_recibido_id;
