@@ -22,6 +22,7 @@ export default async function NuevaCotizacionPage({
   for (const v of vinculos) {
     if (
       v.rol === "ceo" ||
+      v.rol === "directivo" ||
       v.rol === "director" ||
       v.rol === "operativo" ||
       tieneVendedorEnAlguna

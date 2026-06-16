@@ -16,8 +16,9 @@ export type RolMiDia =
 export function detectarRolMiDia(vinculos: Vinculo[]): RolMiDia {
   if (vinculos.length === 0) return "empleado";
 
-  // CEO siempre vista ejecutiva
-  if (vinculos.some((v) => v.rol === "ceo")) return "ceo";
+  // CEO / directivo siempre vista ejecutiva
+  if (vinculos.some((v) => v.rol === "ceo" || v.rol === "directivo"))
+    return "ceo";
 
   // Tesorero corporativo o aprobador financiero → admin
   if (
@@ -48,8 +49,15 @@ export function detectarRolMiDia(vinculos: Vinculo[]): RolMiDia {
     return "rrhh";
   }
 
-  // Director u operativo → PM (la vista por defecto que ya hay)
-  if (vinculos.some((v) => v.rol === "director" || v.rol === "operativo")) {
+  // Director / operativo / administrativo → PM (la vista por defecto que ya hay)
+  if (
+    vinculos.some(
+      (v) =>
+        v.rol === "director" ||
+        v.rol === "operativo" ||
+        v.rol === "administrativo",
+    )
+  ) {
     return "pm";
   }
 

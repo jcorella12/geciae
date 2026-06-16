@@ -29,7 +29,9 @@ export function detectarModoUsuario(
     ),
   );
   const esRolAvanzado = vinculos.some((v) =>
-    ["ceo", "director", "operativo"].includes(v.rol),
+    ["ceo", "director", "operativo", "directivo", "administrativo"].includes(
+      v.rol,
+    ),
   );
 
   return esRolAvanzado || tieneAtribAvanzado ? "avanzado" : "simple";

@@ -21,7 +21,8 @@ export type EmpresaResumen = {
 
 /**
  * Determina si el usuario puede ver la vista consolidada.
- * Spec: rol `ceo` en cualquier empresa O atributo `tesorero_corporativo`.
+ * Spec: rol `ceo`/`directivo` en cualquier empresa O atributo
+ * `tesorero_corporativo`. (`directivo` es el ceo-equivalente tras ROLES F2.)
  */
 export function puedeVerConsolidado(
   vinculos: Array<{ rol: string; atributos: string[] | null }>,
@@ -29,6 +30,7 @@ export function puedeVerConsolidado(
   return vinculos.some(
     (v) =>
       v.rol === "ceo" ||
+      v.rol === "directivo" ||
       (v.atributos ?? []).includes("tesorero_corporativo"),
   );
 }

@@ -80,13 +80,15 @@ export default async function PrestamoDetallePage({
   if (!p) notFound();
 
   const esSolicitante = user?.id === p.solicitante_id;
-  const esCEO = v.some((vi) => vi.rol === "ceo");
+  const esCEO = v.some((vi) => vi.rol === "ceo" || vi.rol === "directivo");
   const esAprobador =
     esCEO ||
     v.some(
       (vi) =>
         vi.empresa_id === p.empresa_propietaria_id &&
-        (vi.rol === "director" || (vi.atributos ?? []).includes("contralor")),
+        (vi.rol === "director" ||
+          vi.rol === "directivo" ||
+          (vi.atributos ?? []).includes("contralor")),
     );
 
   const { data: log } = (await supabase

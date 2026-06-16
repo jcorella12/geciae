@@ -43,7 +43,9 @@ export default async function UmbralesPage() {
   // editable.
   const aprobadores = (rows ?? []).filter(
     (r) =>
-      r.rol === "ceo" || (r.atributos ?? []).includes("aprobador_financiero"),
+      r.rol === "ceo" ||
+      r.rol === "directivo" ||
+      (r.atributos ?? []).includes("aprobador_financiero"),
   );
 
   // Resolver emails vía admin.listUsers (no se puede join directo desde
@@ -79,7 +81,7 @@ export default async function UmbralesPage() {
           r.empresas?.nombre_comercial ?? r.empresas?.codigo ?? "?",
         rol: r.rol,
         puesto: r.puesto,
-        esCeo: r.rol === "ceo",
+        esCeo: r.rol === "ceo" || r.rol === "directivo",
         umbralOc: umb.umbral_max_mxn_oc ?? null,
         umbralOt: umb.umbral_max_mxn_ot ?? null,
         umbralPrestamo: umb.umbral_max_mxn_prestamo ?? null,

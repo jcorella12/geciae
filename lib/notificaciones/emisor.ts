@@ -62,7 +62,7 @@ export async function aprobadoresOC(
     const atributos = (v.atributos as string[] | null) ?? [];
     const cfg = (v.configuracion_atributos as Record<string, unknown> | null) ?? {};
 
-    if (rol === "ceo") {
+    if (rol === "ceo" || rol === "directivo") {
       ids.push(v.usuario_id);
       continue;
     }
@@ -103,7 +103,7 @@ export async function aprobadoresPrestamo(
     const atributos = (v.atributos as string[] | null) ?? [];
     const cfg = (v.configuracion_atributos as Record<string, unknown> | null) ?? {};
 
-    if (rol === "ceo") {
+    if (rol === "ceo" || rol === "directivo") {
       ids.push(v.usuario_id);
       continue;
     }
@@ -138,7 +138,11 @@ export async function tesorerosCorporativos(): Promise<string[]> {
   for (const v of data) {
     const rol = v.rol as string;
     const atributos = (v.atributos as string[] | null) ?? [];
-    if (rol === "ceo" || atributos.includes("tesorero_corporativo")) {
+    if (
+      rol === "ceo" ||
+      rol === "directivo" ||
+      atributos.includes("tesorero_corporativo")
+    ) {
       ids.push(v.usuario_id);
     }
   }

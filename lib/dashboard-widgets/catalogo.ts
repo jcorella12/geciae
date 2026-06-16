@@ -520,8 +520,8 @@ export function plantillaAutomatica(
   rol: RolBase,
   atributos: AtributoUsuario[],
 ): Exclude<VistaPlantilla, "personalizada"> {
-  if (rol === "ceo") return "ceo";
+  if (rol === "ceo" || rol === "directivo") return "ceo";
   if (atributos.includes("contralor")) return "contralor";
-  if (rol === "director") return "director";
+  if (rol === "director" || rol === "administrativo") return "director";
   return "operativo";
 }
