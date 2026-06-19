@@ -538,3 +538,76 @@ export async function cancelarOC(
   revalidatePath("/finanzas/oc");
   return { ok: true, error: null };
 }
+
+/**
+ * Marca una OC como enviada al proveedor (aprobada → enviada). Milestone
+ * operativo. Permiso: capturador o quien gestiona OC en la empresa.
+ */
+export async function marcarEnviadaOC(
+  ocId: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const g = await gateAccionOC(ocId);
+  if (!g.ok) return { ok: false, error: g.error };
+  if (g.oc.estado !== "aprobada") {
+    return {
+      ok: false,
+      error: `OC en estado "${g.oc.estado}": solo una OC aprobada se puede marcar como enviada.`,
+    };
+  }
+  const supabase = createClient();
+  const callerId = await getCallerId(supabase);
+  if (callerId !== g.oc.capturado_por) {
+    const v = await obtenerVinculos();
+    if (!puedeCrearOCEn(v, g.oc.empresa_id)) {
+      return { ok: false, error: "Sin permiso para marcar la OC como enviada." };
+    }
+  }
+  const ahora = new Date().toISOString();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("ordenes_compra")
+    .update({ estado: "enviada", fecha_envio: ahora.slice(0, 10), updated_at: ahora })
+    .eq("id", ocId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/oc/${ocId}`);
+  revalidatePath("/finanzas/oc");
+  return { ok: true, error: null };
+}
+
+/**
+ * Marca una OC como pagada (desde aprobada/enviada/parcial_recibida/recibida).
+ * El pago real se concilia con el CFDI ligado (cfdi.oc_id); esto registra el
+ * milestone + la fecha de pago. Permiso: capturador o gestor de OC.
+ */
+export async function marcarPagadaOC(
+  ocId: string,
+): Promise<{ ok: boolean; error: string | null }> {
+  const g = await gateAccionOC(ocId);
+  if (!g.ok) return { ok: false, error: g.error };
+  if (
+    !["aprobada", "enviada", "parcial_recibida", "recibida"].includes(g.oc.estado)
+  ) {
+    return {
+      ok: false,
+      error: `OC en estado "${g.oc.estado}": no se puede marcar como pagada.`,
+    };
+  }
+  const supabase = createClient();
+  const callerId = await getCallerId(supabase);
+  if (callerId !== g.oc.capturado_por) {
+    const v = await obtenerVinculos();
+    if (!puedeCrearOCEn(v, g.oc.empresa_id)) {
+      return { ok: false, error: "Sin permiso para marcar la OC como pagada." };
+    }
+  }
+  const ahora = new Date().toISOString();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { error } = await (supabase as any)
+    .from("ordenes_compra")
+    .update({ estado: "pagada", fecha_pago: ahora.slice(0, 10), updated_at: ahora })
+    .eq("id", ocId);
+  if (error) return { ok: false, error: error.message };
+  revalidatePath(`/finanzas/oc/${ocId}`);
+  revalidatePath("/finanzas/oc");
+  return { ok: true, error: null };
+}

@@ -10,6 +10,8 @@ import {
   aprobarOC,
   cancelarOC,
   enviarAAprobacion,
+  marcarEnviadaOC,
+  marcarPagadaOC,
   rechazarOC,
   regresarOCABorrador,
 } from "../actions";
@@ -109,6 +111,32 @@ export function OCActionButtons({
             Regresar a borrador
           </Button>
         )}
+
+        {estado === "aprobada" && (esCapturador || puedeAprobar) && (
+          <Button
+            size="sm"
+            onClick={() => run(() => marcarEnviadaOC(ocId))}
+            disabled={isPending}
+          >
+            Marcar enviada al proveedor
+          </Button>
+        )}
+
+        {["aprobada", "enviada", "parcial_recibida", "recibida"].includes(
+          estado,
+        ) &&
+          (esCapturador || puedeAprobar) && (
+            <Button
+              size="sm"
+              onClick={async () => {
+                if (!(await confirm("¿Marcar esta OC como pagada?"))) return;
+                run(() => marcarPagadaOC(ocId));
+              }}
+              disabled={isPending}
+            >
+              Marcar pagada
+            </Button>
+          )}
 
         {!["pagada", "cancelada"].includes(estado) && (esCapturador || puedeAprobar) && (
           <Button
