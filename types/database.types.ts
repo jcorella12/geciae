@@ -2639,6 +2639,33 @@ export type Database = {
           },
         ]
       }
+      cuentas_contables: {
+        Row: {
+          activo: boolean | null
+          clave: string
+          created_at: string | null
+          descripcion: string
+          id: string
+          rubro: string
+        }
+        Insert: {
+          activo?: boolean | null
+          clave: string
+          created_at?: string | null
+          descripcion: string
+          id?: string
+          rubro: string
+        }
+        Update: {
+          activo?: boolean | null
+          clave?: string
+          created_at?: string | null
+          descripcion?: string
+          id?: string
+          rubro?: string
+        }
+        Relationships: []
+      }
       empleados: {
         Row: {
           activo: boolean | null
@@ -4973,24 +5000,30 @@ export type Database = {
           comentarios: string | null
           condiciones_pago: string | null
           created_at: string | null
+          cuenta_contable_id: string | null
           descuento: number | null
           empresa_id: string
+          empresa_pagadora_id: string | null
           estado: Database["public"]["Enums"]["estado_oc"] | null
           fecha_aprobacion: string | null
           fecha_emision: string
           fecha_entrega_esperada: string | null
           fecha_entrega_real: string | null
+          fecha_envio: string | null
           fecha_pago: string | null
           forma_pago: string | null
           id: string
           iva: number | null
+          limite_pago: string | null
           numero: string
           proveedor_id: string
           proyecto_id: string | null
           retenciones: number | null
           subtotal: number
+          tipo_compra: string | null
           total: number
           updated_at: string | null
+          urgencia: string
           url_pdf: string | null
         }
         Insert: {
@@ -5001,24 +5034,30 @@ export type Database = {
           comentarios?: string | null
           condiciones_pago?: string | null
           created_at?: string | null
+          cuenta_contable_id?: string | null
           descuento?: number | null
           empresa_id: string
+          empresa_pagadora_id?: string | null
           estado?: Database["public"]["Enums"]["estado_oc"] | null
           fecha_aprobacion?: string | null
           fecha_emision?: string
           fecha_entrega_esperada?: string | null
           fecha_entrega_real?: string | null
+          fecha_envio?: string | null
           fecha_pago?: string | null
           forma_pago?: string | null
           id?: string
           iva?: number | null
+          limite_pago?: string | null
           numero: string
           proveedor_id: string
           proyecto_id?: string | null
           retenciones?: number | null
           subtotal: number
+          tipo_compra?: string | null
           total: number
           updated_at?: string | null
+          urgencia?: string
           url_pdf?: string | null
         }
         Update: {
@@ -5029,24 +5068,30 @@ export type Database = {
           comentarios?: string | null
           condiciones_pago?: string | null
           created_at?: string | null
+          cuenta_contable_id?: string | null
           descuento?: number | null
           empresa_id?: string
+          empresa_pagadora_id?: string | null
           estado?: Database["public"]["Enums"]["estado_oc"] | null
           fecha_aprobacion?: string | null
           fecha_emision?: string
           fecha_entrega_esperada?: string | null
           fecha_entrega_real?: string | null
+          fecha_envio?: string | null
           fecha_pago?: string | null
           forma_pago?: string | null
           id?: string
           iva?: number | null
+          limite_pago?: string | null
           numero?: string
           proveedor_id?: string
           proyecto_id?: string | null
           retenciones?: number | null
           subtotal?: number
+          tipo_compra?: string | null
           total?: number
           updated_at?: string | null
+          urgencia?: string
           url_pdf?: string | null
         }
         Relationships: [

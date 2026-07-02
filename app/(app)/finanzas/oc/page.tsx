@@ -100,7 +100,7 @@ export default async function OCPage({
   let query = supabase
     .from("ordenes_compra")
     .select(
-      "id, numero, fecha_emision, total, estado, empresa_id, proveedor_id, comentarios, empresas(codigo, nombre_comercial), proveedores(razon_social, rfc, semaforo)",
+      "id, numero, fecha_emision, total, estado, empresa_id, proveedor_id, comentarios, urgencia, limite_pago, empresa_pagadora_id, empresas(codigo, nombre_comercial), proveedores(razon_social, rfc, semaforo)",
       { count: "exact" },
     )
     .in("empresa_id", filtro.empresasIds)

@@ -11,7 +11,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CentroOpcion } from "@/lib/centros/listar";
 import { calcularTotalesOC } from "@/lib/oc/schemas";
-import { initialOCState, TASA_IVA_DEFAULT } from "@/lib/oc/state";
+import {
+  initialOCState,
+  limitePagoDe,
+  TASA_IVA_DEFAULT,
+  TIPOS_COMPRA,
+  URGENCIAS_OC,
+} from "@/lib/oc/state";
 
 import { createOC } from "./actions";
 import {
@@ -50,6 +56,7 @@ type Proyecto = {
   empresa_id: string;
   estado: string | null;
 };
+type CuentaContable = { clave: string; descripcion: string; rubro: string };
 type ConceptoLocal = {
   key: string;
   descripcion: string;
@@ -81,6 +88,8 @@ export function OCForm({
   defaultProyectoId = null,
   defaultEmpresaId,
   solicitudOrigenId = null,
+  empresasPagadoras = [],
+  cuentas = [],
 }: {
   empresas: Empresa[];
   proveedores: Proveedor[];
@@ -90,6 +99,10 @@ export function OCForm({
   defaultProyectoId?: string | null;
   defaultEmpresaId?: string;
   solicitudOrigenId?: string | null;
+  /** Todas las empresas activas del grupo (para "quién paga"). */
+  empresasPagadoras?: Empresa[];
+  /** Catálogo contable (clave/descr/rubro) para clasificación de contraloría. */
+  cuentas?: CuentaContable[];
 }) {
   const [state, formAction] = useFormState(createOC, initialOCState);
   const [modo, setModo] = useState<"rapido" | "detallado">("rapido");
@@ -115,6 +128,12 @@ export function OCForm({
   const [retenciones, setRetenciones] = useState("0");
   const [condicionesPago, setCondicionesPago] = useState("");
 
+  // Contraloría
+  const [urgencia, setUrgencia] = useState("cero");
+  const [empresaPagadoraId, setEmpresaPagadoraId] = useState("");
+  const [tipoCompra, setTipoCompra] = useState("");
+  const [cuentaClave, setCuentaClave] = useState("");
+
   const proveedoresFiltrados = useMemo(
     () =>
       proveedores.filter(
@@ -129,6 +148,27 @@ export function OCForm({
   const proyectosFiltrados = useMemo(
     () => (empresaId ? proyectos.filter((p) => p.empresa_id === empresaId) : []),
     [proyectos, empresaId],
+  );
+
+  // Contraloría: límite de pago estimado y catálogo filtrado por tipo.
+  const limitePreview = limitePagoDe(
+    new Date().toISOString().slice(0, 10),
+    urgencia,
+  );
+  const rubrosDeTipo =
+    (TIPOS_COMPRA.find((t) => t.value === tipoCompra)?.rubros as
+      | readonly string[]
+      | null
+      | undefined) ?? null;
+  const cuentasFiltradas = useMemo(
+    () =>
+      rubrosDeTipo
+        ? cuentas.filter((c) => rubrosDeTipo.includes(c.rubro))
+        : cuentas,
+    [cuentas, rubrosDeTipo],
+  );
+  const esInterEmpresa = Boolean(
+    empresaPagadoraId && empresaId && empresaPagadoraId !== empresaId,
   );
 
   function aplicarCotizacion(d: CotizacionDefaults) {
@@ -500,6 +540,134 @@ export function OCForm({
           </div>
         </div>
       </section>
+
+      {/* 5.5 · Pago: urgencia + quién paga */}
+      <section className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <h2 className="text-base font-semibold">Pago</h2>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <div>
+            <Label className="text-sm">Urgencia de pago</Label>
+            <select
+              name="urgencia"
+              value={urgencia}
+              onChange={(e) => setUrgencia(e.target.value)}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {URGENCIAS_OC.map((u) => (
+                <option key={u.value} value={u.value}>
+                  {u.label}
+                </option>
+              ))}
+            </select>
+            {limitePreview && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Límite de pago:{" "}
+                <strong>
+                  {new Date(`${limitePreview}T12:00:00`).toLocaleDateString(
+                    "es-MX",
+                    { day: "numeric", month: "long" },
+                  )}
+                </strong>{" "}
+                (días hábiles)
+              </p>
+            )}
+          </div>
+          <div>
+            <Label className="text-sm">¿Quién paga? · opcional</Label>
+            <select
+              name="empresa_pagadora_id"
+              value={empresaPagadoraId}
+              onChange={(e) => setEmpresaPagadoraId(e.target.value)}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Misma empresa solicitante</option>
+              {(empresasPagadoras.length ? empresasPagadoras : empresas).map(
+                (e) => (
+                  <option key={e.id} value={e.id}>
+                    {e.codigo} — {e.nombre_comercial ?? e.razon_social}
+                  </option>
+                ),
+              )}
+            </select>
+            {esInterEmpresa && (
+              <p className="mt-1 rounded-md border border-warning/40 bg-warning/10 px-2 py-1 text-xs">
+                ⇄ Operación <strong>inter-empresa</strong>: paga una empresa
+                distinta a la que solicita.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* 5.75 · Clasificación contable (contraloría) · opcional */}
+      <details className="rounded-lg border border-border bg-card shadow-sm">
+        <summary className="cursor-pointer select-none px-5 py-4 text-sm font-medium text-muted-foreground hover:text-foreground">
+          Clasificación contable · opcional (la puede completar contraloría)
+        </summary>
+        <div className="grid gap-4 px-5 pb-5 sm:grid-cols-2">
+          <div>
+            <Label className="text-sm">Tipo de compra</Label>
+            <select
+              name="tipo_compra"
+              value={tipoCompra}
+              onChange={(e) => {
+                setTipoCompra(e.target.value);
+                setCuentaClave("");
+              }}
+              className="mt-1 flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">— Sin clasificar —</option>
+              {TIPOS_COMPRA.map((t) => (
+                <option key={t.value} value={t.value}>
+                  {t.label}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <Label htmlFor="cuenta_clave" className="text-sm">
+              Cuenta contable
+            </Label>
+            <Input
+              id="cuenta_clave"
+              name="cuenta_clave"
+              list="cuentas-contables-list"
+              value={cuentaClave}
+              onChange={(e) => setCuentaClave(e.target.value.split(" ")[0])}
+              placeholder={
+                cuentas.length
+                  ? `Busca en ${cuentasFiltradas.length} cuentas…`
+                  : "Catálogo no disponible"
+              }
+              disabled={cuentas.length === 0}
+              className="mt-1 font-mono"
+            />
+            <datalist id="cuentas-contables-list">
+              {cuentasFiltradas.slice(0, 500).map((c) => (
+                <option key={c.clave} value={c.clave}>
+                  {c.clave} · {c.descripcion} ({c.rubro})
+                </option>
+              ))}
+            </datalist>
+            {cuentaClave &&
+              (() => {
+                const sel = cuentas.find((c) => c.clave === cuentaClave);
+                return sel ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    <span className="font-mono">{sel.clave}</span> ·{" "}
+                    {sel.descripcion}{" "}
+                    <span className="text-ink-4">({sel.rubro})</span>
+                  </p>
+                ) : (
+                  <p className="mt-1 text-xs text-amber-700">
+                    Clave no encontrada en el catálogo — se guardará la OC sin
+                    cuenta.
+                  </p>
+                );
+              })()}
+          </div>
+        </div>
+      </details>
 
       {/* 6 · Comentarios */}
       <section className="rounded-lg border border-border bg-card p-5 shadow-sm">

@@ -77,6 +77,31 @@ export const OCFormSchema = z
       .or(z.literal(""))
       .transform((v) => (v ? v : null)),
 
+    // --- Contraloría (opcionales; flujo del contralor) ---
+    // Empresa que PAGA si difiere de la solicitante (operación inter-empresa).
+    empresa_pagadora_id: z
+      .string()
+      .uuid()
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    tipo_compra: z
+      .enum(["gasto", "obra", "material", "activo", "servicio", "anticipo", "otro"])
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    // Clave del catálogo contable (se resuelve a cuenta_contable_id en la action).
+    cuenta_clave: z
+      .string()
+      .trim()
+      .max(30)
+      .optional()
+      .or(z.literal(""))
+      .transform((v) => (v ? v : null)),
+    urgencia: z
+      .enum(["cero", "bajo", "medio", "alto", "critica"])
+      .default("cero"),
+
     // --- Modo rápido ---
     // Descripción general de qué se compra (es el concepto sintético, y la
     // explicación obligatoria cuando no hay documento adjunto).

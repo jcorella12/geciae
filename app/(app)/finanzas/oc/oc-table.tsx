@@ -15,7 +15,7 @@ import {
   TableRow,
   TableSurface,
 } from "@/components/ui/table";
-import { ESTADOS_OC } from "@/lib/oc/state";
+import { ESTADOS_OC, URGENCIAS_OC } from "@/lib/oc/state";
 
 const empresaCodigoColor: Record<string, string> = {
   PSE: "bg-pse",
@@ -44,9 +44,22 @@ type OC = {
   estado: string | null;
   empresa_id: string;
   proveedor_id: string;
+  urgencia?: string | null;
+  limite_pago?: string | null;
+  empresa_pagadora_id?: string | null;
   empresas: { codigo: string; nombre_comercial: string | null } | null;
   proveedores: { razon_social: string; rfc: string; semaforo: string | null } | null;
 };
+
+/** Estado del límite de pago para OCs abiertas: vencida / vence hoy / ok. */
+function estadoLimite(oc: OC): "vencida" | "hoy" | null {
+  if (!oc.limite_pago) return null;
+  if (oc.estado === "pagada" || oc.estado === "cancelada") return null;
+  const hoy = new Date().toISOString().slice(0, 10);
+  if (hoy > oc.limite_pago) return "vencida";
+  if (hoy === oc.limite_pago) return "hoy";
+  return null;
+}
 
 export function OCTable({
   ocs,
@@ -168,6 +181,26 @@ export function OCTable({
                   <TableRow key={oc.id}>
                     <TableCell className="font-mono">
                       <Ref code={oc.numero} className="font-medium" />
+                      {oc.empresa_pagadora_id &&
+                        oc.empresa_pagadora_id !== oc.empresa_id && (
+                          <span
+                            className="ml-1 text-amber-600"
+                            title="Inter-empresa: paga otra empresa del grupo"
+                          >
+                            ⇄
+                          </span>
+                        )}
+                      {oc.urgencia && oc.urgencia !== "cero" && (
+                        <span
+                          className="ml-1"
+                          title={`Urgencia: ${
+                            URGENCIAS_OC.find((u) => u.value === oc.urgencia)
+                              ?.label ?? oc.urgencia
+                          }`}
+                        >
+                          ⚡
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell>
                       <span className="inline-flex items-center gap-2 text-xs">
@@ -188,6 +221,21 @@ export function OCTable({
                     </TableCell>
                     <TableCell className="text-xs text-ink-3">
                       {new Date(oc.fecha_emision).toLocaleDateString("es-MX")}
+                      {(() => {
+                        const lim = estadoLimite(oc);
+                        if (!lim) return null;
+                        return (
+                          <p
+                            className={
+                              lim === "vencida"
+                                ? "font-semibold text-destructive"
+                                : "font-semibold text-amber-700"
+                            }
+                          >
+                            ⏰ {lim === "vencida" ? "Pago VENCIDO" : "Vence hoy"}
+                          </p>
+                        );
+                      })()}
                     </TableCell>
                     <TableCell align="right" mono>
                       {fmtMxn.format(Number(oc.total))}

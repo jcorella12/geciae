@@ -14,7 +14,11 @@ import {
   OCFormSchema,
   type OCFormData,
 } from "@/lib/oc/schemas";
-import type { OCState } from "@/lib/oc/state";
+import {
+  limitePagoDe,
+  UMBRAL_DOBLE_AUTORIZACION,
+  type OCState,
+} from "@/lib/oc/state";
 import { createClient } from "@/lib/supabase/server";
 
 function parseFormData(formData: FormData): unknown {
@@ -41,6 +45,11 @@ function parseFormData(formData: FormData): unknown {
     descuento: formData.get("descuento") || 0,
     retenciones: formData.get("retenciones") || 0,
     centro_id: formData.get("centro_id") || undefined,
+    // Contraloría
+    empresa_pagadora_id: formData.get("empresa_pagadora_id") || undefined,
+    tipo_compra: formData.get("tipo_compra") || undefined,
+    cuenta_clave: formData.get("cuenta_clave") || undefined,
+    urgencia: formData.get("urgencia") || "cero",
     // Modo rápido
     descripcion_general: formData.get("descripcion_general") || undefined,
     total_directo: formData.get("total_directo") || undefined,
@@ -162,9 +171,27 @@ export async function createOC(
     numero,
   );
 
+  // Resolver cuenta contable (clave → id). Si la clave no existe, se ignora
+  // (el campo es opcional; no bloquea la captura).
+  let cuentaContableId: string | null = null;
+  if (d.cuenta_clave) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: cta } = await (supabase as any)
+      .from("cuentas_contables")
+      .select("id")
+      .eq("clave", d.cuenta_clave)
+      .eq("activo", true)
+      .maybeSingle();
+    cuentaContableId = cta?.id ?? null;
+  }
+
   // Auto-aprobación: si el capturador tiene umbral suficiente, la OC arranca
   // ya aprobada (evita el round-trip de pasar por "pendiente_aprobacion").
-  const autoAprobada = puedeAprobarOC(vinculos, d.empresa_id, totales.total);
+  // Modelo híbrido (regla del contralor): arriba de $100,000 NUNCA se
+  // auto-aprueba — siempre pasa por aprobación explícita.
+  const autoAprobada =
+    puedeAprobarOC(vinculos, d.empresa_id, totales.total) &&
+    totales.total <= UMBRAL_DOBLE_AUTORIZACION;
   const ahora = new Date().toISOString();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -175,6 +202,12 @@ export async function createOC(
       proveedor_id: d.proveedor_id,
       proyecto_id: d.proyecto_id,
       centro_id: d.centro_id,
+      // Contraloría: pagadora (default la solicitante), clasificación y SLA.
+      empresa_pagadora_id: d.empresa_pagadora_id ?? d.empresa_id,
+      cuenta_contable_id: cuentaContableId,
+      tipo_compra: d.tipo_compra,
+      urgencia: d.urgencia,
+      limite_pago: limitePagoDe(d.fecha_emision, d.urgencia),
       numero,
       fecha_emision: d.fecha_emision,
       fecha_entrega_esperada: d.fecha_entrega_esperada,
@@ -309,10 +342,13 @@ export async function enviarAAprobacion(
     }
   }
 
-  // Atajo: si quien envía a aprobación tiene umbral suficiente, aprobamos directo.
+  // Atajo: si quien envía a aprobación tiene umbral suficiente, aprobamos
+  // directo — salvo que supere el umbral de doble autorización ($100k),
+  // donde siempre se exige aprobación explícita (regla del contralor).
   const autoAprobada =
     callerId != null &&
-    puedeAprobarOC(v, g.oc.empresa_id, Number(g.oc.total));
+    puedeAprobarOC(v, g.oc.empresa_id, Number(g.oc.total)) &&
+    Number(g.oc.total) <= UMBRAL_DOBLE_AUTORIZACION;
   const ahora = new Date().toISOString();
   const update = autoAprobada
     ? {

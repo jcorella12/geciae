@@ -18,35 +18,54 @@ export default async function NuevaOCPage({
 
   const supabase = createClient();
 
-  const [{ data: empresas }, { data: proveedores }, { data: proyectos }, centros] =
-    await Promise.all([
-      supabase
-        .from("empresas")
-        .select(
-          "id, codigo, razon_social, nombre_comercial, centro_default_gastos_id",
-        )
-        .in("id", empresasIds)
-        .eq("activa", true)
-        .order("codigo"),
-      supabase
-        .from("proveedores")
-        .select("id, razon_social, rfc, semaforo")
-        .eq("activo", true)
-        .order("razon_social"),
-      supabase
-        .from("proyectos")
-        .select("id, codigo, nombre, empresa_id, estado")
-        .eq("activo", true)
-        .in("estado", [
-          "cotizacion",
-          "contrato_firmado",
-          "planeacion",
-          "en_ejecucion",
-          "en_cierre",
-        ])
-        .order("codigo"),
-      listarCentrosActivos(),
-    ]);
+  const [
+    { data: empresas },
+    { data: proveedores },
+    { data: proyectos },
+    centros,
+    { data: empresasTodas },
+    { data: cuentas },
+  ] = await Promise.all([
+    supabase
+      .from("empresas")
+      .select(
+        "id, codigo, razon_social, nombre_comercial, centro_default_gastos_id",
+      )
+      .in("id", empresasIds)
+      .eq("activa", true)
+      .order("codigo"),
+    supabase
+      .from("proveedores")
+      .select("id, razon_social, rfc, semaforo")
+      .eq("activo", true)
+      .order("razon_social"),
+    supabase
+      .from("proyectos")
+      .select("id, codigo, nombre, empresa_id, estado")
+      .eq("activo", true)
+      .in("estado", [
+        "cotizacion",
+        "contrato_firmado",
+        "planeacion",
+        "en_ejecucion",
+        "en_cierre",
+      ])
+      .order("codigo"),
+    listarCentrosActivos(),
+    // Todas las empresas activas del grupo — cualquiera puede ser la pagadora.
+    supabase
+      .from("empresas")
+      .select("id, codigo, razon_social, nombre_comercial")
+      .eq("activa", true)
+      .order("codigo"),
+    // Catálogo contable para clasificación de contraloría (opcional en el form).
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (supabase as any)
+      .from("cuentas_contables")
+      .select("clave, descripcion, rubro")
+      .eq("activo", true)
+      .order("clave"),
+  ]);
 
   const centroDefaultPorEmpresa: Record<string, string | null> = {};
   for (const e of empresas ?? []) {
@@ -100,6 +119,8 @@ export default async function NuevaOCPage({
         defaultProyectoId={searchParams.proyecto ?? null}
         defaultEmpresaId={empresaPreseleccionada}
         solicitudOrigenId={searchParams.solicitud_origen ?? null}
+        empresasPagadoras={(empresasTodas ?? []) as never}
+        cuentas={(cuentas ?? []) as never}
       />
     </div>
   );
